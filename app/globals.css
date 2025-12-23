@@ -1,8 +1,14 @@
 @import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+.font-geist { font-family: 'Geist', sans-serif; }
+.font-geist-mono { font-family: 'Geist Mono', monospace; }
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --orange: #f97316; /* orange-500 */
 }
 
 @theme inline {
