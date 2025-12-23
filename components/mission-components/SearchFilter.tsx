@@ -19,6 +19,7 @@ export function SearchFilter({ isOpen, onClose, onSearch }: SearchFilterProps) {
   const [nombreKm, setNombreKm] = useState("");
   const [typeVehicule, setTypeVehicule] = useState("");
   const [montant, setMontant] = useState("");
+  const [rayon, setRayon] = useState(50);
 
   const handleSearch = () => {
     onSearch({
@@ -82,6 +83,26 @@ export function SearchFilter({ isOpen, onClose, onSearch }: SearchFilterProps) {
             </div>
           </div>
 
+            {/* Rayon */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Rayon de recherche : {rayon} km
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="300"
+              step="10"
+              value={rayon}
+              onChange={(e) => setRayon(Number(e.target.value))}
+              className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>0 km</span>
+              <span>300 km</span>
+            </div>
+          </div>
+
           {/* Dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -108,52 +129,11 @@ export function SearchFilter({ isOpen, onClose, onSearch }: SearchFilterProps) {
             </div>
           </div>
 
-          {/* Nombre de km */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Nombre de kilomètres
-            </label>
-            <input
-              type="number"
-              value={nombreKm}
-              onChange={(e) => setNombreKm(e.target.value)}
-              placeholder="Ex: 500"
-              className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-          </div>
+        
 
-          {/* Type de véhicule */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Type de véhicule
-            </label>
-            <select
-              value={typeVehicule}
-              onChange={(e) => setTypeVehicule(e.target.value)}
-              className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
-              <option value="">Sélectionner un type</option>
-              <option value="voiture">Voiture</option>
-              <option value="moto">Moto</option>
-              <option value="camionnette">Camionnette</option>
-              <option value="camion">Camion</option>
-              <option value="van">Van</option>
-            </select>
-          </div>
+          
 
-          {/* Montant */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Montant (€)
-            </label>
-            <input
-              type="number"
-              value={montant}
-              onChange={(e) => setMontant(e.target.value)}
-              placeholder="Ex: 150"
-              className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-          </div>
+        
         </div>
 
         {/* Buttons */}

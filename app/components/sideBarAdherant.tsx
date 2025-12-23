@@ -1,5 +1,6 @@
 // SidebarAdherant.tsx
 import { Briefcase, Calendar, Heart, User, LogOut, X } from 'lucide-react';
+import Image from 'next/image';
 
 interface SidebarAdherantProps {
   isMobileMenuOpen: boolean;
@@ -39,9 +40,15 @@ export default function SidebarAdherant({
           <aside className="hidden md:flex md:flex-col fixed left-0 top-0 h-screen w-64 bg-black border-r border-orange-500 z-50 transform transition-transform duration-300">
             {/* Header avec logo et bouton fermer */}
             <div className="h-20 flex items-center justify-between px-4 border-b border-orange-500">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-2xl">M</span>
-              </div>
+              <div className="w-16 h-16  to-orange-600 rounded-lg flex items-center justify-center relative">
+  <Image
+    src="/images/R.jpeg"
+    alt="Logo"
+    fill
+    className="object-contain"
+  />
+</div>
+
               <button 
                 onClick={onDesktopMenuToggle} 
                 className="text-white p-2 hover:bg-gray-800 rounded-lg"
