@@ -1,8 +1,9 @@
 // app/adherant/page.tsx
 "use client";
 
+import SidebarAdherant from "@/app/components/sideBarAdherant";
 import { missionsData } from "@/app/data/missions";
-import { Mission } from "@/app/data/missions"; // ✅ Changez l'import ici
+import { Mission } from "@/app/data/missions";
 import MissionList from "@/components/mission-components/MissionList";
 import ProfileHeader from "@/components/mission-components/ProfileHeader";
 import SearchBar from "@/components/mission-components/rechercheBar";
@@ -15,13 +16,18 @@ export default function MissionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isPositionOpen, setIsPositionOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
+  const toggleDesktopMenu = () => setIsDesktopMenuOpen(prev => !prev);
 
   const filteredMissions = useMemo(() => {
     if (!searchQuery) return missionsData;
 
     return missionsData.filter(
       (m: Mission) =>
-        m.villeDepart.toLowerCase().includes(searchQuery.toLowerCase()) || // ✅ Ajoutez .toLowerCase()
+        m.villeDepart.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.villeArrivee.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [searchQuery]);
@@ -38,9 +44,22 @@ export default function MissionsPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      {/* Header en plein largeur - reste en haut */}
-      <ProfileHeader />
-      
+      {/* Header avec sidebar intégrée */}
+    {/* Sidebar Component */}
+      <SidebarAdherant
+        isMobileMenuOpen={isMobileMenuOpen}
+        onMobileMenuToggle={toggleMobileMenu}
+        isDesktopMenuOpen={isDesktopMenuOpen}
+        onDesktopMenuToggle={toggleDesktopMenu}
+      />
+
+      {/* Profile Header */}
+      <ProfileHeader
+        isMobileMenuOpen={isMobileMenuOpen}
+        isDesktopMenuOpen={isDesktopMenuOpen}
+        toggleMobileMenu={toggleMobileMenu}
+        toggleDesktopMenu={toggleDesktopMenu}
+      />   
       {/* Contenu principal avec padding adaptatif */}
       <main className="py-6 sm:py-8 lg:py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">

@@ -1,13 +1,14 @@
 "use client"; // ← Ajoute cette ligne en tout premier
 import { useState } from 'react';
 import { Upload, Camera, Calendar, FileText, IdCard, Truck, Link } from 'lucide-react';
-import router from 'next/router';
+import router, { useRouter } from 'next/navigation';
 
 export default function AdherantFormulaire() {
 const [formData, setFormData] = useState({
       nom: '',
     prenom: '',
     dateNaissance: '',
+    email: '',
     adresse: '',
     telephone: '',
     raisonSociale: '',
@@ -18,6 +19,8 @@ const [formData, setFormData] = useState({
     rcPro: '',
     rcCirculation: '',
   });
+  const [showModal, setShowModal] = useState(false);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
 
   // Gestion des fichiers
   const [files, setFiles] = useState({
@@ -40,11 +43,70 @@ const [formData, setFormData] = useState({
     }
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Formulaire soumis', { formData, files });
-    // Ici appel API
+    
+    // Vérification de tous les champs
+    const missing: string[] = [];
+    
+    // Liste des champs texte à vérifier
+    const textFields = [
+      { value: formData.nom, label: 'Nom' },
+      { value: formData.prenom, label: 'Prénom' },
+      { value: formData.dateNaissance, label: 'Date de naissance' },
+      { value: formData.email, label: 'Email' },
+      { value: formData.adresse, label: 'Adresse complète' },
+      { value: formData.raisonSociale, label: 'Raison sociale / Numéro Kbis' },
+      { value: formData.numeroPermis, label: 'Numéro de permis' },
+      { value: formData.dateDelivrance, label: 'Date de délivrance du permis' },
+      { value: formData.typePermis, label: 'Type de permis' },
+    ];
+    
+    // Vérifier les champs texte avec while
+    let i = 0;
+    while (i < textFields.length) {
+      const field = textFields[i];
+      let checkEmpty = !field.value;
+      while (checkEmpty) {
+        missing.push(field.label);
+        checkEmpty = false;
+      }
+      i++;
+    }
+     const fileFields = [
+      { value: files.carteIdentite, label: 'Carte d\'identité' },
+      { value: files.permisRectoVerso, label: 'Permis recto/verso' },
+      { value: files.kbis, label: 'Kbis' },
+      { value: files.rib, label: 'RIB' },
+      { value: files.assuranceRcPro, label: 'Assurance RC PRO' },
+      { value: files.assuranceRcCirculation, label: 'Assurance RC circulation avec photo véhicule' },
+      { value: files.casierJudiciaire, label: 'Extrait casier judiciaire' },
+    ];
+    
+    // Vérifier les fichiers avec while
+    let j = 0;
+    while (j < fileFields.length) {
+      const file = fileFields[j];
+      let checkFile = !file.value;
+      while (checkFile) {
+        missing.push(file.label);
+        checkFile = false;
+      }
+      j++;
+    }
+    
+    setMissingFields(missing);
+    setShowModal(true);
+    
+    // Vérifier si le formulaire est complet
+    let isComplete = missing.length === 0;
+    while (isComplete) {
+      console.log('Formulaire complet soumis', { formData, files });
+      // Ici appel API
+      isComplete = false;
+    }
   };
+  const router = useRouter();
     const handleCancel = () => {
     router.push('/'); // <-- mettre le path de redirection ici
   };
@@ -131,6 +193,21 @@ const [formData, setFormData] = useState({
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-400 text-black"
                   placeholder="06 12 34 56 78"
+                />
+              </div>
+
+               <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                 email <span className="text-orange-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="email"
+                  required
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-400 text-black"
+                  placeholder="exemple@domaine.com"
                 />
               </div>
 

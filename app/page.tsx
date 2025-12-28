@@ -76,7 +76,7 @@ export default function Page() {
                 </p>
 
                 {/* Image R.jpeg */}
-                <div className="w-full flex items-center justify-center animate-rotate-in mt-4 -ml-2">
+                <div className="w-full flex items-center justify-center animate-rotate-in md:mt-4 md:-ml-9 md:-ml-10 ">
                   <Image
                     src="/images/R.jpeg"
                     alt="Carte de la France"
@@ -93,15 +93,20 @@ export default function Page() {
                 </div>
                 
                 {/* Boutons */}
-                <div className="flex justify-center gap-3 mt-4 sm:justify-start">
+                <div className="flex justify-center gap-3 mt-4 sm:justify-start ">
                   <Link href="/adherant/mission-page">
-                    <button className="w-28 h-14 sm:w-32 sm:h-12 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-lg transition-colors duration-200">
+                    <button className="w-28 h-14 sm:w-25 sm:h-12 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-lg transition-colors duration-200">
                       Devenir partenaire
                     </button>
                   </Link>
                   <Link href="/adherant/inscription-formulaire">
-                    <button className="w-28 h-14 sm:w-32 sm:h-12 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-lg transition-colors duration-200">
+                    <button className="w-28 h-14 sm:w-25 sm:h-12 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-lg transition-colors duration-200">
                       Adhérant
+                    </button>
+                  </Link>
+                  <Link href="/adherant/mission-page">
+                    <button className="w-28 h-14 sm:w-25 sm:h-12 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-lg transition-colors duration-200">
+                      Mission
                     </button>
                   </Link>
                 </div>
