@@ -9,12 +9,12 @@ import { Mission } from "@/app/data/missions";
 export default function NavBarClient() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  const hideNavbar = pathname === '/signin' || pathname.startsWith('/adherant/');
+  const hideNavbar = pathname === '/signin' || pathname.startsWith('/adherant')|| pathname.startsWith('/partenaire');
 
   if (hideNavbar) return null; // si page login, ne rien afficher
 
   return (
-    <nav className="relative inset-x-0 top-0 z-50 bg-slate-800 border-b border-orange-500/30 backdrop-blur-sm animate-slide-blur">
+<nav className="fixed inset-x-0 top-0 z-50 bg-slate-800 border-b border-orange-500/30 backdrop-blur-sm animate-slide-blur ">
       <style>{`
         @keyframes slide-blur {
           0% { transform: translateY(-20px); opacity: 0; filter: blur(6px); }
@@ -23,7 +23,7 @@ export default function NavBarClient() {
         .animate-slide-blur { animation: slide-blur 0.7s ease-out; }
       `}</style>
 
-      <div className="flex h-20 md:h-50 items-center justify-center px-4 md:px-8 relative">
+      <div className="flex h-20 md:h-50 items-center justify-center px-4 md:px-8 relative sm:-mb-0 lg:-mb-5 ">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 shrink-0 absolute left-4 md:left-8">
           <Image

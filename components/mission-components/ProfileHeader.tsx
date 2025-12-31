@@ -34,7 +34,7 @@ export default function ProfileHeader({
       />
 
       {/* Header amélioré */}
-      <header className="w-full bg-gradient-to-r from-black via-zinc-900 to-black border-b-2 border-orange-500 shadow-2xl sticky top-0 z-40">
+<header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex items-center gap-4">
             

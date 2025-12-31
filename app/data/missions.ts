@@ -3,6 +3,7 @@
 import { FaGasPump, FaLeaf, FaBolt } from "react-icons/fa";
 import { MdLocalGasStation } from "react-icons/md";
 import { FuelType } from "../type/fuelConfig";
+import { image } from "framer-motion/client";
 
 // Types de véhicules disponibles
 export type VehicleType = 
@@ -15,6 +16,29 @@ export type VehicleType =
   | "luxe"
   | "camionnette";
 
+
+  export type VehiculeCarburant = "Essence" | "Diesel" | "Hybride" | "Electrique";
+
+
+
+  export const vehiculeCarburantIcons: Record<VehiculeCarburant,{ image: string; label: string }> = {
+    Essence:{
+          label: "essence",
+          image:"/icons/vehicles/pompe.png"
+        },
+    Diesel: {
+      label: "diesel",
+      image:"/icons/vehicles/pompe.png"
+    },
+    Hybride: {
+      label: "hybride",
+      image:"/icons/vehicles/pompe.png"
+    },
+    Electrique: {
+      label: "electrique",
+      image:"/icons/vehicles/electriqueCar.png"  
+    }
+  }
 // Configuration des icônes pour chaque type de véhicule
 export const vehicleIcons: Record<VehicleType, { image: string; label: string; examples: string }> = {
   citadine: {
@@ -59,33 +83,6 @@ export const vehicleIcons: Record<VehicleType, { image: string; label: string; e
   }
 };
 
-// Configuration des icônes et couleurs pour chaque type de carburant
-export const fuelConfig: Record<FuelType, { 
-  IconType: React.ComponentType<{ size?: number; color?: string; className?: string }>;
-  color: string;
-  label: string;
-}> = {
-  Essence: {
-    IconType: FaGasPump,
-    color: "#ef4444", // rouge
-    label: "Essence"
-  },
-  Diesel: {
-    IconType: MdLocalGasStation,
-    color: "#3b82f6", // bleu
-    label: "Diesel"
-  },
-  Hybride: {
-    IconType: FaLeaf,
-    color: "#10b981", // vert
-    label: "Hybride"
-  },
-  Électrique: {
-    IconType: FaBolt,
-    color: "#8b5cf6", // violet
-    label: "Électrique"
-  }
-};
 
 export interface Mission {
   id: number;
@@ -110,7 +107,7 @@ export interface Mission {
 
   modeleVehicule: string;
   typeBoite: "Manuelle" | "Automatique";
-  typeCarburant: FuelType; // ✅ Utilise directement FuelType au lieu de dupliquer
+  typeCarburant: VehiculeCarburant; // ✅ Utilise directement FuelType au lieu de dupliquer
 
   tarifDepassementKm: number;
   tarifRetardHeure: number;
@@ -259,7 +256,7 @@ export const missionsData: Mission[] = [
     dateHeureExpiration: "2025-12-23T14:00:00",
     modeleVehicule: "BMW Série 3",
     typeBoite: "Automatique",
-    typeCarburant: "Diesel",
+    typeCarburant: "Electrique",
     tarifDepassementKm: 0.7,
     tarifRetardHeure: 35,
     tarifCarburant: "Inclus",

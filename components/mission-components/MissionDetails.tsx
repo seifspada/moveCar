@@ -1,12 +1,15 @@
 
 import React, { useState, useEffect } from "react";
 import { Mission } from "@/app/type/mission";
+import Image from "next/image";
 import { AlertCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import { Car, ChevronDown, Clock, Fuel, MapPin } from "lucide-react";
+import { VehiculeCarburant, vehiculeCarburantIcons } from "@/app/data/missions";
 
 // Composant Détails de Mission
  export default function MissionDetails({ mission, onBack, onReserve }: { mission: Mission; onBack: () => void; onReserve: () => void }) {
   const [timeRemaining, setTimeRemaining] = useState({ hours: 23, minutes: 45, seconds: 30 });
+  const fuelInfo = vehiculeCarburantIcons[mission.typeCarburant as VehiculeCarburant] || vehiculeCarburantIcons.Essence;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -30,8 +33,8 @@ import { Car, ChevronDown, Clock, Fuel, MapPin } from "lucide-react";
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+    <div className="min-h-screen bg-black  py-8 px-4">
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg border border-orange-500 overflow-hidden">
         
         <div className="bg-black text-white px-8 py-6">
           <h1 className="text-2xl font-bold">Mission de Transport</h1>
@@ -47,7 +50,6 @@ import { Car, ChevronDown, Clock, Fuel, MapPin } from "lucide-react";
             </h2>
             <div className="bg-gray-50 p-4 rounded border-l-4 border-orange-500">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600 font-medium">Entité</span>
                 <span className="text-gray-900 font-semibold text-lg">{mission.entite || "Non spécifié"}</span>
               </div>
             </div>
@@ -205,8 +207,13 @@ import { Car, ChevronDown, Clock, Fuel, MapPin } from "lucide-react";
                   </div>
                 </div>
                 <div className="flex items-center bg-white px-4 py-2 rounded-lg border border-gray-300">
-                  <Fuel className="text-gray-600 mr-2" size={20} />
-                  <span className="text-gray-700 font-medium">{mission.typeCarburant || "Diesel"}</span>
+                   <Image
+                      src={fuelInfo.image}
+                      alt={fuelInfo.label}
+                      width={60}
+                      height={60}
+                      className="object-contain w-full h-full"
+                    />
                 </div>
               </div>
             </div>
@@ -240,21 +247,23 @@ import { Car, ChevronDown, Clock, Fuel, MapPin } from "lucide-react";
 
           <section className="pt-4">
             <div className="flex flex-col sm:flex-row gap-4 items-center">
+
+               <button 
+                onClick={onBack}
+                className="w-full sm:w-auto bg-white hover:bg-gray-50 text-gray-700 font-semibold py-4 px-8 rounded-full border-2 border-gray-300 transition-colors duration-200 flex items-center justify-center"
+              >
+                <ArrowLeft className="mr-2" size={20} />
+                Retour
+              </button>
               <button 
                 onClick={onReserve}
-                className="w-full sm:flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 px-8 rounded-lg transition-colors duration-200 flex items-center justify-center group"
+                className="w-full sm:flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 px-8 rounded-full transition-colors duration-200 flex items-center justify-center group"
               >
                 <span className="text-lg">Réserver cette mission</span>
                 <ArrowRight className="ml-3 group-hover:translate-x-1 transition-transform" size={24} />
               </button>
               
-              <button 
-                onClick={onBack}
-                className="w-full sm:w-auto bg-white hover:bg-gray-50 text-gray-700 font-semibold py-4 px-8 rounded-lg border-2 border-gray-300 transition-colors duration-200 flex items-center justify-center"
-              >
-                <ArrowLeft className="mr-2" size={20} />
-                Retour
-              </button>
+             
             </div>
             
             <div className="mt-6 flex justify-center">

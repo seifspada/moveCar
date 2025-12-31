@@ -1,11 +1,33 @@
-"use client"; // ← Ajoute cette ligne en tout premier
+"use client";
 import { useState } from 'react';
-import { Upload, Camera, Calendar, FileText, IdCard, Truck, Link } from 'lucide-react';
-import router, { useRouter } from 'next/navigation';
+import { Upload, Camera, FileText, IdCard, CheckCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import CustomSelect from '@/app/components/customSelect';
+import NavFormulaire from '@/app/components/navFormulaire';
+import Stepper from '@/app/components/Stepper';
+
+type FormDataType = {
+  nom: string;
+  prenom: string;
+  dateNaissance: string;
+  email: string;
+  adresse: string;
+  telephone: string;
+  raisonSociale: string;
+  numeroPermis: string;
+  dateDelivrance: string;
+  typePermis: string;
+  immatriculation: string;
+  rcPro: string;
+  rcCirculation: string;
+};
 
 export default function AdherantFormulaire() {
-const [formData, setFormData] = useState({
-      nom: '',
+  const [currentStep, setCurrentStep] = useState(1); // État pour gérer l'étape actuelle
+  const [isSubmitted, setIsSubmitted] = useState(false); // État pour savoir si le formulaire est soumis
+  
+  const [formData, setFormData] = useState<FormDataType>({
+    nom: '',
     prenom: '',
     dateNaissance: '',
     email: '',
@@ -19,10 +41,10 @@ const [formData, setFormData] = useState({
     rcPro: '',
     rcCirculation: '',
   });
+
   const [showModal, setShowModal] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
 
-  // Gestion des fichiers
   const [files, setFiles] = useState({
     carteIdentite: null as File | null,
     permisRectoVerso: null as File | null,
@@ -43,13 +65,11 @@ const [formData, setFormData] = useState({
     }
   };
 
-   const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Vérification de tous les champs
+
     const missing: string[] = [];
-    
-    // Liste des champs texte à vérifier
+
     const textFields = [
       { value: formData.nom, label: 'Nom' },
       { value: formData.prenom, label: 'Prénom' },
@@ -61,19 +81,17 @@ const [formData, setFormData] = useState({
       { value: formData.dateDelivrance, label: 'Date de délivrance du permis' },
       { value: formData.typePermis, label: 'Type de permis' },
     ];
-    
-    // Vérifier les champs texte avec while
+
     let i = 0;
     while (i < textFields.length) {
       const field = textFields[i];
-      let checkEmpty = !field.value;
-      while (checkEmpty) {
+      if (!field.value) {
         missing.push(field.label);
-        checkEmpty = false;
       }
       i++;
     }
-     const fileFields = [
+
+    const fileFields = [
       { value: files.carteIdentite, label: 'Carte d\'identité' },
       { value: files.permisRectoVerso, label: 'Permis recto/verso' },
       { value: files.kbis, label: 'Kbis' },
@@ -82,51 +100,118 @@ const [formData, setFormData] = useState({
       { value: files.assuranceRcCirculation, label: 'Assurance RC circulation avec photo véhicule' },
       { value: files.casierJudiciaire, label: 'Extrait casier judiciaire' },
     ];
-    
-    // Vérifier les fichiers avec while
+
     let j = 0;
     while (j < fileFields.length) {
       const file = fileFields[j];
-      let checkFile = !file.value;
-      while (checkFile) {
+      if (!file.value) {
         missing.push(file.label);
-        checkFile = false;
       }
       j++;
     }
-    
+
     setMissingFields(missing);
     setShowModal(true);
-    
-    // Vérifier si le formulaire est complet
-    let isComplete = missing.length === 0;
-    while (isComplete) {
+
+    if (missing.length === 0) {
       console.log('Formulaire complet soumis', { formData, files });
       // Ici appel API
-      isComplete = false;
+      // Après succès de l'API, passer à l'étape 2
+      setIsSubmitted(true);
+      setCurrentStep(2);
     }
   };
+
   const router = useRouter();
-    const handleCancel = () => {
-    router.push('/'); // <-- mettre le path de redirection ici
+  const handleCancel = () => {
+    router.push('/');
   };
 
+  // Si le formulaire est soumis, afficher la page de confirmation
+  if (isSubmitted) {
+    return (
+      <>
+        <NavFormulaire />
+        <div className="min-h-screen bg-black py-12 px-4">
+          <div className="max-w-4xl mx-auto">
+            <Stepper currentStep={2} />
+            
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden mt-8">
+              <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-6">
+                <h2 className="text-2xl font-semibold flex items-center gap-3">
+                  <CheckCircle className="w-8 h-8" />
+                  Demande envoyée avec succès
+                </h2>
+              </div>
+
+              <div className="p-8">
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle className="w-12 h-12 text-green-600" />
+                  </div>
+                  
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                    Votre demande d'adhésion a été envoyée !
+                  </h3>
+                  
+                  <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+                    Nous avons bien reçu votre demande d'inscription. Notre équipe va examiner votre dossier 
+                    et vous recevrez une réponse par email à l'adresse <strong>{formData.email}</strong> dans les plus brefs délais.
+                  </p>
+
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-8 max-w-2xl mx-auto">
+                    <h4 className="font-semibold text-orange-900 mb-3">Prochaines étapes :</h4>
+                    <ul className="text-left text-gray-700 space-y-2">
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">1.</span>
+                        <span>Vérification de votre dossier par notre équipe (24-48h)</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">2.</span>
+                        <span>Vous recevrez un email de confirmation si votre demande est acceptée</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">3.</span>
+                        <span>Création de votre compte et accès à la plateforme</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-6 mb-8 max-w-2xl mx-auto">
+                    <h4 className="font-semibold text-gray-900 mb-3">Récapitulatif de votre demande :</h4>
+                    <div className="text-left text-sm text-gray-600 space-y-2">
+                      <p><strong>Nom :</strong> {formData.nom} {formData.prenom}</p>
+                      <p><strong>Email :</strong> {formData.email}</p>
+                      <p><strong>Téléphone :</strong> {formData.telephone}</p>
+                      <p><strong>Raison sociale :</strong> {formData.raisonSociale}</p>
+                      <p><strong>Date de soumission :</strong> {new Date().toLocaleDateString('fr-FR')}</p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => router.push('/')}
+                    className="px-10 py-4 bg-gradient-to-r from-orange-600 to-orange-800 text-white rounded-full font-semibold hover:from-orange-700 hover:to-orange-900 transition-colors"
+                  >
+                    Retour à l'accueil
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Affichage du formulaire (étape 1)
   return (
     <>
-      <div className="min-h-screen bg-gray-50 py-12 px-4">
+      <NavFormulaire />
+      <div className="min-h-screen bg-black py-12 px-4">
         <div className="max-w-4xl mx-auto">
-          {/* En-tête */}
-          <div className="text-center mb-10">
-            <div className="flex justify-center items-center gap-4 mb-6">
-              <Truck className="w-12 h-12 text-orange-500" />
-              <h1 className="text-4xl font-bold text-orange-900">
-                Inscription Adhérent Convoyeur
-              </h1>
-            </div>
-            <p className="text-gray-600 text-lg">Tous les champs marqués d'une étoile (*) sont obligatoires</p>
-          </div>
+          <Stepper currentStep={currentStep} />
 
-          <form onSubmit={onSubmit} className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div onSubmit={onSubmit} className="bg-white rounded-2xl shadow-xl overflow-hidden pt-15">
             <div className="bg-gradient-to-r from-orange-800 to-orange-600 text-white p-6">
               <h2 className="text-2xl font-semibold flex items-center gap-3">
                 <IdCard className="w-8 h-8" />
@@ -135,115 +220,113 @@ const [formData, setFormData] = useState({
             </div>
 
             <div className="p-8 space-y-8">
-              {/* Informations personnelles */}
               <div className="grid md:grid-cols-2 gap-6">
-                 <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nom <span className="text-orange-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="nom"
-                  required
-                  value={formData.nom}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-400 text-black"
-                  placeholder="DUPONT"
-                />
-              </div>
-
-                 <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Prénom <span className="text-orange-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="prenom"
-                  required
-                  value={formData.prenom}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-400 text-black"
-                  placeholder="Jean"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nom <span className="text-orange-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="nom"
+                    required
+                    value={formData.nom}
+                    onChange={handleInputChange}
+                    className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black"
+                    placeholder="DUPONT"
+                  />
+                </div>
 
                 <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Date de naissance <span className="text-orange-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  name="dateNaissance"
-                  required
-                  value={formData.dateNaissance}
-                  onChange={handleInputChange}
-                  className=" w-[95%]   sm:w-full px-4 sm:px-2 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-black" 
-                  placeholder="JJ/MM/AAAA"
-                />
-              </div>
-                  <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Téléphone <span className="text-orange-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  name="telephone"
-                  required
-                  value={formData.telephone}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-400 text-black"
-                  placeholder="06 12 34 56 78"
-                />
-              </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Prénom <span className="text-orange-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="prenom"
+                    required
+                    value={formData.prenom}
+                    onChange={handleInputChange}
+                    className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black"
+                    placeholder="Jean"
+                  />
+                </div>
 
-               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                 email <span className="text-orange-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="email"
-                  required
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-400 text-black"
-                  placeholder="exemple@domaine.com"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Date de naissance <span className="text-orange-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="dateNaissance"
+                    required
+                    value={formData.dateNaissance}
+                    onChange={handleInputChange}
+                    className="w-[95%] sm:w-full px-4 sm:px-2 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-black"
+                    placeholder="JJ/MM/AAAA"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Téléphone <span className="text-orange-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    name="telephone"
+                    required
+                    value={formData.telephone}
+                    onChange={handleInputChange}
+                    className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black"
+                    placeholder="06 12 34 56 78"
+                  />
+                </div>
 
                 <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Adresse complète <span className="text-orange-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="adresse"
-                  required
-                  value={formData.adresse}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-400 text-black"
-                  placeholder="12 rue des Lilas, 75001 Paris"
-                />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email <span className="text-orange-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black"
+                    placeholder="exemple@domaine.com"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Adresse complète <span className="text-orange-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="adresse"
+                    required
+                    value={formData.adresse}
+                    onChange={handleInputChange}
+                    className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black"
+                    placeholder="12 rue des Lilas, 75001 Paris"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Raison sociale / Numéro Kbis <span className="text-orange-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="raisonSociale"
+                    required
+                    value={formData.raisonSociale}
+                    onChange={handleInputChange}
+                    className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black"
+                    placeholder="SARL TRANSPORT EXPRESS - SIRET 123 456 789 00012"
+                  />
+                </div>
               </div>
 
-                 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Raison sociale / Numéro Kbis <span className="text-orange-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="raisonSociale"
-                  required
-                  value={formData.raisonSociale}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-400 text-black"
-                  placeholder="SARL TRANSPORT EXPRESS - SIRET 123 456 789 00012"
-                />
-              </div>
-              </div>
-
-              {/* Permis de conduire */}
               <div className="bg-orange-50 rounded-xl p-6 border border-orange-200">
                 <h3 className="text-xl font-semibold text-orange-800 mb-5 flex items-center gap-3">
                   <FileText className="w-7 h-7" />
@@ -261,7 +344,8 @@ const [formData, setFormData] = useState({
                       required
                       value={formData.numeroPermis}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none  focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400 text-black"
+                      className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-600 text-black"
+                      placeholder="Ex: AB-123-CD"
                     />
                   </div>
 
@@ -275,35 +359,32 @@ const [formData, setFormData] = useState({
                       required
                       value={formData.dateDelivrance}
                       onChange={handleInputChange}
-                      className=" w-[93%]   sm:w-full px-4 sm:px-2 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2  focus:border-orange-500 text-black" />
+                      className="w-[93%] sm:w-full px-4 sm:px-2 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:border-orange-500 text-black"
+                    />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Type de permis <span className="text-orange-500">*</span>
                     </label>
-                    <select
-                      name="typePermis"
-                      required
+                    <CustomSelect
                       value={formData.typePermis}
-                      onChange={(e) => setFormData({ ...formData, typePermis: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400 text-black"
-                    >
-                      <option value="">Sélectionner</option>
-                      <option value="C">C (Poids lourd)</option>
-                      <option value="CE">CE (Remorque)</option>
-                      <option value="D">D (Transport de personnes)</option>
-                    </select>
+                      onChange={(val) => setFormData({ ...formData, typePermis: String(val) })}
+                      options={[
+                        { value: "C", label: "C (Poids lourd)" },
+                        { value: "CE", label: "CE (Remorque)" },
+                        { value: "D", label: "D (Transport de personnes)" },
+                      ]}
+                    />
                   </div>
                 </div>
 
-                {/* Photo permis recto/verso */}
                 <div className="mt-6">
                   <label className="block text-sm font-medium text-gray-700 mb-3">
                     Permis de conduire recto/verso <span className="text-orange-500">*</span>
                   </label>
                   <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-orange-400 rounded-xl cursor-pointer bg-orange-50 hover:bg-orange-100 transition">
+                    <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-orange-400 rounded-full cursor-pointer bg-orange-50 hover:bg-orange-100 transition">
                       <Camera className="w-12 h-12 text-orange-600" />
                       <span className="mt-2 text-sm text-orange-700">Prendre une photo ou importer</span>
                       <input
@@ -321,7 +402,6 @@ const [formData, setFormData] = useState({
                 </div>
               </div>
 
-              {/* Documents à uploader */}
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold text-orange-900 flex items-center gap-3">
                   <Upload className="w-7 h-7" />
@@ -330,7 +410,7 @@ const [formData, setFormData] = useState({
 
                 <div className="grid md:grid-cols-2 gap-6">
                   {[
-                    { key: 'carteIdentite', label: 'Carte d’identité valide' },
+                    { key: 'carteIdentite', label: 'Carte d\'identité valide' },
                     { key: 'kbis', label: 'Kbis (moins de 3 mois)' },
                     { key: 'rib', label: 'RIB (IBAN)' },
                     { key: 'assuranceRcPro', label: 'Assurance RC PRO' },
@@ -340,7 +420,7 @@ const [formData, setFormData] = useState({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         {doc.label} <span className="text-orange-500">*</span>
                       </label>
-                      <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-orange-400 rounded-xl cursor-pointer bg-orange-50 hover:bg-orange-100 transition">
+                      <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-orange-400 rounded-full cursor-pointer bg-orange-50 hover:bg-orange-100 transition">
                         <div className="text-center">
                           <Upload className="mx-auto w-10 h-10 text-orange-600" />
                           <span className="mt-2 block text-sm text-orange-700">Cliquer pour uploader</span>
@@ -361,12 +441,11 @@ const [formData, setFormData] = useState({
                     </div>
                   ))}
 
-                  {/* Assurance RC Circulation avec photo véhicule */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Assurance RC circulation (photo avec MT visible) <span className="text-orange-500">*</span>
                     </label>
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-orange-400 rounded-xl cursor-pointer bg-orange-50 hover:bg-orange-100">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-orange-400 rounded-full cursor-pointer bg-orange-50 hover:bg-orange-100">
                       <Camera className="w-10 h-10 text-orange-600" />
                       <span className="mt-2 text-sm text-orange-700">Prendre photo du véhicule assuré</span>
                       <input
@@ -385,26 +464,62 @@ const [formData, setFormData] = useState({
                 </div>
               </div>
 
-              {/* Boutons */}
-              <div className="flex justify-end gap-4 pt-8">
+              <div className="flex justify-center gap-4 pt-8">
                 <button
                   type="button"
-                   onClick={handleCancel}
-                  className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-lg focus:outline-none font-medium hover:bg-gray-50 transition"
+                  onClick={handleCancel}
+                  className="px-10 py-4 bg-gradient-to-r from-orange-600 to-orange-800 text-white rounded-full focus:outline-none font-semibold hover:bg-black hover:from-black hover:to-black transition-colors"
                 >
-                  Annuler
+                  Retour
                 </button>
                 <button
-                  type="submit"
-                  className="px-10 py-4 bg-gradient-to-r from-orange-600 to-orange-800 text-white rounded-lg focus:outline-none font-semibold hover:from-orange-700 hover:to-orange-900 shadow-lg transform hover:scale-105 transition"
+                  type="button"
+                  onClick={onSubmit}
+                  className="px-10 py-4 bg-gradient-to-r from-orange-600 to-orange-800 text-white rounded-full focus:outline-none font-semibold hover:bg-green-600 hover:from-green-600 hover:to-green-600 transition-colors"
                 >
-                  Valider l'inscription
+                  Envoyer la demande
                 </button>
               </div>
             </div>
-          </form>
+          </div>
         </div>
       </div>
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+              {missingFields.length === 0 ? '✓ Formulaire validé' : '⚠ Champs manquants'}
+            </h3>
+
+            {missingFields.length === 0 ? (
+              <div className="bg-green-50 p-6 rounded-lg text-center border border-green-200">
+                <p className="text-green-600 text-lg font-semibold mb-2">
+                  Votre inscription a été soumise avec succès!
+                </p>
+                <p className="text-green-700 text-sm">
+                  Nous avons envoyé la réponse de votre demande par e-mail.
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-gray-700 mb-4">Veuillez remplir les champs suivants:</p>
+                <ul className="list-disc list-inside text-red-600 mb-6 space-y-1">
+                  {missingFields.map((field, idx) => (
+                    <li key={idx}>{field}</li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            <button
+              onClick={() => setShowModal(false)}
+              className="w-full py-3 bg-orange-600 text-white rounded-full hover:bg-orange-700 transition font-semibold"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

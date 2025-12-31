@@ -43,11 +43,11 @@ export default function SidebarAdherant({
         }`}
       >
         {/* Header avec logo */}
-        <div className="h-24 flex items-center justify-between px-6 border-b-2 border-orange-500 bg-gradient-to-r from-zinc-900 to-black">
+<div className="h-30 flex items-center justify-between px-6 border-b border-orange-500/30 bg-slate-800">
             <div onClick={handleLogoClick}  className="flex items-center gap-3">
 
               <Image
-              src="/images/R.jpeg"
+              src="/images/R-bg.png"
               alt="Logo"
               width={150}
               height={150}
@@ -100,12 +100,12 @@ export default function SidebarAdherant({
         }`}
       >
         {/* Header */}
-        <div className="h-24 flex items-center justify-between px-6 border-b-2 border-orange-500 bg-gradient-to-r from-zinc-900 to-black">
+        <div className="h-26 flex items-center justify-between px-6 border-b border-orange-500/30 bg-slate-800">
           <div className="flex items-center gap-3">
              <div onClick={handleLogoClick}  className="flex items-center gap-3">
 
               <Image
-              src="/images/R.jpeg"
+              src="/images/R-bg.png"
               alt="Logo"
               width={150}
               height={150}
