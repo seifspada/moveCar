@@ -6,6 +6,7 @@ import Image from "next/image";
 import { FaUserCircle } from "react-icons/fa";
 import { usePathname } from "next/navigation";
 import { Mission } from "@/app/data/missions";
+import LanguageSelector from "./LanguageSelector";
 export default function NavBarClient() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
@@ -43,7 +44,9 @@ export default function NavBarClient() {
           <Link href="/services" className="text-lg font-medium text-gray-100 hover:text-orange-500 transition-colors">Services</Link>
           <Link href="/contact" className="text-lg font-medium text-gray-100 hover:text-orange-500 transition-colors">Contact</Link>
         </div>
-
+<div className="absolute right-1/6 -translate-x-1/2 hidden md:flex">
+  <LanguageSelector />
+</div>
         {/* Right side : Connexion */}
         <div className="hidden md:flex absolute right-4 md:right-8 items-center gap-4">
           <Link href="/signin" className="flex items-center gap-2 text-gray-100 hover:text-orange-500 transition-colors">
