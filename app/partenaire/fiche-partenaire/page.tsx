@@ -2,6 +2,7 @@
 "use client";
 import { useState } from 'react';
 import { UserPlus, CheckCircle2, Building2, Calendar, Phone, Video, CalendarClock } from 'lucide-react';
+import NavFormulaire from '@/app/components/navFormulaire';
 
 type FormData = {
   nom: string;
@@ -13,6 +14,8 @@ type FormData = {
   nombreAgences: string;
   typeRdv: string;
   dateRdv: string;
+  heureDebut?: string;
+  heureFin?: string;
 };
 
 export default function FichePartenaireContact() {
@@ -25,7 +28,9 @@ export default function FichePartenaireContact() {
     nombreDeplacements: '',
     nombreAgences: '',
     typeRdv: '',
-    dateRdv: ''
+    dateRdv: '',
+    heureDebut: '',
+    heureFin: ''
   });
 
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -56,16 +61,19 @@ export default function FichePartenaireContact() {
       { value: formData.nombreAgences, label: 'Nombre d\'agences' },
       { value: formData.typeRdv, label: 'Type de rendez-vous' },
       { value: formData.dateRdv, label: 'Date du rendez-vous' },
+      { value: formData.heureDebut, label: 'Heure de début' },
+      { value: formData.heureFin, label: 'Heure de fin' },
     ];
 
-    let i = 0;
-    while (i < fields.length) {
-      const field = fields[i];
-      if (!field.value.trim()) {
-        missing.push(field.label);
-      }
-      i++;
-    }
+   let i = 0;
+while (i < fields.length) {
+  const field = fields[i];
+  if (!field.value?.trim()) { // ✅ ajoute le ?
+    missing.push(field.label);
+  }
+  i++;
+}
+
 
     // Validation email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -100,7 +108,9 @@ export default function FichePartenaireContact() {
       nombreDeplacements: '',
       nombreAgences: '',
       typeRdv: '',
-      dateRdv: ''
+      dateRdv: '',
+      heureDebut: '',
+      heureFin: ''
     });
     setShowCalendar(false);
   };
@@ -108,8 +118,11 @@ export default function FichePartenaireContact() {
   // Page de confirmation après soumission
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-100 py-12 px-4">
-        <div className="max-w-3xl mx-auto">
+      
+      <div className="min-h-screen bg-black py-12 px-4">
+                <NavFormulaire />
+
+        <div className="max-w-3xl   pt-25 mx-auto">
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-6">
               <h2 className="text-2xl font-semibold flex items-center gap-3">
@@ -184,7 +197,9 @@ export default function FichePartenaireContact() {
   // Formulaire de premier contact
   return (
     <div className="min-h-screen bg-black py-12 px-4">
-      <div className="max-w-3xl mx-auto">
+
+        <NavFormulaire />
+      <div className="max-w-3xl mx-auto pt-25">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="bg-gradient-to-r from-orange-800 to-orange-600 text-white p-6">
             <h2 className="text-2xl font-semibold flex items-center gap-3">
@@ -288,7 +303,7 @@ export default function FichePartenaireContact() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nombre de déplacements par mois <span className="text-orange-500">*</span>
+                      Nombre de déplacements par mois 
                     </label>
                     <input
                       type="number"
@@ -302,7 +317,7 @@ export default function FichePartenaireContact() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nombre d'agences <span className="text-orange-500">*</span>
+                      Nombre d'agences 
                     </label>
                     <input
                       type="number"
@@ -365,24 +380,55 @@ export default function FichePartenaireContact() {
                     </div>
                   </div>
 
-                  {showCalendar && (
-                    <div className="animate-fadeIn">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Date du rendez-vous <span className="text-orange-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        name="dateRdv"
-                        value={formData.dateRdv}
-                        onChange={handleInputChange}
-                        min={new Date().toISOString().split('T')[0]}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
-                      />
-                      <p className="mt-2 text-sm text-gray-600">
-                        Notre équipe vous contactera pour confirmer ce créneau
-                      </p>
-                    </div>
-                  )}
+               {showCalendar && (
+  <div className="animate-fadeIn space-y-4">
+    {/* Date du rendez-vous */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Date du rendez-vous <span className="text-orange-500">*</span>
+      </label>
+      <input
+        type="date"
+        name="dateRdv"
+        value={formData.dateRdv}
+        onChange={handleInputChange}
+        min={new Date().toISOString().split('T')[0]}
+        className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
+      />
+      <p className="mt-2 text-sm text-gray-600">
+        Notre équipe vous contactera pour confirmer ce créneau
+      </p>
+    </div>
+
+    {/* Plage horaire */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Plage horaire du rendez-vous
+      </label>
+      <div className="flex gap-2">
+        <input
+          type="time"
+          name="heureDebut"
+          value={formData.heureDebut || ""}
+          onChange={handleInputChange}
+          className="w-1/2 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
+        />
+        <span className="flex items-center text-gray-500">à</span>
+        <input
+          type="time"
+          name="heureFin"
+          value={formData.heureFin || ""}
+          onChange={handleInputChange}
+          className="w-1/2 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
+        />
+      </div>
+      <p className="mt-2 text-sm text-gray-600">
+        Précisez la plage horaire souhaitée pour ce rendez-vous
+      </p>
+    </div>
+  </div>
+)}
+
                 </div>
               </div>
 
@@ -397,7 +443,7 @@ export default function FichePartenaireContact() {
                 <button
                   type="button"
                   onClick={onSubmit}
-                  className="flex-1 bg-gradient-to-r from-orange-600 to-orange-800 text-white font-semibold py-3.5 px-6 rounded-full hover:from-orange-700 hover:to-orange-900 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="flex-1 bg-gradient-to-r from-orange-600 to-orange-800 text-white font-semibold py-3.5 px-6 rounded-full hover:from-green-700 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   Envoyer la demande
                 </button>

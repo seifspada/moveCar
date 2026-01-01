@@ -4,22 +4,7 @@
 import { X, MapPin, Bell } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { createPortal } from "react-dom";
-import useSWR from "swr";
-
-interface Commune {
-  nom: string;
-  centre?: {
-    coordinates: [number, number]; // GeoJSON format: [lon, lat]
-  };
-  codesPostaux?: string[];
-}
-
-interface SelectedCity {
-  name: string;
-  lat: number;
-  lon: number;
-}
+import { CityAutocomplete, type SelectedCity } from "./CityAutocomplete";
 
 interface SearchPositionProps {
   isOpen: boolean;
@@ -39,57 +24,11 @@ const MapComponent = dynamic(() => import("./MapComponent").then(mod => mod.defa
 
 export function SearchPosition({ isOpen, onClose, onSearch }: SearchPositionProps) {
   const [inputValue, setInputValue] = useState("");
-  const [debouncedInput, setDebouncedInput] = useState("");
   const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
   const [radius, setRadius] = useState(50);
   const [alertActive, setAlertActive] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   
   const modalRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
-
-  // Debounce input pour éviter trop de requêtes API
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedInput(inputValue);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [inputValue]);
-
-  // Fetch des suggestions (max 5) via SWR pour le cache
-  const { data: suggestions = [], isLoading } = useSWR<Commune[]>(
-    debouncedInput.length >= 2
-      ? `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(debouncedInput)}&fields=nom,centre,codesPostaux&format=geojson&limit=5`
-      : null,
-    async (url) => {
-      const res = await fetch(url);
-      if (!res.ok) return [];
-      const geojson = await res.json();
-      
-      return geojson.features?.map((feature: any) => ({
-        nom: feature.properties.nom,
-        centre: feature.geometry,
-        codesPostaux: feature.properties.codesPostaux
-      })) || [];
-    },
-    { revalidateOnFocus: false }
-  );
-
-  const handleSelectCity = useCallback((commune: Commune) => {
-    if (!commune.centre || !commune.centre.coordinates) return;
-    
-    const [lon, lat] = commune.centre.coordinates;
-    
-    if (typeof lon !== 'number' || typeof lat !== 'number' || isNaN(lon) || isNaN(lat)) return;
-    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return;
-    
-    // Mise à jour de la ville sélectionnée - la carte se mettra à jour automatiquement
-    setSelectedCity({ name: commune.nom, lat, lon });
-    setInputValue(commune.nom);
-    setShowSuggestions(false);
-  }, []);
 
   const handleSearch = useCallback(() => {
     if (!selectedCity) return;
@@ -101,51 +40,21 @@ export function SearchPosition({ isOpen, onClose, onSearch }: SearchPositionProp
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        if (showSuggestions) {
-          setShowSuggestions(false);
-        } else {
-          onClose();
-        }
+        onClose();
       }
     };
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, showSuggestions, onClose]);
-
-  // Click outside to close suggestions
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        suggestionsRef.current && 
-        !suggestionsRef.current.contains(e.target as Node) &&
-        inputRef.current &&
-        !inputRef.current.contains(e.target as Node)
-      ) {
-        setShowSuggestions(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isOpen, onClose]);
 
   // Reset quand le modal ferme
   useEffect(() => {
     if (!isOpen) {
       setInputValue("");
-      setDebouncedInput("");
       setSelectedCity(null);
       setRadius(50);
       setAlertActive(false);
-      setShowSuggestions(false);
-    }
-  }, [isOpen]);
-
-  // Focus input when modal opens
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
 
@@ -179,68 +88,17 @@ export function SearchPosition({ isOpen, onClose, onSearch }: SearchPositionProp
 
         {/* Contenu */}
         <div className="space-y-6">
-          {/* Ville avec autocomplete */}
-          <div className="relative">
-            <label 
-              className="block text-sm font-medium text-gray-300 mb-2"
-            >
-              Ville
-            </label>
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={(e) => {
-                setInputValue(e.target.value);
-                if (selectedCity) setSelectedCity(null);
-                setShowSuggestions(true);
-              }}
-              onFocus={() => inputValue.length >= 2 && setShowSuggestions(true)}
-              placeholder="Entrez votre ville (min. 2 caractères)"
-              className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-            
-            {/* Portal pour les suggestions - identique à SearchFilter */}
-            {showSuggestions && inputValue.length >= 2 &&
-              createPortal(
-                <div 
-                  ref={suggestionsRef}
-                  className="absolute z-50 w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                  style={{
-                    top: inputRef.current?.getBoundingClientRect().bottom,
-                    left: inputRef.current?.getBoundingClientRect().left,
-                    width: inputRef.current?.offsetWidth,
-                  }}
-                >
-                  {isLoading ? (
-                    <div className="px-4 py-3 text-gray-400">
-                      Chargement...
-                    </div>
-                  ) : suggestions.length === 0 ? (
-                    <div className="px-4 py-3 text-gray-400">
-                      Aucun résultat
-                    </div>
-                  ) : (
-                    suggestions.map((commune, idx) => (
-                      <button
-                        key={`${commune.nom}-${idx}`}
-                        onClick={() => handleSelectCity(commune)}
-                        className="w-full px-4 py-3 text-left text-white hover:bg-zinc-700 transition-colors"
-                      >
-                        {commune.nom}
-                        {commune.codesPostaux?.[0] && (
-                          <span className="text-gray-400 text-sm ml-2">
-                            ({commune.codesPostaux[0]})
-                          </span>
-                        )}
-                      </button>
-                    ))
-                  )}
-                </div>,
-                document.body
-              )
-            }
-          </div>
+          {/* Ville avec autocomplete - Composant réutilisable */}
+          <CityAutocomplete
+            value={inputValue}
+            onValueChange={setInputValue}
+            selectedCity={selectedCity}
+            onSelectCity={setSelectedCity}
+            theme="dark" // ou ne pas spécifier (dark par défaut)
+
+            placeholder="Entrez votre ville (min. 2 caractères)"
+            label="Ville"
+          />
 
           {/* Map - Affiche la France par défaut, puis la ville sélectionnée */}
           <div className="h-96 rounded-lg overflow-hidden border border-zinc-700">

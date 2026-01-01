@@ -5,6 +5,7 @@ import { Mission, missionsData } from '@/app/data/missions';
 import MissionDetails from '@/components/mission-components/MissionDetails';
 import ProfileHeader from '@/components/mission-components/ProfileHeader';
 import { useMemo, useState } from 'react';
+import SidebarAdherant from '@/app/components/sideBarAdherant';
 export default function Page() {
   const router = useRouter();
   const params = useParams();          // 👈 correct
@@ -46,6 +47,15 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-black">
       {/* Header en plein largeur - reste en haut */}
+
+       {/* Sidebar Component */}
+            <SidebarAdherant
+              isMobileMenuOpen={isMobileMenuOpen}
+              onMobileMenuToggle={toggleMobileMenu}
+              isDesktopMenuOpen={isDesktopMenuOpen}
+              onDesktopMenuToggle={toggleDesktopMenu}
+            />
+                  
       <ProfileHeader
         isMobileMenuOpen={isMobileMenuOpen}
         isDesktopMenuOpen={isDesktopMenuOpen}

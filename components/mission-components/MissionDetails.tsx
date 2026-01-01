@@ -236,7 +236,7 @@ import { VehiculeCarburant, vehiculeCarburantIcons } from "@/app/data/missions";
                 {conditions.map((condition, index) => (
                   <li key={index} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-0">
                     <span className="text-gray-700">{condition.label}</span>
-                    <span className="font-semibold text-gray-900">{condition.valeur}</span>
+                    <span className="font-semibold text-gray-900 text-sm">{condition.valeur}</span>
                   </li>
                 ))}
               </ul>

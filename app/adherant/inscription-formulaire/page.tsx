@@ -5,15 +5,19 @@ import { useRouter } from 'next/navigation';
 import CustomSelect from '@/app/components/customSelect';
 import NavFormulaire from '@/app/components/navFormulaire';
 import Stepper from '@/app/components/Stepper';
+import { CityAutocomplete, SelectedCity } from '@/components/mission-components/CityAutocomplete';
 
 type FormDataType = {
   nom: string;
   prenom: string;
   dateNaissance: string;
   email: string;
+  confirmEmail: string;
+  ville: string;
   adresse: string;
   telephone: string;
   raisonSociale: string;
+  numeroKbis: string;
   numeroPermis: string;
   dateDelivrance: string;
   typePermis: string;
@@ -23,17 +27,22 @@ type FormDataType = {
 };
 
 export default function AdherantFormulaire() {
-  const [currentStep, setCurrentStep] = useState(1); // État pour gérer l'étape actuelle
-  const [isSubmitted, setIsSubmitted] = useState(false); // État pour savoir si le formulaire est soumis
-  
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
+
   const [formData, setFormData] = useState<FormDataType>({
     nom: '',
     prenom: '',
     dateNaissance: '',
     email: '',
+    confirmEmail: '',
+    ville: '',
     adresse: '',
     telephone: '',
     raisonSociale: '',
+    numeroKbis: '',
     numeroPermis: '',
     dateDelivrance: '',
     typePermis: '',
@@ -59,6 +68,12 @@ export default function AdherantFormulaire() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Gestion de la sélection de ville avec synchronisation
+  const handleCitySelect = (city: SelectedCity | null) => {
+    setSelectedCity(city);
+    setFormData({ ...formData, ville: city?.name || '' });
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
     if (e.target.files?.[0]) {
       setFiles({ ...files, [key]: e.target.files[0] });
@@ -75,8 +90,12 @@ export default function AdherantFormulaire() {
       { value: formData.prenom, label: 'Prénom' },
       { value: formData.dateNaissance, label: 'Date de naissance' },
       { value: formData.email, label: 'Email' },
+      { value: formData.confirmEmail, label: 'Confirmation Email' },
+      { value: formData.ville, label: 'Ville' },
       { value: formData.adresse, label: 'Adresse complète' },
-      { value: formData.raisonSociale, label: 'Raison sociale / Numéro Kbis' },
+      { value: formData.telephone, label: 'Téléphone' },
+      { value: formData.raisonSociale, label: 'Raison sociale' },
+      { value: formData.numeroKbis, label: 'Numéro Kbis' },
       { value: formData.numeroPermis, label: 'Numéro de permis' },
       { value: formData.dateDelivrance, label: 'Date de délivrance du permis' },
       { value: formData.typePermis, label: 'Type de permis' },
@@ -115,8 +134,6 @@ export default function AdherantFormulaire() {
 
     if (missing.length === 0) {
       console.log('Formulaire complet soumis', { formData, files });
-      // Ici appel API
-      // Après succès de l'API, passer à l'étape 2
       setIsSubmitted(true);
       setCurrentStep(2);
     }
@@ -135,7 +152,7 @@ export default function AdherantFormulaire() {
         <div className="min-h-screen bg-black py-12 px-4">
           <div className="max-w-4xl mx-auto">
             <Stepper currentStep={2} />
-            
+
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden mt-8">
               <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-6">
                 <h2 className="text-2xl font-semibold flex items-center gap-3">
@@ -149,13 +166,13 @@ export default function AdherantFormulaire() {
                   <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <CheckCircle className="w-12 h-12 text-green-600" />
                   </div>
-                  
+
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">
                     Votre demande d'adhésion a été envoyée !
                   </h3>
-                  
+
                   <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                    Nous avons bien reçu votre demande d'inscription. Notre équipe va examiner votre dossier 
+                    Nous avons bien reçu votre demande d'inscription. Notre équipe va examiner votre dossier
                     et vous recevrez une réponse par email à l'adresse <strong>{formData.email}</strong> dans les plus brefs délais.
                   </p>
 
@@ -183,6 +200,7 @@ export default function AdherantFormulaire() {
                       <p><strong>Nom :</strong> {formData.nom} {formData.prenom}</p>
                       <p><strong>Email :</strong> {formData.email}</p>
                       <p><strong>Téléphone :</strong> {formData.telephone}</p>
+                      <p><strong>Ville :</strong> {formData.ville}</p>
                       <p><strong>Raison sociale :</strong> {formData.raisonSociale}</p>
                       <p><strong>Date de soumission :</strong> {new Date().toLocaleDateString('fr-FR')}</p>
                     </div>
@@ -261,7 +279,7 @@ export default function AdherantFormulaire() {
                     required
                     value={formData.dateNaissance}
                     onChange={handleInputChange}
-                    className="w-[95%] sm:w-full px-4 sm:px-2 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-black"
+                    className="w-[95%] sm:w-full px-4 sm:px-2 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-black"
                     placeholder="JJ/MM/AAAA"
                   />
                 </div>
@@ -281,22 +299,7 @@ export default function AdherantFormulaire() {
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email <span className="text-orange-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black"
-                    placeholder="exemple@domaine.com"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Adresse complète <span className="text-orange-500">*</span>
                   </label>
@@ -311,9 +314,53 @@ export default function AdherantFormulaire() {
                   />
                 </div>
 
-                <div className="md:col-span-2">
+                {/* CityAutocomplete avec synchronisation */}
+                <div>
+                  <CityAutocomplete
+                    value={inputValue}
+                    onValueChange={setInputValue}
+                    selectedCity={selectedCity}
+                    onSelectCity={handleCitySelect}
+                    theme="light"
+                    placeholder="Entrez votre ville (min. 2 caractères)"
+                    label="Ville"
+                  />
+                  <span className="text-orange-500 text-sm ml-2">*</span>
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Raison sociale / Numéro Kbis <span className="text-orange-500">*</span>
+                    Email <span className="text-orange-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black"
+                    placeholder="exemple@domaine.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Confirmer e-mail <span className="text-orange-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="confirmEmail"
+                    required
+                    value={formData.confirmEmail}
+                    onChange={handleInputChange}
+                    className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black"
+                    placeholder="Confirmez votre e-mail"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Raison sociale <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -322,7 +369,22 @@ export default function AdherantFormulaire() {
                     value={formData.raisonSociale}
                     onChange={handleInputChange}
                     className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black"
-                    placeholder="SARL TRANSPORT EXPRESS - SIRET 123 456 789 00012"
+                    placeholder="SARL TRANSPORT EXPRESS"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Numéro Kbis <span className="text-orange-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="numeroKbis"
+                    required
+                    value={formData.numeroKbis}
+                    onChange={handleInputChange}
+                    className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black"
+                    placeholder="123 456 789 00012"
                   />
                 </div>
               </div>
@@ -371,9 +433,12 @@ export default function AdherantFormulaire() {
                       value={formData.typePermis}
                       onChange={(val) => setFormData({ ...formData, typePermis: String(val) })}
                       options={[
+                        { value: "B", label: "B (Voiture)" },
+                        { value: "BE", label: "BE (Voiture + remorque)" },
                         { value: "C", label: "C (Poids lourd)" },
-                        { value: "CE", label: "CE (Remorque)" },
-                        { value: "D", label: "D (Transport de personnes)" },
+                        { value: "CE", label: "CE (Poids lourd + remorque)" },
+                        { value: "D", label: "D (Bus / Transport de personnes)" },
+                        { value: "DE", label: "DE (Bus + remorque)" },
                       ]}
                     />
                   </div>

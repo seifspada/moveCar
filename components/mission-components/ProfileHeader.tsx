@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import SidebarAdherant from "@/app/components/sideBarAdherant";
 
-  
+
 // ============================================
 // PROFILE HEADER COMPONENT - Amélioré
 // ============================================
@@ -14,19 +14,18 @@ interface ProfileHeaderProps {
   toggleDesktopMenu: () => void;
 }
 
-export default function ProfileHeader({ 
-  isMobileMenuOpen, 
-  isDesktopMenuOpen, 
-  toggleMobileMenu, 
-  toggleDesktopMenu 
+export default function ProfileHeader({
+  isMobileMenuOpen,
+  isDesktopMenuOpen,
+  toggleMobileMenu,
+  toggleDesktopMenu
 }: ProfileHeaderProps) {
   return (
     <>
       {/* Overlay avec animation fade fluide */}
-      <div 
-        className={`fixed inset-0 bg-black z-30 transition-opacity duration-700 ease-out pointer-events-none ${
-          isMobileMenuOpen || isDesktopMenuOpen ? 'opacity-70 pointer-events-auto' : 'opacity-0'
-        }`}
+      <div
+        className={`fixed inset-0 bg-black z-30 transition-opacity duration-700 ease-out pointer-events-none ${isMobileMenuOpen || isDesktopMenuOpen ? 'opacity-70 pointer-events-auto' : 'opacity-0'
+          }`}
         onClick={() => {
           if (isMobileMenuOpen) toggleMobileMenu();
           if (isDesktopMenuOpen) toggleDesktopMenu();
@@ -34,10 +33,10 @@ export default function ProfileHeader({
       />
 
       {/* Header amélioré */}
-<header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-40">
+      <header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex items-center gap-4">
-            
+
             {/* Bouton hamburger MOBILE avec animation */}
             <button
               onClick={toggleMobileMenu}
@@ -63,15 +62,9 @@ export default function ProfileHeader({
             </button>
 
             {/* Profil utilisateur amélioré */}
-            <div className="flex items-center gap-4 sm:gap-6 flex-1">
-              <div className="relative">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full border-4 border-orange-500 flex-shrink-0 flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-2xl sm:text-3xl">PN</span>
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-black rounded-full"></div>
-              </div>
-              
-              <div className="text-left">
+<div className="flex items-center justify-end gap-4 sm:gap-6 ml-auto pl-10">
+
+  <div className="text-left">
                 <h2 className="text-xl sm:text-2xl font-bold text-white">
                   Prénom Nom
                 </h2>
@@ -79,6 +72,14 @@ export default function ProfileHeader({
                   prenom.nom@email.com
                 </p>
               </div>
+              <div className="relative">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full border-4 border-orange-500 flex-shrink-0 flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-2xl sm:text-3xl">PN</span>
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-black rounded-full"></div>
+              </div>
+
+              
             </div>
           </div>
         </div>

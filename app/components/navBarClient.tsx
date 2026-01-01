@@ -9,7 +9,7 @@ import { Mission } from "@/app/data/missions";
 export default function NavBarClient() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  const hideNavbar = pathname === '/signin' || pathname.startsWith('/adherant')|| pathname.startsWith('/partenaire');
+  const hideNavbar = pathname.startsWith('/adherant')|| pathname.startsWith('/partenaire');
 
   if (hideNavbar) return null; // si page login, ne rien afficher
 

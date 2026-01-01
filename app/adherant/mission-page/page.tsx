@@ -6,7 +6,7 @@ import { missionsData } from "@/app/data/missions";
 import { Mission } from "@/app/data/missions";
 import MissionList from "@/components/mission-components/MissionList";
 import ProfileHeader from "@/components/mission-components/ProfileHeader";
-import SearchBar from "@/components/mission-components/rechercheBar";
+import SearchBar from "@/components/mission-components/RrechercheBar";
 import { SearchFilter } from "@/components/mission-components/SearchFilter";
 import { SearchPosition } from "@/components/mission-components/SearchPosition";
 import { MapPin, Filter } from "lucide-react";
@@ -14,7 +14,6 @@ import { useState, useMemo } from "react";
 
 export default function MissionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isPositionOpen, setIsPositionOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
@@ -67,26 +66,19 @@ export default function MissionsPage() {
           {/* Barre de recherche avec icônes */}
           <div className="flex items-center gap-3">
             {/* Barre de recherche */}
-            <div className="flex-1">
+            <div className="flex-1 ">
               <SearchBar onSearch={setSearchQuery} />
             </div>
             
             {/* Icône Position */}
-            <button
-              onClick={() => setIsPositionOpen(true)}
-              className="flex-shrink-0 p-3 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition-colors -mt-7"
-              aria-label="Géolocalisation"
-            >
-              <MapPin className="w-10 h-10 text-white" />
-            </button>
-
+           
             {/* Icône Filtre */}
             <button
               onClick={() => setIsFilterOpen(true)}
-              className="flex-shrink-0 p-3 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition-colors -mt-7"
+              className="flex-shrink-0 p-3  hover:bg-zinc-800 rounded-lg transition-colors -mt-7"
               aria-label="Filtres"
             >
-              <Filter className="w-10 h-10 text-white" />
+              <Filter className="w-7 h-7 text-white" />
             </button>
           </div>
           
@@ -95,11 +87,7 @@ export default function MissionsPage() {
       </main>
 
       {/* Modales */}
-      <SearchPosition
-        isOpen={isPositionOpen}
-        onClose={() => setIsPositionOpen(false)}
-        onSearch={handlePositionSearch}
-      />
+     
 
       <SearchFilter
         isOpen={isFilterOpen}

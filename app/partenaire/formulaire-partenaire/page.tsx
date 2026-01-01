@@ -1,6 +1,8 @@
 "use client";
 import { useState } from 'react';
 import { Eye, EyeOff, CheckCircle2, AlertCircle, UserPlus } from 'lucide-react';
+import NavFormulaire from '@/app/components/navFormulaire';
+import { CityAutocomplete, SelectedCity } from '@/components/mission-components/CityAutocomplete';
 
 type FormData = {
   codePartenaire: string;
@@ -38,10 +40,18 @@ export default function FormulairePartenaire() {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const [inputValue, setInputValue] = useState("");
+  const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  // Gestion de la sélection de ville avec synchronisation
+  const handleCitySelect = (city: SelectedCity | null) => {
+    setSelectedCity(city);
+    setFormData({ ...formData, ville: city?.name || '' });
   };
 
   const validateForm = (): string[] => {
@@ -121,6 +131,8 @@ export default function FormulairePartenaire() {
       motDePasse: '',
       confirmMotDePasse: ''
     });
+    setInputValue('');
+    setSelectedCity(null);
   };
 
   // Page de confirmation après soumission
@@ -198,7 +210,8 @@ export default function FormulairePartenaire() {
 
   // Formulaire d'inscription
   return (
-    <div className="min-h-screen bg-black py-12 px-4">
+    <div className="min-h-screen bg-black py-12 px-4 lg:pt-35 sm:pt-25">
+      <NavFormulaire />
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="bg-gradient-to-r from-orange-800 to-orange-600 text-white p-6">
@@ -295,17 +308,18 @@ export default function FormulairePartenaire() {
                 />
               </div>
 
+              {/* CityAutocomplete avec synchronisation */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ville <span className="text-orange-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="ville"
-                  value={formData.ville}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
+                <CityAutocomplete
+                  value={inputValue}
+                  onValueChange={setInputValue}
+                  selectedCity={selectedCity}
+                  onSelectCity={handleCitySelect}
+                  theme="light"
+                  placeholder="Entrez votre ville (min. 2 caractères)"
+                  label="Ville"
                 />
+                <span className="text-orange-500 text-sm ml-2">*</span>
               </div>
 
               <div>
@@ -402,7 +416,7 @@ export default function FormulairePartenaire() {
                 <button
                   type="button"
                   onClick={onSubmit}
-                  className="flex-1 bg-gradient-to-r from-orange-600 to-orange-800 text-white font-semibold py-3.5 px-6 rounded-full hover:from-orange-700 hover:to-orange-900 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="flex-1 bg-gradient-to-r from-orange-600 to-orange-800 text-white font-semibold py-3.5 px-6 rounded-full hover:from-green-700 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   Envoyer le formulaire
                 </button>

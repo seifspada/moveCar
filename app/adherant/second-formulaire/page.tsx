@@ -113,6 +113,9 @@ export default function InscriptionForm() {
                       <p>✓ Demande envoyée et validée</p>
                       <p>✓ Demande acceptée par l'équipe</p>
                       <p>✓ Compte créé et activé</p>
+                        <p className="mt-8 text-sm text-gray-500">
+                    ✓ Un email de confirmation a été envoyé à <strong>{email}</strong>
+                  </p>
                     </div>
                   </div>
 
@@ -173,9 +176,7 @@ export default function InscriptionForm() {
                     </button>
                   </div>
 
-                  <p className="mt-8 text-sm text-gray-500">
-                    Un email de confirmation a été envoyé à <strong>{email}</strong>
-                  </p>
+                
                 </div>
               </div>
             </div>

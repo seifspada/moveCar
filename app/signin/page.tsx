@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-gray-50 pt-45">
       {/* === Partie gauche : Image + Titre === */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br   from-slate-900 via-slate-800 to-black relative  overflow-hidden">
         {/* Image de fond */}
@@ -132,7 +132,7 @@ export default function LoginPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
                   placeholder="votre.email@domaine.com"
                 />
               </div>
@@ -148,7 +148,7 @@ export default function LoginPage() {
                   type="password"
                   autoComplete="current-password"
                   required
-                  className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
                   placeholder="Entrer votre mot de passe"
                 />
               </div>
@@ -157,7 +157,7 @@ export default function LoginPage() {
             {/* Bouton connexion */}
             <button
               type="submit"
-              className="w-full py-4 px-6 bg-gradient-to-r from-orange-700 to-orange-600 text-white font-semibold text-lg rounded-lg shadow-lg hover:from-orange-800 hover:to-orange-700 transform hover:scale-105 transition duration-200"
+              className="w-full py-4 px-6 bg-gradient-to-r from-orange-700 to-orange-600 text-white font-semibold text-lg rounded-full shadow-lg hover:from-green-800 hover:to-green-700 transform hover:scale-105 transition duration-200"
             >
               Se connecter
             </button>
