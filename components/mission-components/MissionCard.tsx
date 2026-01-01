@@ -30,36 +30,29 @@ export default function MissionCard({ mission }: { mission: Mission }) {
       {/* LAYOUT HORIZONTAL - Mobile et Desktop */}
       <div className="flex flex-row items-stretch h-full">
         {/* Section gauche : Icône du véhicule + Icône carburant */}
-        <div className="relative w-16 sm:w-20 md:w-24 lg:w-32 bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center p-2 sm:p-2.5 md:p-3 lg:p-4 flex-shrink-0">
-          {/* Icône du véhicule */}
-          <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 bg-white rounded-full flex items-center justify-center p-1 sm:p-1.5 lg:p-2 shadow-lg">
-            <Image
-              src={vehicleConfig.image}
-              alt={vehicleConfig.label}
-              width={70}
-              height={70}
-              className="object-contain"
-            />
-          </div>
-          
-        <div
-  className="absolute top-0 right-0
-             w-8 h-8 md:w-10 md:h-10
-             bg-white rounded-full
-             flex items-center justify-center
-             p-0.5"
->
-  <Image
-    src={fuelInfo.image}
-    alt={fuelInfo.label}
-    width={32}
-    height={32}
-    className="object-contain w-full h-full"
-  />
+   <div className="relative w-20 sm:w-20 md:w-22 lg:w-34 bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center p-2 sm:p-2.5 md:p-3 lg:p-4.5 flex-shrink-0">
+  {/* Icône du véhicule - cercle taille moyenne */}
+  <div className="w-13 h-13 sm:w-15 sm:h-15 md:w-19 md:h-19 lg:w-24 lg:h-24 bg-white rounded-full flex items-center justify-center p-2 sm:p-2.5 md:p-3.5 lg:p-4.5 shadow-lg">
+    <Image
+      src={vehicleConfig.image}
+      alt={vehicleConfig.label}
+      width={70}
+      height={70}
+      className="object-contain w-10 h-10 sm:w-11 sm:h-11 md:w-13 md:h-13 lg:w-16 lg:h-16"
+    />
+  </div>
+  
+  {/* Icône carburant - taille moyenne */}
+  <div className="absolute top-0.5 right-0.5 w-8 h-8 md:w-13 md:h-13 lg:w-17 lg:h-17 bg-white rounded-full flex items-center justify-center p-0.5 md:p-1 lg:p-1.5">
+    <Image
+      src={fuelInfo.image}
+      alt={fuelInfo.label}
+      width={32}
+      height={32}
+      className="object-contain w-full h-full"
+    />
+  </div>
 </div>
-
-        </div>
-
         {/* Section centrale et droite : Informations */}
         <div className="flex-1 flex flex-col justify-between p-2 sm:p-3 md:p-4 lg:p-6 min-w-0">
           {/* Première ligne : Villes (Départ → Arrivée) */}
@@ -77,7 +70,6 @@ export default function MissionCard({ mission }: { mission: Mission }) {
                 <p className="text-white font-bold text-[11px] sm:text-xs md:text-sm lg:text-lg leading-tight truncate">{mission.villeDepart}</p>
               </div>
             </div>
-
             {/* Flèche horizontale */}
             <svg className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-16 lg:h-16 text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -94,6 +86,48 @@ export default function MissionCard({ mission }: { mission: Mission }) {
               <div className="min-w-0 flex-1">
                 <p className="text-gray-400 text-[8px] sm:text-[9px] md:text-[10px] lg:text-xs leading-tight">Arrivée</p>
                 <p className="text-white font-bold text-[11px] sm:text-xs md:text-sm lg:text-lg leading-tight truncate">{mission.villeArrivee}</p>
+              </div>
+            </div>
+            {/* Container pour étoile ET montant - même ligne, centrés verticalement */}
+            <div className="flex items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 flex-shrink-0 pr-2 sm:pr-3 md:pr-4 lg:pr-6">
+              {/* Étoile favorite À GAUCHE */}
+              <button
+                onClick={handleFavoriteClick}
+                className="transition-all duration-200 hover:scale-110"
+                aria-label="Ajouter aux favoris"
+              >
+                <svg
+                  className={`w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-9 lg:h-9 transition-colors duration-200 ${
+                    isFavorite
+                      ? 'fill-orange-500 text-orange-500'
+                      : 'fill-none text-gray-400 hover:text-orange-400'
+                  }`}
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+                  />
+                </svg>
+              </button>
+
+              {/* Montant À DROITE avec background image */}
+              <div className="relative rounded-lg overflow-hidden px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 lg:px-6 lg:py-3">
+                <Image
+                  src="/images/bg-montant.png"
+                  alt="Background"
+                  fill
+                  className="object-cover opacity-20"
+                />
+                <div className="relative flex flex-col items-center justify-center">
+                  <p className="text-[8px] sm:text-[9px] md:text-[10px] text-gray-300 mb-0.5">Total</p>
+                  <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-orange-500">
+                    {mission.montant.toFixed(2)}€
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -148,51 +182,7 @@ export default function MissionCard({ mission }: { mission: Mission }) {
               </div>
             </div>
 
-            {/* Container pour favorite et montant */}
-            <div className="flex flex-col items-end justify-between flex-shrink-0 min-w-[70px] sm:min-w-[85px] md:min-w-[100px] lg:min-w-[120px]">
-              {/* Étoile favorite */}
-              <button
-                onClick={handleFavoriteClick}
-                className="transition-all duration-200 hover:scale-110 -mt-9 mb-4"
-                aria-label="Ajouter aux favoris"
-              >
-                <svg
-                  className={`w-5 h-5 sm:w-8 sm:h-8 md:w-8 md:h-8 lg:w-10 lg:h-10 transition-colors duration-200 ${isFavorite
-                      ? 'fill-orange-500 text-orange-500'
-                      : 'fill-none text-gray-400 hover:text-orange-400'
-                    }`}
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
-                  />
-                </svg>
-              </button>
-
-              {/* Montant */}
-              <div className="relative rounded-md sm:rounded-lg overflow-hidden px-2 py-1.5 sm:px-2.5 sm:py-5 md:px-4 md:py-2 lg:px-6 lg:py-2 w-full">
-                <Image
-                  src="/images/bg-montant.png"
-                  alt="Background"
-                  fill
-                  className="object-cover object-center opacity-20"
-                  priority
-                />
-                <div className="relative flex flex-col items-center">
-                  <div className="flex items-center gap-0.5 sm:gap-1 lg:gap-2 mb-0.5">
-                    <span className="text-yellow-400 text-[9px] sm:text-[10px] md:text-xs lg:text-base">★</span>
-                    <p className="text-gray-300 text-[7px] sm:text-[8px] md:text-[9px] lg:text-xs font-medium leading-tight">Total</p>
-                  </div>
-                  <p className="text-[11px] sm:text-xs md:text-base lg:text-2xl font-bold text-orange-500 leading-tight">
-                    {mission.montant.toFixed(2)}€
-                  </p>
-                </div>
-              </div>
-            </div>
+          
           </div>
         </div>
       </div>

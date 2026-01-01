@@ -189,6 +189,10 @@ export default function AdherantFormulaire() {
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-orange-600 font-bold">3.</span>
+                        <span>Signature de contrat</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-600 font-bold">4.</span>
                         <span>Création de votre compte et accès à la plateforme</span>
                       </li>
                     </ul>

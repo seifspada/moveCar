@@ -131,9 +131,7 @@ export default function CompteAdherent() {
           {/* Actions rapides */}
           <div className="p-6 bg-black">
             <div className="flex flex-wrap gap-4 justify-center">
-              <button className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-full font-semibold hover:from-yellow-600 hover:to-yellow-700 transition shadow-lg">
-                Devenez Premium
-              </button>
+              
               
               <div className="flex gap-2">
                 <button
