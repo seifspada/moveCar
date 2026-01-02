@@ -10,7 +10,7 @@ export default function NavFormulaire() {
 
 
     return (
-        <nav className="fixed inset-x-0 top-0 z-50 bg-slate-800 border-b border-orange-500/30 backdrop-blur-sm animate-slide-blur">
+        <nav className="fixed inset-x-0 top-0 z-50 bg-slate-800 border-b border-orange-500/30 backdrop-blur-sm animate-slide-blur -pt-20">
             <style>{`
         @keyframes slide-blur {
           0% { transform: translateY(-20px); opacity: 0; filter: blur(6px); }
@@ -36,16 +36,16 @@ export default function NavFormulaire() {
                 </Link>
 
                 {/* Texte centré */}
-                <div className="text-center text-white sm:text-s md:text-xl lg:text-2xl font-semibold">
+                <div className="text-center sm:gap-4  text-white sm:text-s md:text-xl lg:text-2xl font-semibold">
 
-                   <p className="text-lg md:text-xl font-bold inline-flex items-center justify-center gap-2">
-  <Truck className="w-5 h-5 text-orange-500" />
-  Compléter le profil
-</p>
+                    <p className="text-lg md:text-xl font-bold inline-flex items-center justify-center gap-2">
+                        <Truck className="w-5 h-5 text-orange-500" />
+                        Compléter le profil
+                    </p>
 
-                    <p className="text-xs sm:text-sm md:text-base text-gray-300 ml-2 md:ml-6">
-  Tous les champs marqués par <span className="text-orange-500 font-bold">*</span> sont obligatoires
-</p>
+                    <p className="text-[10px] md:text-base text-gray-300 ml-2 md:ml-6">
+                        Tous les champs marqués par <span className="text-orange-500 font-bold">*</span> sont obligatoires
+                    </p>
 
 
                 </div>

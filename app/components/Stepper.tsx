@@ -15,7 +15,7 @@ export default function Stepper({ currentStep }: StepperProps) {
   ];
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-8 py-8 pt-20 pb-20">
+    <div className="w-full max-w-2xl mx-auto px-8 py-8 pt-20 pb-20 sm:gap-4">
       <div className="flex items-center justify-between">
         {steps.map((step, index) => (
           <React.Fragment key={step.id}>
@@ -47,7 +47,7 @@ export default function Stepper({ currentStep }: StepperProps) {
               
               {/* Label de l'étape */}
               <span
-                className={`mt-2 text-sm font-medium text-center absolute top-14 whitespace-nowrap ${
+                className={`mt-2 text-xs font-medium text-center absolute top-14 whitespace-nowrap ${
                   step.id <= currentStep ? 'text-white' : 'text-gray-600'
                 }`}
               >

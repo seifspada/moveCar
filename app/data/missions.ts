@@ -21,11 +21,11 @@ export type VehicleType =
 
 
 
-  export const vehiculeCarburantIcons: Record<VehiculeCarburant,{ image: string; label: string, size: number }> = {
-     Essence: { label: "essence", image: "/icons/vehicles/pompe-m.png", size: 24 },
-  Diesel: { label: "diesel", image: "/icons/vehicles/pompe-m.png", size: 24 },
-  Hybride: { label: "hybride", image: "/icons/vehicles/pompe-m.png", size: 24 },
-  Electrique: { label: "electrique", image: "/icons/vehicles/electric-car.png", size: 32 },
+  export const vehiculeCarburantIcons: Record<VehiculeCarburant,{ image: string; label: string }> = {
+     Essence: { label: "essence", image: "/icons/vehicles/pompe-m.png" },
+  Diesel: { label: "diesel", image: "/icons/vehicles/pompe-m.png" },
+  Hybride: { label: "hybride", image: "/icons/vehicles/pompe-m.png" },
+  Electrique: { label: "electrique", image: "/icons/vehicles/carE.png" },
   }
 // Configuration des icônes pour chaque type de véhicule
 export const vehicleIcons: Record<VehicleType, { image: string; label: string; examples: string }> = {
@@ -215,7 +215,7 @@ export const missionsData: Mission[] = [
     dateHeureExpiration: "2025-12-22T16:00:00",
     modeleVehicule: "Skoda Octavia",
     typeBoite: "Manuelle",
-    typeCarburant: "Diesel",
+    typeCarburant: "Electrique",
     tarifDepassementKm: 0.55,
     tarifRetardHeure: 22,
     tarifCarburant: "Selon facture",

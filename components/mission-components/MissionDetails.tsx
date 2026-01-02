@@ -5,6 +5,7 @@ import Image from "next/image";
 import { AlertCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import { Car, ChevronDown, Clock, Fuel, MapPin } from "lucide-react";
 import { VehiculeCarburant, vehiculeCarburantIcons } from "@/app/data/missions";
+import MissionMapComponent from "./MissionMapComponent";
 
 // Composant Détails de Mission
  export default function MissionDetails({ mission, onBack, onReserve }: { mission: Mission; onBack: () => void; onReserve: () => void }) {
@@ -97,6 +98,14 @@ import { VehiculeCarburant, vehiculeCarburantIcons } from "@/app/data/missions";
               </div>
             </div>
           </section>
+<div className="
+  w-full
+  max-w-9xl
+  h-56 sm:h-64 md:h-300 lg:h-[1000px]
+  rounded-xl overflow-hidden
+">
+  <MissionMapComponent />
+</div>
 
           <div className="border-t border-gray-200"></div>
 
@@ -257,7 +266,7 @@ import { VehiculeCarburant, vehiculeCarburantIcons } from "@/app/data/missions";
               </button>
               <button 
                 onClick={onReserve}
-                className="w-full sm:flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 px-8 rounded-full transition-colors duration-200 flex items-center justify-center group"
+                className="w-full sm:flex-1 bg-orange-500 hover:bg-green-600 text-white font-semibold py-4 px-8 rounded-full transition-colors duration-200 flex items-center justify-center group"
               >
                 <span className="text-lg">Réserver cette mission</span>
                 <ArrowRight className="ml-3 group-hover:translate-x-1 transition-transform" size={24} />
@@ -267,7 +276,7 @@ import { VehiculeCarburant, vehiculeCarburantIcons } from "@/app/data/missions";
             </div>
             
             <div className="mt-6 flex justify-center">
-              <div className="bg-orange-100 text-orange-800 px-6 py-3 rounded-full flex items-center">
+              <div className="bg-orange-100 text-green-600 px-6 py-3 rounded-full flex items-center">
                 <ArrowRight className="mr-2" size={20} />
                 <span className="text-sm font-medium">Cliquez sur "Réserver" pour confirmer votre mission</span>
               </div>

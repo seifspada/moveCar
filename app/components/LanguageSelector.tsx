@@ -22,12 +22,30 @@ export default function LanguageSelector() {
   };
 
   return (
-    <div className="relative inline-block ">
-      {/* Bouton de sélection */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-4 py-2 bg-white-300 hover:bg-orange-600 border border-gray-300 rounded-lg   transition-colors shadow-sm min-w-[180px]"
-      >
+    <div className="
+  relative
+  flex justify-center        /* 📱 mobile */
+  md:justify-end             /* 📱 tablette → à droite */
+  lg:justify-start           /* 💻 PC */
+">
+ <button
+  onClick={() => setIsOpen(!isOpen)}
+  className="
+    flex items-center gap-1
+    px-2 py-1 text-sm min-w-[100px]   /* MOBILE */
+
+    md:px-4 md:py-2 md:text-base md:min-w-[180px]  /* TABLETTE */
+    md:ml-auto md:-mr-10                        /* position tablette */
+
+    lg:ml-0 lg:mr-0 lg:px-5 lg:py-3 lg:text-lg lg:min-w-[220px]  /* DESKTOP */
+
+     hover:bg-orange-600
+    rounded-lg shadow-sm
+  "
+>
+
+
+
         <img src={selectedLanguage.flag} alt={selectedLanguage.name} className="w-6 h-4 object-cover rounded" />
         <span className="font-medium text-white flex-1 text-left hover:text-black">{selectedLanguage.name}</span>
         <svg
@@ -42,7 +60,11 @@ export default function LanguageSelector() {
 
       {/* Menu déroulant */}
       {isOpen && (
-        <div className="absolute top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+<div className="
+  absolute top-full mt-2 w-48
+  md:ml-32
+  bg-white border border-gray-200 rounded-lg shadow-lg z-50
+">
           {languages.map((lang) => (
             <button
               key={lang.code}

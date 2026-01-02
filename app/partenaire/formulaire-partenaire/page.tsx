@@ -212,7 +212,7 @@ export default function FormulairePartenaire() {
   return (
     <div className="min-h-screen bg-black py-12 px-4 lg:pt-35 sm:pt-25">
       <NavFormulaire />
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto pt-10 md:pt-10 sm:pt-20">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="bg-gradient-to-r from-orange-800 to-orange-600 text-white p-6">
             <h2 className="text-2xl font-semibold flex items-center gap-3">
@@ -416,7 +416,7 @@ export default function FormulairePartenaire() {
                 <button
                   type="button"
                   onClick={onSubmit}
-                  className="flex-1 bg-gradient-to-r from-orange-600 to-orange-800 text-white font-semibold py-3.5 px-6 rounded-full hover:from-green-700 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="flex-1 bg-orange-600 text-white font-semibold py-3.5 px-6 rounded-full hover:bg-green-600 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   Envoyer le formulaire
                 </button>

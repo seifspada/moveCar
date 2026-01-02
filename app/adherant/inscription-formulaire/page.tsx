@@ -320,6 +320,7 @@ export default function AdherantFormulaire() {
 
                 {/* CityAutocomplete avec synchronisation */}
                 <div>
+                 
                   <CityAutocomplete
                     value={inputValue}
                     onValueChange={setInputValue}
@@ -328,8 +329,8 @@ export default function AdherantFormulaire() {
                     theme="light"
                     placeholder="Entrez votre ville (min. 2 caractères)"
                     label="Ville"
+                    
                   />
-                  <span className="text-orange-500 text-sm ml-2">*</span>
                 </div>
 
                 <div>
