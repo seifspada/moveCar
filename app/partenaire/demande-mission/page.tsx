@@ -5,10 +5,16 @@ import { Upload, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { DateTimePicker } from '@/app/components/DateTimePicker';
 import CustomSelect from '@/app/components/customSelect';
 import { CityAutocomplete, SelectedCity } from '@/components/mission-components/CityAutocomplete';
+import ProfileHeader from '@/components/partenaire-components/ProfileHeader';
+import SidebarPartenaire from '@/app/components/sideBarPartenaire';
 
 // Types
 type FormData = {
+  adresseArriveeComplete: string;
+  adresseDepartComplete: string ;
+
   villeDepart: string;
+
   typeLieuDepart: string;
   nomLieuDepart: string;
   villeArrivee: string;
@@ -50,8 +56,8 @@ const ToggleSwitch = ({ label, checked, onChange }: {
 // Composant principal
 export default function TravelRequestForm() {
   const [formData, setFormData] = useState<FormData>({
-    villeDepart: '', typeLieuDepart: '', nomLieuDepart: '',
-    villeArrivee: '', typeLieuArrivee: '', nomLieuArrivee: '',
+    villeDepart: '', adresseDepartComplete: '', typeLieuDepart: '', nomLieuDepart: '',
+    villeArrivee: '', adresseArriveeComplete: '', typeLieuArrivee: '', nomLieuArrivee: '',
     typeVehicule: '', marqueModele: '', immatriculation: '',
     nombrePlaces: '', boiteVitesse: '', commentaire: ''
   });
@@ -70,6 +76,12 @@ export default function TravelRequestForm() {
   const [inputValueDepart, setInputValueDepart] = useState("");
   const [selectedCityDepart, setSelectedCityDepart] = useState<SelectedCity | null>(null);
   const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
+   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
+  const toggleDesktopMenu = () => setIsDesktopMenuOpen(prev => !prev);
+
 
 
 
@@ -96,10 +108,14 @@ export default function TravelRequestForm() {
 
   const requiredFields = [
     { value: formData.villeDepart, label: 'Ville de départ' },
+        { value: formData.adresseDepartComplete, label: 'Adresse de départ' },
+
     { value: formData.typeLieuDepart, label: 'Type de lieu de départ' },
     // nomLieuDepart → optionnel
     
     { value: formData.villeArrivee, label: "Ville d'arrivée" },
+            { value: formData.adresseArriveeComplete, label: 'Adresse d’arrivée' },
+
     { value: formData.typeLieuArrivee, label: "Type de lieu d'arrivée" },
     // nomLieuArrivee → optionnel
 
@@ -148,8 +164,26 @@ export default function TravelRequestForm() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-100 py-12 px-4">
-        <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div className="min-h-screen bg-black to-amber-100 py-12 px-4">
+         <SidebarPartenaire
+                isMobileMenuOpen={isMobileMenuOpen}
+                onMobileMenuToggle={toggleMobileMenu}
+                isDesktopMenuOpen={isDesktopMenuOpen}
+                onDesktopMenuToggle={toggleDesktopMenu}
+              />
+        
+              {/* Profile Header */}
+              <ProfileHeader
+          isMobileMenuOpen={isMobileMenuOpen}
+          isDesktopMenuOpen={isDesktopMenuOpen}
+          toggleMobileMenu={toggleMobileMenu}
+          toggleDesktopMenu={toggleDesktopMenu} partner={{
+            nom: 'agence transport express',
+            email: 'transportexpress@gmail.com',
+            logoUrl: '/images/logo.jpg',
+            isOnline: true
+          }}              />   
+        <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden pt-15">
           <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-6">
             <h2 className="text-2xl font-semibold flex items-center gap-3">
               <CheckCircle2 className="w-8 h-8" />
@@ -201,8 +235,26 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
   }
 };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 py-8 px-4">
-      <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8">
+    <div className="min-h-screen bg-black">
+
+      <SidebarPartenaire
+              isMobileMenuOpen={isMobileMenuOpen}
+              onMobileMenuToggle={toggleMobileMenu}
+              isDesktopMenuOpen={isDesktopMenuOpen}
+              onDesktopMenuToggle={toggleDesktopMenu}
+            />
+      
+            <ProfileHeader
+        isMobileMenuOpen={isMobileMenuOpen}
+        isDesktopMenuOpen={isDesktopMenuOpen}
+        toggleMobileMenu={toggleMobileMenu}
+        toggleDesktopMenu={toggleDesktopMenu} partner={{
+          nom: 'transport express',
+          email: 'transportexpress@gmail.com',
+          logoUrl: '/images/logo.jpg',
+          isOnline: true
+        }}            />
+      <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8 pt-15 md:pt-20 my-10">
         <div className="border-l-4 border-orange-500 pl-4 mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Demande de Déplacement</h1>
           <p className="text-sm text-gray-600 mt-1">Complétez les informations pour votre demande</p>
@@ -230,15 +282,40 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
   </h2>
   <div className="space-y-4">
     {/* CityAutocomplete pour ville de départ */}
+<div className="grid grid-cols-2 gap-4">
+  {/* Adresse de départ (editable) */}
+  <div className="w-full">
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      Adresse de départ<span className="text-orange-500 text-xs"> *</span>
+    </label>
+    <input
+      type="text"
+      value={formData.adresseDepartComplete}
+      onChange={(e) =>
+        setFormData(prev => ({
+          ...prev,
+          adresseDepartComplete: e.target.value
+        }))
+      }
+      placeholder="Adresse de départ"
+      className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500" 
+    />
+  </div>
+
+  {/* City Autocomplete */}
+  <div className="w-full">
+    
     <CityAutocomplete
       value={inputValueDepart}
       onValueChange={setInputValueDepart}
       selectedCity={selectedCityDepart}
       onSelectCity={handleCitySelectDepart}
       theme="light"
-      placeholder="Entrez votre ville de départ (min. 2 caractères)"
+      placeholder="Ville de départ"
     />
-    
+  </div>
+</div>
+
   
 <div className="grid grid-cols-2 gap-4">
   <CustomSelect
@@ -274,14 +351,41 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
   </h2>
   <div className="space-y-4">
     {/* CityAutocomplete pour ville d'arrivée */}
+<div className="grid grid-cols-2 gap-4">
+  {/* Adresse d'arrivée (editable) */}
+  <div className="w-full">
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      Adresse d'arrivée<span className="text-orange-500 text-xs"> *</span>
+    </label>
+    <input
+      type="text"
+      value={formData.adresseArriveeComplete}
+      onChange={(e) =>
+        setFormData(prev => ({
+          ...prev,
+          adresseArriveeComplete: e.target.value
+        }))
+      }
+      placeholder="Adresse d'arrivée"
+      className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500"
+    />
+  </div>
+
+  {/* City Autocomplete */}
+  <div className="w-full">
+  
     <CityAutocomplete
       value={inputValueArrivee}
       onValueChange={setInputValueArrivee}
       selectedCity={selectedCityArrivee}
       onSelectCity={handleCitySelectArrivee}
       theme="light"
-      placeholder="Entrez votre ville d'arrivée (min. 2 caractères)"
+      placeholder="Ville d'arrivée"
     />
+  </div>
+</div>
+
+
     
 <div className="grid grid-cols-2 gap-4">
   <CustomSelect
