@@ -148,6 +148,7 @@ export interface Mission {
   conditionsAnnulation: string;
   carburantInclus: boolean;
   peagesInclus: boolean;
+  favorite?: boolean;
 }
 
 export const missionsData: Mission[] = [
@@ -178,7 +179,8 @@ export const missionsData: Mission[] = [
     tarifRestitutionAutreEndroit: 1.2,
     conditionsAnnulation: "Selon convention signée",
     carburantInclus: true,
-    peagesInclus: true
+    peagesInclus: true,
+    favorite: true
   },
   {
     id: 2,
@@ -207,7 +209,8 @@ export const missionsData: Mission[] = [
     tarifRestitutionAutreEndroit: 1.5,
     conditionsAnnulation: "48h avant départ",
     carburantInclus: true,
-    peagesInclus: true
+    peagesInclus: true,
+    favorite: false
   },
   {
     id: 3,
@@ -236,7 +239,8 @@ export const missionsData: Mission[] = [
     tarifRestitutionAutreEndroit: 1.0,
     conditionsAnnulation: "Non remboursable",
     carburantInclus: false,
-    peagesInclus: false
+    peagesInclus: false,
+    favorite: true
   },
   {
     id: 4,
@@ -265,7 +269,8 @@ export const missionsData: Mission[] = [
     tarifRestitutionAutreEndroit: 1.3,
     conditionsAnnulation: "24h avant",
     carburantInclus: true,
-    peagesInclus: true
+    peagesInclus: true,
+    favorite: true
   },
   {
     id: 5,
@@ -294,6 +299,7 @@ export const missionsData: Mission[] = [
     tarifRestitutionAutreEndroit: 1.8,
     conditionsAnnulation: "Selon contrat",
     carburantInclus: true,
-    peagesInclus: true
+    peagesInclus: true,
+    favorite: false
   }
 ];

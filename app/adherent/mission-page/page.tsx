@@ -1,7 +1,7 @@
-// app/adherant/page.tsx
+// app/adherent/page.tsx
 "use client";
 
-import SidebarAdherant from "@/app/components/sideBarAdherant";
+import SidebarAdherent from "@/app/components/sideBarAdherent";
 import { missionsData } from "@/app/data/missions";
 import { Mission } from "@/app/data/missions";
 import MissionList from "@/components/mission-components/MissionList";
@@ -45,7 +45,7 @@ export default function MissionsPage() {
     <div className="min-h-screen bg-black">
       {/* Header avec sidebar intégrée */}
     {/* Sidebar Component */}
-      <SidebarAdherant
+      <SidebarAdherent
         isMobileMenuOpen={isMobileMenuOpen}
         onMobileMenuToggle={toggleMobileMenu}
         isDesktopMenuOpen={isDesktopMenuOpen}

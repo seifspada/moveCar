@@ -2,9 +2,9 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Camera, AlertTriangle, X } from "lucide-react";
-import SidebarAdherant from "@/app/components/sideBarAdherant";
 import ProfileHeader from "@/components/mission-components/ProfileHeader";
 import GPSLocationButton from "@/app/components/GPSLocationButton";
+import SidebarAdherent from "@/app/components/sideBarAdherent";
 
 // Types
 enum TypeIncident {
@@ -159,7 +159,7 @@ export default function FormulaireIncident() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black px-3 py-4 sm:px-6 sm:py-6 md:px-8 md:py-6 lg:px-10 lg:py-8">
-      <SidebarAdherant
+      <SidebarAdherent
         isMobileMenuOpen={isMobileMenuOpen}
         onMobileMenuToggle={toggleMobileMenu}
         isDesktopMenuOpen={isDesktopMenuOpen}

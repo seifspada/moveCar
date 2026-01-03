@@ -93,14 +93,20 @@ export default function ProfileHeader({
               </button>
 
               {/* ✅ Logo responsive - tailles augmentées */}
-              <Image
-                src="/images/logo.jpg"
-                alt="Logo"
-                width={150}
-                height={150}
-                className="rounded-lg w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20"
-                priority
-              />
+             <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-full border-3 sm:border-4 border-orange-500 overflow-hidden shadow-lg">
+    <Image
+      src="/images/logo.jpg"
+      alt="Logo"
+      width={150}
+      height={150}
+      className="w-full h-full object-cover"
+      priority
+    />
+  </div>
+  <div className="border-l-4 justify-center border-orange-500 pl-8 mb-1">
+          <h1 className="text-3xl font-bold text-white">Demande de Déplacement</h1>
+          <p className="text-sm text-white mt-1">Complétez les informations pour votre demande</p>
+        </div>
             </div>
 
             {/* ✅ Section DROITE: Profil utilisateur - dynamique */}

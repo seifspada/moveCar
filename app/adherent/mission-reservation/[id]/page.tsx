@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Mission, missionsData } from '@/app/data/missions';
 import MissionDetails from '@/components/mission-components/MissionDetails';
 import ProfileHeader from '@/components/mission-components/ProfileHeader';
-import SidebarAdherant from '@/app/components/sideBarAdherant';
+import SidebarAdherent from '@/app/components/sideBarAdherent';
 
 export default function MissionReservationPage({ 
   params 
@@ -48,7 +48,7 @@ export default function MissionReservationPage({
 
   return (
     <div className="min-h-screen bg-black">
-      <SidebarAdherant
+      <SidebarAdherent
         isMobileMenuOpen={isMobileMenuOpen}
         onMobileMenuToggle={toggleMobileMenu}
         isDesktopMenuOpen={isDesktopMenuOpen}

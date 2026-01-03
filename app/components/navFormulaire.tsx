@@ -20,20 +20,23 @@ export default function NavFormulaire() {
       `}</style>
 
             <div className="relative flex items-center justify-center h-20 md:h-24 px-4 md:px-8">
-                {/* Logo */}
-                <Link
-                    href="/"
-                    className="absolute left-4 md:left-8 flex items-center gap-3"
-                >
-                    <Image
-                        src="/images/logo.jpg"
-                        alt="Logo"
-                        width={150}
-                        height={150}
-                        className="rounded-lg w-14 h-14 md:w-20 md:h-20"
-                        priority
-                    />
-                </Link>
+             {/* Logo */}
+<Link
+  href="/"
+  className="absolute left-4 md:left-8 flex items-center gap-3"
+>
+  <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full border-3 sm:border-4 border-orange-500 overflow-hidden shadow-lg">
+    <Image
+      src="/images/logo.jpg"
+      alt="Logo"
+      width={150}
+      height={150}
+      className="w-full h-full object-cover"
+      priority
+    />
+  </div>
+</Link>
+
 
                 {/* Texte centré */}
                 <div className="text-center sm:gap-4  text-white sm:text-s md:text-xl lg:text-2xl font-semibold">

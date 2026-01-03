@@ -7,29 +7,29 @@ import { useRouter, usePathname } from 'next/navigation';
 // ============================================
 // SIDEBAR COMPONENT - Détection automatique de la page active
 // ============================================
-interface SidebarAdherantProps {
+interface SidebarAdherentProps {
   isMobileMenuOpen: boolean;
   onMobileMenuToggle: () => void;
   isDesktopMenuOpen: boolean;
   onDesktopMenuToggle: () => void;
 }
 
-export default function SidebarAdherant({ 
+export default function SidebarAdherent({ 
   isMobileMenuOpen, 
   onMobileMenuToggle,
   isDesktopMenuOpen,
   onDesktopMenuToggle
-}: SidebarAdherantProps) {
+}: SidebarAdherentProps) {
   const router = useRouter();
   const pathname = usePathname(); // ✅ Détecte la route actuelle
   const [activeItem, setActiveItem] = useState<string | null>(null);
 
   // Configuration des items du menu avec leurs routes
   const menuItems = [
-    { key: 'missions', icon: Briefcase, label: 'Liste des missions', href: '/adherant/mission-page' },
-    { key: 'reservations', icon: Calendar, label: 'Réservations', href: '/adherant/reservations' },
-    { key: 'favoris', icon: Heart, label: 'Favoris', href: '/adherant/favoris' },
-    { key: 'compte', icon: User, label: 'Mon profile', href: '/adherant/profile-adherant' },
+    { key: 'missions', icon: Briefcase, label: 'Liste des missions', href: '/adherent/mission-page' },
+    { key: 'reservations', icon: Calendar, label: 'Réservations', href: '/adherent/reservations' },
+    { key: 'favoris', icon: Heart, label: 'Favoris', href: '/adherent/favoris' },
+    { key: 'compte', icon: User, label: 'Mon profile', href: '/adherent/profile-adherent' },
   ];
 
   // ✅ Détection automatique de la page active au chargement et après navigation

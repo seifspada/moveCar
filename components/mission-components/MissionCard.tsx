@@ -22,7 +22,7 @@ export default function MissionCard({ mission }: { mission: Mission }) {
   const fuelInfo = getFuelInfo(mission.typeCarburant);
 
   const handleCardClick = () => {
-    router.push(`/adherant/mission-reservation/${mission.id}`);
+    router.push(`/adherent/mission-reservation/${mission.id}`);
   };
 
   const handleFavoriteClick = (e: React.MouseEvent) => {

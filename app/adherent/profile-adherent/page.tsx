@@ -21,7 +21,7 @@ import {
   X
 } from 'lucide-react';
 import ProfileHeader from '@/components/mission-components/ProfileHeader';
-import SidebarAdherant from '@/app/components/sideBarAdherant';
+import SidebarAdherent from '@/app/components/sideBarAdherent';
 
 // Types
 interface UserProfile {
@@ -111,7 +111,7 @@ export default function CompteAdherent() {
  
 
     <div className="min-h-screen bg-black min-w-full pb-20">
-           <SidebarAdherant
+           <SidebarAdherent
         isMobileMenuOpen={isMobileMenuOpen}
         onMobileMenuToggle={toggleMobileMenu}
         isDesktopMenuOpen={isDesktopMenuOpen}

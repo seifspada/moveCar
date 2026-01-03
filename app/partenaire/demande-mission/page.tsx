@@ -487,7 +487,21 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
             <option value="">Type de véhicule</option>
             <option value="citadine">Citadine</option>
             <option value="berline">Berline</option>
-            <option value="suv">SUV</option>
+            <option value="compacte">Compacte</option>
+            <option value="cabriolet">Cabriolet</option>
+            <option value="monospace">Monospace</option>
+            
+            <option value="luxe">Voiture de luxe</option>
+            <option value="VU3m3">VU 3m3</option>
+            <option value="VU6m3">VU 6m3</option>
+            <option value="VU9m3">VU 9m3</option>
+            <option value="VU12m3">VU 12m3</option>
+            <option value="VU15m3">VU 15m3</option>
+            <option value="VU20m3">VU 20m3</option>
+            <option value="VU25m3">VU 25m3</option>
+            <option value="VU30m3">VU 30m3</option>
+
+
           </select>
           <input type="text" name="marqueModele" value={formData.marqueModele} onChange={handleInputChange}
             placeholder="Marque et modèle" className="col-span-2 w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500" />

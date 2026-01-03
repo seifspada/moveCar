@@ -11,7 +11,7 @@ import LanguageSelector from "./LanguageSelector";
 export default function NavBarClient() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  const hideNavbar = pathname.startsWith('/adherant')|| pathname.startsWith('/partenaire');
+  const hideNavbar = pathname.startsWith('/adherent')|| pathname.startsWith('/partenaire');
 
   if (hideNavbar) return null;
 
@@ -28,16 +28,20 @@ export default function NavBarClient() {
       <div className="flex h-20 md:h-50 items-center justify-between px-4 md:px-8 lg:px-12 xl:px-16 relative">
         
         {/* Logo - avec marge droite responsive */}
-        <Link href="/" className="flex items-center gap-3 shrink-0 mr-4 md:mr-8 lg:mr-12">
-          <Image
-            src="/images/logo.jpg"
-            alt="Logo"
-            width={150}
-            height={150}
-            className="rounded-lg w-16 h-16 md:w-36 md:h-36"
-            priority
-          />
-        </Link>
+  <Link href="/" className="flex items-center gap-3 shrink-0 mr-4 md:mr-8 lg:mr-12">
+  <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-full border-3 sm:border-4 border-orange-500 overflow-hidden shadow-lg ml-2 md:ml-4 lg:ml-6">
+    <Image
+      src="/images/logo.jpg"
+      alt="Logo"
+      width={150}
+      height={150}
+      className="w-full h-full object-cover"
+      priority
+    />
+  </div>
+</Link>
+
+
 
   <div className="absolute px-15 py-4.5 right-2 top-2 block md:hidden">
     <LanguageSelector />

@@ -7,7 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 // ============================================
 // SIDEBAR COMPONENT - Détection automatique de la page active
 // ============================================
-interface SidebarAdherantProps {
+interface SidebarAdherentProps {
   isMobileMenuOpen: boolean;
   onMobileMenuToggle: () => void;
   isDesktopMenuOpen: boolean;
@@ -19,7 +19,7 @@ export default function SidebarPartenaire({
   onMobileMenuToggle,
   isDesktopMenuOpen,
   onDesktopMenuToggle
-}: SidebarAdherantProps) {
+}: SidebarAdherentProps) {
   const router = useRouter();
   const pathname = usePathname(); // ✅ Détecte la route actuelle
   const [activeItem, setActiveItem] = useState<string | null>(null);

@@ -26,7 +26,7 @@ type FormDataType = {
   rcCirculation: string;
 };
 
-export default function AdherantFormulaire() {
+export default function AdherentFormulaire() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [inputValue, setInputValue] = useState("");
