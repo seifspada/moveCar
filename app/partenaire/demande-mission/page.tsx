@@ -91,37 +91,51 @@ export default function TravelRequestForm() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const validateForm = (): string[] => {
-    const missing: string[] = [];
-    const fields = [
-      { value: formData.villeDepart, label: 'Ville de départ' },
-      { value: formData.typeLieuDepart, label: 'Type de lieu de départ' },
-      { value: formData.villeArrivee, label: "Ville d'arrivée" },
-      { value: formData.typeLieuArrivee, label: "Type de lieu d'arrivée" },
-      { value: formData.typeVehicule, label: 'Type de véhicule' },
-      { value: formData.marqueModele, label: 'Marque et modèle' },
-      { value: formData.immatriculation, label: 'Immatriculation' },
-      { value: formData.nombrePlaces, label: 'Nombre de places' },
-      { value: formData.boiteVitesse, label: 'Boîte de vitesse' },
-      { value: selectedDate1, label: 'Date de début' },
-      { value: selectedTime1, label: 'Heure de début' },
-      { value: selectedDate2, label: 'Date de fin' },
-      { value: selectedTime2, label: 'Heure de fin' }
-    ];
+ const validateForm = (): string[] => {
+  const missing: string[] = [];
 
-    fields.forEach(field => {
-      if (!field.value || !field.value.toString().trim()) missing.push(field.label);
-    });
+  const requiredFields = [
+    { value: formData.villeDepart, label: 'Ville de départ' },
+    { value: formData.typeLieuDepart, label: 'Type de lieu de départ' },
+    // nomLieuDepart → optionnel
+    
+    { value: formData.villeArrivee, label: "Ville d'arrivée" },
+    { value: formData.typeLieuArrivee, label: "Type de lieu d'arrivée" },
+    // nomLieuArrivee → optionnel
 
-    if (selectedDate1 && selectedDate2 && selectedTime1 && selectedTime2) {
-      const date1 = new Date(selectedDate1 + 'T' + selectedTime1);
-      const date2 = new Date(selectedDate2 + 'T' + selectedTime2);
-      if (date2 <= date1) missing.push('La date/heure de fin doit être après la date/heure de début');
+    { value: formData.typeVehicule, label: 'Type de véhicule' },
+    { value: formData.marqueModele, label: 'Marque et modèle' },
+    { value: formData.immatriculation, label: 'Immatriculation' },
+    { value: formData.nombrePlaces, label: 'Nombre de places' },
+    { value: formData.boiteVitesse, label: 'Boîte de vitesse' },
+
+    { value: selectedDate1, label: 'Date de début' },
+    { value: selectedTime1, label: 'Heure de début' },
+    { value: selectedDate2, label: 'Date de fin' },
+    { value: selectedTime2, label: 'Heure de fin' },
+  ];
+
+  requiredFields.forEach(field => {
+    if (!field.value?.toString().trim()) {
+      missing.push(field.label);
     }
+  });
 
-    return missing;
-  };
+  // Vérification cohérence dates
+  if (selectedDate1 && selectedDate2 && selectedTime1 && selectedTime2) {
+    const start = new Date(`${selectedDate1}T${selectedTime1}`);
+    const end = new Date(`${selectedDate2}T${selectedTime2}`);
+    
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      missing.push('Format de date/heure invalide');
+    }
+    else if (end <= start) {
+      missing.push('La date/heure de fin doit être après le début');
+    }
+  }
 
+  return missing;
+};
   const handleSubmit = () => {
     const missing = validateForm();
     setMissingFields(missing);
@@ -173,6 +187,19 @@ export default function TravelRequestForm() {
     );
   }
 
+
+  const [files, setFiles] = useState<{
+  documentDepart?: File;
+  documentArrivee?: File;
+}>({});
+
+// 2. Fonction de gestion (à ajouter aussi)
+const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'documentDepart' | 'documentArrivee') => {
+  const file = e.target.files?.[0];
+  if (file) {
+    setFiles(prev => ({ ...prev, [key]: file }));
+  }
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 py-8 px-4">
       <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8">
@@ -212,31 +239,29 @@ export default function TravelRequestForm() {
       placeholder="Entrez votre ville de départ (min. 2 caractères)"
     />
     
-    <div className="grid grid-cols-2 gap-4">
-     <CustomSelect
-  options={[
-    { label: "Agence", value: "agence" },
-    { label: "Concession", value: "concession" },
-    { label: "Particulier", value: "particulier" }
-  ]}
-  value={formData.typeLieuArrivee}
-  onChange={(value) => handleInputChange({ 
-    target: { 
-      name: 'typeLieuArrivee', 
-      value: String(value) // Convert to string
-    } 
-  } as any)}
-  placeholder="Type de lieu"
+  
+<div className="grid grid-cols-2 gap-4">
+  <CustomSelect
+    options={[
+      { label: "Agence", value: "agence" },
+      { label: "Concession", value: "concession" },
+      { label: "Particulier", value: "particulier" }
+    ]}
+    value={formData.typeLieuDepart}           // ← CORRECTION ici
+    onChange={(value) => handleInputChange({ 
+      target: { name: 'typeLieuDepart', value: String(value) } 
+    } as any)}
+    placeholder="Type de lieu"
 />
-      <input 
-        type="text" 
-        name="nomLieuDepart" 
-        value={formData.nomLieuDepart} 
-        onChange={handleInputChange}
-        placeholder="Nom du lieu (optionnel)" 
-        className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500" 
-      />
-    </div>
+  <input 
+    type="text" 
+    name="nomLieuDepart" 
+    value={formData.nomLieuDepart} 
+    onChange={handleInputChange}
+    placeholder="Nom du lieu (ex: Agence XYZ)" 
+    className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500" 
+  />
+</div>
     <ToggleSwitch label="Prévenir une personne au départ" checked={departureNotify} onChange={setDepartureNotify} />
   </div>
 </div>
@@ -258,45 +283,98 @@ export default function TravelRequestForm() {
       placeholder="Entrez votre ville d'arrivée (min. 2 caractères)"
     />
     
-    <div className="grid grid-cols-2 gap-4">
-     <CustomSelect
-  options={[
-    { label: "Agence", value: "agence" },
-    { label: "Concession", value: "concession" },
-    { label: "Particulier", value: "particulier" }
-  ]}
-  value={formData.typeLieuArrivee}
-  onChange={(value) => handleInputChange({ 
-    target: { 
-      name: 'typeLieuArrivee', 
-      value: String(value) // Convert to string
-    } 
-  } as any)}
-  placeholder="Type de lieu"
+<div className="grid grid-cols-2 gap-4">
+  <CustomSelect
+    options={[
+      { label: "Agence", value: "agence" },
+      { label: "Concession", value: "concession" },
+      { label: "Particulier", value: "particulier" }
+    ]}
+    value={formData.typeLieuArrivee}
+    onChange={(value) => handleInputChange({ 
+      target: { name: 'typeLieuArrivee', value: String(value) } 
+    } as any)}
+    placeholder="Type de lieu"
 />
-      <input 
-        type="text" 
-        name="nomLieuArrivee" 
-        value={formData.nomLieuArrivee} 
-        onChange={handleInputChange}
-        placeholder="Nom du lieu (optionnel)" 
-        className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500" 
-      />
-    </div>
+  <input 
+    type="text" 
+    name="nomLieuArrivee" 
+    value={formData.nomLieuArrivee} 
+    onChange={handleInputChange}
+    placeholder="Nom du lieu (ex: Concession ACME)" 
+    className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500" 
+  />
+</div>
     <ToggleSwitch label="Prévenir une personne à l'arrivée" checked={arrivalNotify} onChange={setArrivalNotify} />
   </div>
 </div>
-        {/* Upload */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="border-2 border-dashed border-orange-300 rounded-full p-8 text-center hover:border-orange-500 hover:bg-orange-50 transition-all cursor-pointer">
-            <Upload className="mx-auto h-12 w-12 text-orange-400 mb-3" />
-            <p className="text-sm font-semibold text-gray-700">Document de départ</p>
-          </div>
-          <div className="border-2 border-dashed border-orange-300 rounded-full p-8 text-center hover:border-orange-500 hover:bg-orange-50 transition-all cursor-pointer">
-            <Upload className="mx-auto h-12 w-12 text-orange-400 mb-3" />
-            <p className="text-sm font-semibold text-gray-700">Document d'arrivée</p>
-          </div>
-        </div>
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+  {/* Document de départ */}
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 mb-3">
+      Document de départ <span className="text-orange-500 text-xs">(facultatif)</span>
+    </label>
+    <label className="flex items-center justify-center w-full h-36 border-2 border-dashed border-orange-300 rounded-full cursor-pointer bg-orange-50/50 hover:border-orange-500 hover:bg-orange-50 transition-all group">
+      <div className="text-center p-6">
+        <Upload className="mx-auto h-10 w-10 text-orange-400 group-hover:text-orange-600 transition-colors" />
+        <p className="mt-3 text-sm font-medium text-gray-600 group-hover:text-orange-700">
+          Déposer ou cliquer pour uploader
+        </p>
+        <p className="text-xs text-gray-500 mt-1">
+          PDF, JPG, PNG • Max. 10 Mo
+        </p>
+      </div>
+      <input
+        type="file"
+        className="hidden"
+        accept=".pdf,.jpg,.jpeg,.png"
+        onChange={(e) => handleFileChange(e, 'documentDepart')}
+      />
+    </label>
+    
+    {files.documentDepart && (
+      <div className="mt-2 flex items-center gap-2 text-sm">
+        <CheckCircle2 className="h-4 w-4 text-green-600" />
+        <span className="text-green-700 truncate max-w-[220px]">
+          {files.documentDepart.name}
+        </span>
+      </div>
+    )}
+  </div>
+
+  {/* Document d'arrivée */}
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 mb-3">
+      Document d'arrivée <span className="text-orange-500 text-xs">(facultatif)</span>
+    </label>
+    <label className="flex items-center justify-center w-full h-36 border-2 border-dashed border-orange-300 rounded-full cursor-pointer bg-orange-50/50 hover:border-orange-500 hover:bg-orange-50 transition-all group">
+      <div className="text-center p-6">
+        <Upload className="mx-auto h-10 w-10 text-orange-400 group-hover:text-orange-600 transition-colors" />
+        <p className="mt-3 text-sm font-medium text-gray-600 group-hover:text-orange-700">
+          Déposer ou cliquer pour uploader
+        </p>
+        <p className="text-xs text-gray-500 mt-1">
+          PDF, JPG, PNG • Max. 10 Mo
+        </p>
+      </div>
+      <input
+        type="file"
+        className="hidden"
+        accept=".pdf,.jpg,.jpeg,.png"
+        onChange={(e) => handleFileChange(e, 'documentArrivee')}
+      />
+    </label>
+    
+    {files.documentArrivee && (
+      <div className="mt-2 flex items-center gap-2 text-sm">
+        <CheckCircle2 className="h-4 w-4 text-green-600" />
+        <span className="text-green-700 truncate max-w-[220px]">
+          {files.documentArrivee.name}
+        </span>
+      </div>
+    )}
+  </div>
+</div>
 
         {/* Véhicule */}
         <div className="grid grid-cols-3 gap-4 mb-4">
@@ -358,12 +436,12 @@ export default function TravelRequestForm() {
 
         {/* Boutons */}
         <div className="flex justify-end gap-4">
-          <button type="button" className="px-8 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all">
+          <button type="button" className="px-8 py-3 border-2 border-gray-300 rounded-full text-gray-700 font-semibold hover:bg-gray-50 transition-all">
             Retour
           </button>
           <button type="button" onClick={handleSubmit}
-            className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-orange-700 transition-all">
-            Envoyer
+            className="px-30 py-5 bg-orange-500 text-white rounded-full font-semibold hover:bg-green-600  transition-all">
+            Calculer
           </button>
         </div>
       </div>
