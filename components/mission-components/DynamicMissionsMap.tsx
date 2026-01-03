@@ -56,18 +56,14 @@ export default function DynamicMissionsMap({
   const [routeStats, setRouteStats] = useState<RouteStats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Geocoding function
-  const geocodeCity = async (
-    cityName: string, 
-    address: string | null = null
-  ): Promise<Coordinates | null> => {
-    const cacheKey = address || cityName;
-    if (geocodeCache.current[cacheKey]) {
-      return geocodeCache.current[cacheKey];
+ // Geocoding function - utilise uniquement les noms de villes
+  const geocodeCity = async (cityName: string): Promise<Coordinates | null> => {
+    if (geocodeCache.current[cityName]) {
+      return geocodeCache.current[cityName];
     }
 
     try {
-      const query = address || `${cityName}, France`;
+      const query = `${cityName}, France`;
       const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
       
       const response = await fetch(url, {
@@ -80,7 +76,7 @@ export default function DynamicMissionsMap({
       
       if (data && data.length > 0) {
         const coords: Coordinates = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-        geocodeCache.current[cacheKey] = coords;
+        geocodeCache.current[cityName] = coords;
         return coords;
       }
       
@@ -188,14 +184,12 @@ export default function DynamicMissionsMap({
 
       const startCoords = await geocodeCity(
         mission.villeDepart, 
-        mission.adresseDepartComplete || null
       );
       
       await new Promise(resolve => setTimeout(resolve, 100));
       
       const endCoords = await geocodeCity(
         mission.villeArrivee, 
-        mission.adresseArriveeComplete || null
       );
 
       if (!startCoords || !endCoords) {
