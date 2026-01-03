@@ -1,18 +1,24 @@
 'use client';
 
-import { useRouter, useParams } from 'next/navigation';
+import { use, useMemo, useState } from 'react'; // ✅ Importer 'use'
+import { useRouter } from 'next/navigation';
 import { Mission, missionsData } from '@/app/data/missions';
 import MissionDetails from '@/components/mission-components/MissionDetails';
 import ProfileHeader from '@/components/mission-components/ProfileHeader';
-import { useMemo, useState } from 'react';
 import SidebarAdherant from '@/app/components/sideBarAdherant';
-export default function Page() {
+
+export default function MissionReservationPage({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> // ✅ params est maintenant une Promise
+}) {
   const router = useRouter();
-  const params = useParams();          // 👈 correct
-  const missionId = Number(params.id); // 👈 correct
+  
+  // ✅ Unwrap la Promise avec React.use()
+  const resolvedParams = use(params);
+  const missionId = Number(resolvedParams.id);
 
-  const mission = missionsData.find(m => m.id === missionId);
-
+  const mission = missionsData.find((m): m is Mission => m.id === missionId);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isPositionOpen, setIsPositionOpen] = useState(false);
@@ -26,42 +32,36 @@ export default function Page() {
   const filteredMissions = useMemo(() => {
     if (!searchQuery) return missionsData;
 
-    return missionsData.filter(
-      (m: Mission) =>
-        m.villeDepart.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.villeArrivee.toLowerCase().includes(searchQuery.toLowerCase())
+    return missionsData.filter(m =>
+      m.villeDepart.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.villeArrivee.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [searchQuery]);
 
-  const handlePositionSearch = (data: any) => {
-    console.log("Recherche position:", data);
-    // Logique de filtrage par position
-  };
-
-  const handleFilterSearch = (data: any) => {
-    console.log("Recherche avec filtres:", data);
-    // Logique de filtrage avancé
-  };
-  if (!mission) return <p>Mission introuvable</p>;
+  if (!mission) {
+    return (
+      <div className="min-h-screen bg-black text-white p-8">
+        Mission introuvable
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black">
-      {/* Header en plein largeur - reste en haut */}
+      <SidebarAdherant
+        isMobileMenuOpen={isMobileMenuOpen}
+        onMobileMenuToggle={toggleMobileMenu}
+        isDesktopMenuOpen={isDesktopMenuOpen}
+        onDesktopMenuToggle={toggleDesktopMenu}
+      />
 
-       {/* Sidebar Component */}
-            <SidebarAdherant
-              isMobileMenuOpen={isMobileMenuOpen}
-              onMobileMenuToggle={toggleMobileMenu}
-              isDesktopMenuOpen={isDesktopMenuOpen}
-              onDesktopMenuToggle={toggleDesktopMenu}
-            />
-                  
       <ProfileHeader
         isMobileMenuOpen={isMobileMenuOpen}
         isDesktopMenuOpen={isDesktopMenuOpen}
         toggleMobileMenu={toggleMobileMenu}
         toggleDesktopMenu={toggleDesktopMenu}
       />
+
       <MissionDetails
         mission={mission}
         onBack={() => router.back()}

@@ -32,7 +32,7 @@ export default function ProfileHeader({
       />
 
       {/* Header responsive */}
-      <header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-40">
+<header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-[2000]">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-5">
           <div className="flex items-center justify-between gap-3 sm:gap-4">
 

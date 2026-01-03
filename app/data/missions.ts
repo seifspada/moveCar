@@ -14,7 +14,14 @@ export type VehicleType =
   | "cabriolet"
   | "monospace"
   | "luxe"
-  | "camionnette";
+  | "VU3m3"
+  | "VU6m3"
+  | "VU9m3"
+  | "VU12m3"
+  | "VU15m3"
+  | "VU20m3"
+  | "VU25m3"
+  | "VU30m3"; 
 
 
   export type VehiculeCarburant = "Essence" | "Diesel" | "Hybride" | "Electrique";
@@ -64,11 +71,50 @@ export const vehicleIcons: Record<VehicleType, { image: string; label: string; e
     examples: "Mercedes Classe S, Porsche Panamera",
     image: "/icons/vehicles/lux.png"
   },
-  camionnette: {
-    label: "Camionnette",
+  VU3m3: {
+    label: "VU 3m3",
     examples: "Dmax",
     image: "/icons/vehicles/camionette.png"
-  }
+  },
+VU6m3: {
+    label: "VU 6m3",
+    examples: "Dmax",
+    image: "/icons/vehicles/camionette.png"
+  },
+  VU9m3: {
+    label: "VU 9m3",
+    examples: "Dmax",
+    image: "/icons/vehicles/camionette.png"
+  },
+  VU12m3: {
+    label: "VU 12m3",
+    examples: "Dmax",
+    image: "/icons/vehicles/camionette.png"
+  },
+VU15m3: {
+    label: "VU 15m3",
+    examples: "Dmax",
+    image: "/icons/vehicles/camionette.png"
+  },
+  VU20m3: {
+    label: "VU 20m3",
+    examples: "Dmax",
+    image: "/icons/vehicles/camionette.png"
+  },
+  VU25m3: {
+    label: "VU 25m3",
+    examples: "Dmax",
+    image: "/icons/vehicles/camionette.png"
+  },
+    VU30m3: {
+    label: "VU 30m3",
+    examples: "Dmax",
+    image: "/icons/vehicles/camionette.png"
+  },
+
+
+
+
 };
 
 
@@ -81,27 +127,24 @@ export interface Mission {
   fraisPeage: string;
   montant: number;
   vehicleType: VehicleType;
-
   entite: string;
-  lieuDepart: string;
-  adresseDepartComplete: string;
-  lieuArrivee: string;
-  adresseArriveeComplete: string;
+  
+  lieuDepart?: string;              // ✅ Rendu optionnel
+  adresseDepartComplete?: string;
+  lieuArrivee?: string;             // ✅ Rendu optionnel
+  adresseArriveeComplete?: string;
 
   kmTotalAutorise: number;
   dateDebutMin: string;
   dateDebutMax: string;
   dateHeureExpiration: string;
-
   modeleVehicule: string;
   typeBoite: "Manuelle" | "Automatique";
-  typeCarburant: VehiculeCarburant; // ✅ Utilise directement FuelType au lieu de dupliquer
-
+  typeCarburant: VehiculeCarburant;
   tarifDepassementKm: number;
   tarifRetardHeure: number;
   tarifCarburant: string;
   tarifRestitutionAutreEndroit: number;
-
   conditionsAnnulation: string;
   carburantInclus: boolean;
   peagesInclus: boolean;
@@ -145,7 +188,7 @@ export const missionsData: Mission[] = [
     nbKm: 200,
     fraisPeage: "30 €",
     montant: 180,
-    vehicleType: "camionnette",
+    vehicleType: "VU6m3",
     entite: "Europcar",
     lieuDepart: "Port de Marseille",
     adresseDepartComplete: "Quai du Lazaret",

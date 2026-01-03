@@ -309,18 +309,20 @@ export default function FormulairePartenaire() {
               </div>
 
               {/* CityAutocomplete avec synchronisation */}
-              <div>
-                <CityAutocomplete
-                  value={inputValue}
-                  onValueChange={setInputValue}
-                  selectedCity={selectedCity}
-                  onSelectCity={handleCitySelect}
-                  theme="light"
-                  placeholder="Entrez votre ville (min. 2 caractères)"
-                  label="Ville"
-                />
-                <span className="text-orange-500 text-sm ml-2">*</span>
-              </div>
+            <div className="flex flex-col gap-1">
+
+
+  <CityAutocomplete
+    value={inputValue}
+    onValueChange={setInputValue}
+    selectedCity={selectedCity}
+    onSelectCity={handleCitySelect}
+    theme="light"
+    placeholder="Entrez votre ville (min. 2 caractères)"
+  />
+</div>
+
+
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

@@ -26,7 +26,7 @@ interface CityAutocompleteProps {
   placeholder?: string;
   label?: string;
   className?: string;
-  theme?: "dark" | "light"; // Nouveau prop pour le thème
+  theme?: "dark" | "light";
 }
 
 export function CityAutocomplete({
@@ -37,13 +37,38 @@ export function CityAutocomplete({
   placeholder = "Entrez votre ville (min. 2 caractères)",
   label = "Ville",
   className = "",
-  theme = "dark", // Dark par défaut
+  theme = "dark",
 }: CityAutocompleteProps) {
   const [debouncedInput, setDebouncedInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Update dropdown position on scroll and resize
+  useEffect(() => {
+    const updatePosition = () => {
+      if (inputRef.current && showSuggestions) {
+        const rect = inputRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom,
+          left: rect.left,
+          width: rect.width,
+        });
+      }
+    };
+
+    updatePosition();
+    
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+    
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [showSuggestions]);
 
   // Debounce input pour éviter trop de requêtes API
   useEffect(() => {
@@ -138,10 +163,11 @@ export function CityAutocomplete({
   };
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`block ${className}`}>
       {label && (
         <label className={`block text-sm font-medium mb-2 ${themeClasses.label}`}>
           {label}
+          {theme === "light" && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
       <input
@@ -165,9 +191,9 @@ export function CityAutocomplete({
             ref={suggestionsRef}
             className={`fixed z-50 w-full mt-1 border rounded-lg max-h-60 overflow-y-auto ${themeClasses.dropdown}`}
             style={{
-              top: inputRef.current?.getBoundingClientRect().bottom,
-              left: inputRef.current?.getBoundingClientRect().left,
-              width: inputRef.current?.offsetWidth,
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+              width: `${dropdownPosition.width}px`,
             }}
           >
             {isLoading ? (

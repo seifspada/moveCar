@@ -71,10 +71,11 @@ export default function MissionCard({ mission }: { mission: Mission }) {
 
         {/* Section centrale et droite : Informations */}
         <div className="flex-1 flex flex-col justify-between p-1.5 sm:p-3 md:p-4 lg:p-6 min-w-0">
-          {/* Structure en grille pour aligner Km et Péage verticalement */}
+          {/* Structure en grille pour 2 lignes */}
           <div className="grid grid-cols-[1fr_auto_1fr_auto_auto_auto] gap-x-1 sm:gap-x-3 md:gap-x-4 lg:gap-x-6 gap-y-1.5 sm:gap-y-3 md:gap-y-4 lg:gap-y-6">
             
-            {/* LIGNE 1 */}
+            {/* ========== LIGNE 1 ========== */}
+            
             {/* Ville de départ */}
             <div className="flex items-center gap-0.5 sm:gap-1.5 md:gap-2 flex-shrink-0 min-w-[60px] sm:min-w-[80px]">
               <div className="w-3 h-3 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -168,9 +169,20 @@ export default function MissionCard({ mission }: { mission: Mission }) {
               </div>
             </div>
 
-            {/* LIGNE 2 */}
-            {/* Date - occupe 3 colonnes */}
-            <div className="col-span-3 flex items-center">
+            {/* ========== LIGNE 2 ========== */}
+            
+            {/* Type véhicule */}
+            <div className="flex items-center">
+              <div className="bg-zinc-800 rounded-md sm:rounded-lg px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-3 md:py-1.5 lg:px-4 lg:py-2">
+                <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 lg:gap-2 mb-0.5">
+                  <p className="text-gray-400 text-[7px] sm:text-[6px] md:text-[10px] lg:text-xs leading-tight">Type</p>
+                </div>
+                <p className="text-white font-semibold text-[8px] sm:text-[8px] md:text-xs lg:text-base leading-tight whitespace-nowrap">{mission.vehicleType}</p>
+              </div>
+            </div>
+
+            {/* Date - alignée sous la flèche */}
+            <div className="flex items-center justify-center">
               <div className="bg-zinc-800 rounded-md sm:rounded-lg px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-3 md:py-1.5 lg:px-4 lg:py-2">
                 <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 lg:gap-2 mb-0.5">
                   <svg className="w-2 h-2 sm:w-3 md:w-3.5 lg:w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,6 +193,9 @@ export default function MissionCard({ mission }: { mission: Mission }) {
                 <p className="text-white font-semibold text-[8px] sm:text-[8px] md:text-xs lg:text-base leading-tight whitespace-nowrap">{mission.dateDisposition}</p>
               </div>
             </div>
+            
+            {/* Cellule vide pour aligner avec l'arrivée */}
+            <div></div>
 
             {/* Péage - aligné sous Km */}
             <div className="flex items-center flex-shrink-0">

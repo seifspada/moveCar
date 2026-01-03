@@ -83,12 +83,12 @@ export default function SidebarAdherant({
           DESKTOP SIDEBAR avec détection automatique
       ======================================== */}
       <aside 
-        className={`hidden md:flex md:flex-col fixed left-0 top-0 h-screen w-72 bg-black border-r-2 border-orange-500 z-50 transform transition-all duration-700 ease-out shadow-2xl ${
+        className={`hidden md:flex md:flex-col fixed left-0 top-0 h-screen w-72 bg-black border-r-2 border-orange-500 z-[3000] transform transition-all duration-700 ease-out shadow-2xl ${
           isDesktopMenuOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
         }`}
       >
         {/* Header avec logo */}
-        <div className="h-30 flex items-center justify-between px-6 border-b border-orange-500/30 bg-slate-800">
+        <div className="h-30 flex items-center justify-between px-6 border-b border-orange-500/30 bg-slate-800 ">
           <div onClick={handleLogoClick} className="flex items-center gap-3 cursor-pointer">
             <Image
               src="/images/R-bg.png"
