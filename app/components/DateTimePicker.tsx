@@ -7,6 +7,8 @@ type DateTimePickerProps = {
   onDateChange: (date: string) => void;
   onTimeChange: (time: string) => void;
   label: string;
+  minDate?: string;
+  minTime?: string;
 };
 
 export function DateTimePicker({
@@ -14,7 +16,9 @@ export function DateTimePicker({
   selectedTime,
   onDateChange,
   onTimeChange,
-  label
+  label,
+  minDate,
+  minTime
 }: DateTimePickerProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -60,7 +64,10 @@ export function DateTimePicker({
 
   const handleDateClick = (day: Date | null) => {
     if (!day) return;
-    const dateStr = day.toISOString().split('T')[0];
+    const year = day.getFullYear();
+    const month = String(day.getMonth() + 1).padStart(2, '0');
+    const dayNum = String(day.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${dayNum}`;
     onDateChange(dateStr);
   };
 
@@ -75,13 +82,12 @@ export function DateTimePicker({
         {label} <span className="text-orange-500">*</span>
       </label>
 
-      {/* Box d'affichage de la sélection */}
       {selectedDate && selectedTime && (
         <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-4 mb-3 flex items-center justify-between">
           <div>
             <p className="text-sm font-semibold text-gray-700">Date sélectionnée</p>
             <p className="text-lg font-bold text-orange-700">
-              {new Date(selectedDate).toLocaleDateString('fr-FR', {
+              {new Date(selectedDate + 'T00:00:00').toLocaleDateString('fr-FR', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -102,101 +108,111 @@ export function DateTimePicker({
         </div>
       )}
 
-      {/* Calendrier et Créneaux côte à côte */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Calendrier */}
-        <div className="bg-white rounded-lg p-2 border border-gray-200">
-          <div className="flex items-center justify-between mb-2">
-            <button
-              type="button"
-              onClick={handlePrevMonth}
-              className="p-1 hover:bg-gray-100 rounded transition"
-            >
-              <ChevronLeft className="w-3 h-3 text-gray-600" />
-            </button>
-            <h4 className="text-xs font-semibold text-gray-900 capitalize">
-              {formatMonthYear(currentMonth)}
-            </h4>
-            <button
-              type="button"
-              onClick={handleNextMonth}
-              className="p-1 hover:bg-gray-100 rounded transition"
-            >
-              <ChevronRight className="w-3 h-3 text-gray-600" />
-            </button>
+      {(!selectedDate || !selectedTime) && (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white rounded-lg p-2 border border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <button
+                type="button"
+                onClick={handlePrevMonth}
+                className="p-1 hover:bg-gray-100 rounded transition"
+              >
+                <ChevronLeft className="w-3 h-3 text-gray-600" />
+              </button>
+              <h4 className="text-xs font-semibold text-gray-900 capitalize">
+                {formatMonthYear(currentMonth)}
+              </h4>
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                className="p-1 hover:bg-gray-100 rounded transition"
+              >
+                <ChevronRight className="w-3 h-3 text-gray-600" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-7 gap-0.5 mb-1">
+              {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, idx) => (
+                <div key={idx} className="text-center text-[10px] font-semibold text-gray-600 py-0.5">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-0.5">
+              {getDaysInMonth(currentMonth).map((day, idx) => {
+                if (!day) {
+                  return <div key={idx} className="aspect-square" />;
+                }
+
+                const year = day.getFullYear();
+                const month = String(day.getMonth() + 1).padStart(2, '0');
+                const dayNum = String(day.getDate()).padStart(2, '0');
+                const dateStr = `${year}-${month}-${dayNum}`;
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                
+                const isToday = dateStr === todayStr;
+                const isSelected = dateStr === selectedDate;
+                const isPast = day < today;
+                const isBeforeMin = !!(minDate && dateStr < minDate);
+                const isDisabled = isPast || isBeforeMin;
+
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleDateClick(day)}
+                    disabled={isDisabled}
+                    className={`aspect-square rounded text-[10px] font-medium transition-all ${
+                      isSelected
+                        ? 'bg-orange-500 text-white shadow-sm scale-105'
+                        : isDisabled
+                        ? 'text-gray-300 cursor-not-allowed'
+                        : isToday
+                        ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                        : 'hover:bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    {day.getDate()}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Jours de la semaine */}
-          <div className="grid grid-cols-7 gap-0.5 mb-1">
-            {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, idx) => (
-              <div key={idx} className="text-center text-[10px] font-semibold text-gray-600 py-0.5">
-                {day}
-              </div>
-            ))}
-          </div>
-
-          {/* Jours du mois */}
-          <div className="grid grid-cols-7 gap-0.5">
-            {getDaysInMonth(currentMonth).map((day, idx) => {
-              if (!day) {
-                return <div key={idx} className="aspect-square" />;
-              }
-
-              const dateStr = day.toISOString().split('T')[0];
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              const isToday = dateStr === today.toISOString().split('T')[0];
-              const isSelected = dateStr === selectedDate;
-              const isPast = day < today;
-
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleDateClick(day)}
-                  disabled={isPast}
-                  className={`aspect-square rounded text-[10px] font-medium transition-all ${
-                    isSelected
-                      ? 'bg-orange-500 text-white shadow-sm scale-105'
-                      : isPast
-                      ? 'text-gray-300 cursor-not-allowed'
-                      : isToday
-                      ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                      : 'hover:bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  {day.getDate()}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Créneaux horaires */}
-        {selectedDate && (
-          <div>
+          <div className="bg-white rounded-lg p-2 border border-gray-200">
             <label className="block text-xs font-medium text-gray-700 mb-2">
               Créneau horaire <span className="text-orange-500">*</span>
             </label>
-            <div className="grid grid-cols-3 gap-1.5 max-h-64 overflow-y-auto pr-2">
-              {timeSlots.map((slot) => (
-                <button
-                  key={slot}
-                  type="button"
-                  onClick={() => onTimeChange(slot)}
-                  className={`p-1.5 border rounded text-[10px] font-medium transition-all ${
-                    selectedTime === slot
-                      ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm'
-                      : 'border-gray-300 hover:border-orange-300 hover:bg-orange-50 text-gray-700'
-                  }`}
-                >
-                  {slot}
-                </button>
-              ))}
+            <div className="grid grid-cols-3 gap-1.5 max-h-[280px] overflow-y-auto pr-2">
+              {timeSlots.map((slot) => {
+                const isSlotDisabled = !!(minDate && minTime && selectedDate === minDate && slot <= minTime);
+                
+                return (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => onTimeChange(slot)}
+                    disabled={isSlotDisabled}
+                    className={`p-1.5 border rounded text-[10px] font-medium transition-all ${
+                      selectedTime === slot
+                        ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm'
+                        : isSlotDisabled
+                        ? 'border-gray-200 bg-gray-100 text-gray-300 cursor-not-allowed'
+                        : 'border-gray-300 hover:border-orange-300 hover:bg-orange-50 text-gray-700'
+                    }`}
+                  >
+                    {slot}
+                  </button>
+                );
+              })}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

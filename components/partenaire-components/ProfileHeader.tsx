@@ -103,7 +103,7 @@ export default function ProfileHeader({
       priority
     />
   </div>
-  <div className="border-l-4 justify-center border-orange-500 pl-8 mb-1">
+  <div className="hidden md:block border-l-4 justify-center border-orange-500 pl-8 mb-1">
           <h1 className="text-3xl font-bold text-white">Demande de Déplacement</h1>
           <p className="text-sm text-white mt-1">Complétez les informations pour votre demande</p>
         </div>

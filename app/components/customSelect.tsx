@@ -33,7 +33,7 @@ export default function CustomSelect({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between pl-4 pr-4 py-3 rounded-full border border-gray-300  text-black focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-700"
+className="w-full flex items-center justify-between pl-4 pr-4 py-3 rounded-full border border-gray-300 bg-white text-black focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition placeholder-gray-700"
       >
         <span className={!selectedOption ? "text-gray-700" : ""}>
           {displayText}

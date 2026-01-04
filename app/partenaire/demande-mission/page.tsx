@@ -7,6 +7,7 @@ import CustomSelect from '@/app/components/customSelect';
 import { CityAutocomplete, SelectedCity } from '@/components/mission-components/CityAutocomplete';
 import ProfileHeader from '@/components/partenaire-components/ProfileHeader';
 import SidebarPartenaire from '@/app/components/sideBarPartenaire';
+import AddressSection from '@/components/partenaire-components/AddressSection';
 
 // Types
 type FormData = {
@@ -184,7 +185,7 @@ export default function TravelRequestForm() {
             isOnline: true
           }}              />   
         <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden pt-15">
-          <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-6">
+          <div className=" bg-gradient-to-r from-green-600 to-green-500 text-white p-6">
             <h2 className="text-2xl font-semibold flex items-center gap-3">
               <CheckCircle2 className="w-8 h-8" />
               Demande de déplacement envoyée
@@ -255,7 +256,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
           isOnline: true
         }}            />
       <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8 pt-15 md:pt-20 my-10">
-        <div className="border-l-4 border-orange-500 pl-4 mb-8">
+        <div className="block lg:hidden border-l-4 border-orange-500 pl-4 mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Demande de Déplacement</h1>
           <p className="text-sm text-gray-600 mt-1">Complétez les informations pour votre demande</p>
         </div>
@@ -274,149 +275,42 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
           </div>
         </div>
 
-       {/* Départ */}
-<div className="border-2 border-orange-200 rounded-xl p-6 mb-6 bg-gradient-to-br from-orange-50 to-white">
-  <h2 className="text-xl font-bold text-orange-700 mb-4 flex items-center">
-    <span className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm mr-3">1</span>
-    Adresse de départ
-  </h2>
-  <div className="space-y-4">
-    {/* CityAutocomplete pour ville de départ */}
-<div className="grid grid-cols-2 gap-4">
-  {/* Adresse de départ (editable) */}
-  <div className="w-full">
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Adresse de départ<span className="text-orange-500 text-xs"> *</span>
-    </label>
-    <input
-      type="text"
-      value={formData.adresseDepartComplete}
-      onChange={(e) =>
-        setFormData(prev => ({
-          ...prev,
-          adresseDepartComplete: e.target.value
-        }))
-      }
-      placeholder="Adresse de départ"
-      className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500" 
-    />
-  </div>
+ <AddressSection
+        type="depart"
+        stepNumber={1}
+        title="Adresse de départ"
+        formData={formData}
+        onFormDataChange={setFormData}
+        inputValue={inputValueDepart}
+        onInputValueChange={setInputValueDepart}
+        selectedCity={selectedCityDepart}
+        onSelectCity={handleCitySelectDepart}
+        notify={departureNotify}
+        onNotifyChange={setDepartureNotify}
+        notifyLabel="Prévenir une personne au départ"
+      />
 
-  {/* City Autocomplete */}
-  <div className="w-full">
-    
-    <CityAutocomplete
-      value={inputValueDepart}
-      onValueChange={setInputValueDepart}
-      selectedCity={selectedCityDepart}
-      onSelectCity={handleCitySelectDepart}
-      theme="light"
-      placeholder="Ville de départ"
-    />
-  </div>
-</div>
+      {/* Section Arrivée */}
+      <AddressSection
+        type="arrivee"
+        stepNumber={2}
+        title="Adresse d'arrivée"
+        formData={formData}
+        onFormDataChange={setFormData}
+        inputValue={inputValueArrivee}
+        onInputValueChange={setInputValueArrivee}
+        selectedCity={selectedCityArrivee}
+        onSelectCity={handleCitySelectArrivee}
+        notify={arrivalNotify}
+        onNotifyChange={setArrivalNotify}
+        notifyLabel="Prévenir une personne à l'arrivée"
+      />
 
-  
-<div className="grid grid-cols-2 gap-4">
-  <CustomSelect
-    options={[
-      { label: "Agence", value: "agence" },
-      { label: "Concession", value: "concession" },
-      { label: "Particulier", value: "particulier" }
-    ]}
-    value={formData.typeLieuDepart}           // ← CORRECTION ici
-    onChange={(value) => handleInputChange({ 
-      target: { name: 'typeLieuDepart', value: String(value) } 
-    } as any)}
-    placeholder="Type de lieu"
-/>
-  <input 
-    type="text" 
-    name="nomLieuDepart" 
-    value={formData.nomLieuDepart} 
-    onChange={handleInputChange}
-    placeholder="Nom du lieu (ex: Agence XYZ)" 
-    className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500" 
-  />
-</div>
-    <ToggleSwitch label="Prévenir une personne au départ" checked={departureNotify} onChange={setDepartureNotify} />
-  </div>
-</div>
-
-{/* Arrivée */}
-<div className="border-2 border-orange-200 rounded-xl p-6 mb-6 bg-gradient-to-br from-orange-50 to-white">
-  <h2 className="text-xl font-bold text-orange-700 mb-4 flex items-center">
-    <span className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm mr-3">2</span>
-    Adresse d'arrivée
-  </h2>
-  <div className="space-y-4">
-    {/* CityAutocomplete pour ville d'arrivée */}
-<div className="grid grid-cols-2 gap-4">
-  {/* Adresse d'arrivée (editable) */}
-  <div className="w-full">
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Adresse d'arrivée<span className="text-orange-500 text-xs"> *</span>
-    </label>
-    <input
-      type="text"
-      value={formData.adresseArriveeComplete}
-      onChange={(e) =>
-        setFormData(prev => ({
-          ...prev,
-          adresseArriveeComplete: e.target.value
-        }))
-      }
-      placeholder="Adresse d'arrivée"
-      className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500"
-    />
-  </div>
-
-  {/* City Autocomplete */}
-  <div className="w-full">
-  
-    <CityAutocomplete
-      value={inputValueArrivee}
-      onValueChange={setInputValueArrivee}
-      selectedCity={selectedCityArrivee}
-      onSelectCity={handleCitySelectArrivee}
-      theme="light"
-      placeholder="Ville d'arrivée"
-    />
-  </div>
-</div>
-
-
-    
-<div className="grid grid-cols-2 gap-4">
-  <CustomSelect
-    options={[
-      { label: "Agence", value: "agence" },
-      { label: "Concession", value: "concession" },
-      { label: "Particulier", value: "particulier" }
-    ]}
-    value={formData.typeLieuArrivee}
-    onChange={(value) => handleInputChange({ 
-      target: { name: 'typeLieuArrivee', value: String(value) } 
-    } as any)}
-    placeholder="Type de lieu"
-/>
-  <input 
-    type="text" 
-    name="nomLieuArrivee" 
-    value={formData.nomLieuArrivee} 
-    onChange={handleInputChange}
-    placeholder="Nom du lieu (ex: Concession ACME)" 
-    className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500" 
-  />
-</div>
-    <ToggleSwitch label="Prévenir une personne à l'arrivée" checked={arrivalNotify} onChange={setArrivalNotify} />
-  </div>
-</div>
        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
   {/* Document de départ */}
   <div>
     <label className="block text-sm font-semibold text-gray-700 mb-3">
-      Document de départ <span className="text-orange-500 text-xs">(facultatif)</span>
+      Document administratif <span className="text-orange-500 text-xs">(facultatif)</span>
     </label>
     <label className="flex items-center justify-center w-full h-36 border-2 border-dashed border-orange-300 rounded-full cursor-pointer bg-orange-50/50 hover:border-orange-500 hover:bg-orange-50 transition-all group">
       <div className="text-center p-6">
@@ -543,13 +437,15 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
             onTimeChange={setSelectedTime1}
             label="Disponible à partir du"
           />
-          <DateTimePicker 
-            selectedDate={selectedDate2} 
-            selectedTime={selectedTime2}
-            onDateChange={setSelectedDate2}
-            onTimeChange={setSelectedTime2}
-            label="Disponible jusqu'au"
-          />
+        <DateTimePicker 
+  selectedDate={selectedDate2} 
+  selectedTime={selectedTime2}
+  onDateChange={setSelectedDate2}
+  onTimeChange={setSelectedTime2}
+  label="Livraison au plus tard"
+  minDate={selectedDate1}
+  minTime={selectedTime1}
+/>
         </div>
 
         {/* Boutons */}
@@ -558,7 +454,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
             Retour
           </button>
           <button type="button" onClick={handleSubmit}
-            className="px-30 py-5 bg-orange-500 text-white rounded-full font-semibold hover:bg-green-600  transition-all">
+            className="px-20 py-5 bg-orange-500 text-white rounded-full font-semibold hover:bg-green-600  transition-all">
             Calculer
           </button>
         </div>
