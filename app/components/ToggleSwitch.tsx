@@ -4,7 +4,7 @@ interface ToggleSwitchProps {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
-  // Nouveaux props pour les champs conditionnels
+  // Rendre les callbacks obligatoires quand les valeurs sont fournies
   nomValue?: string;
   telephoneValue?: string;
   onNomChange?: (value: string) => void;
@@ -57,15 +57,19 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           {/* Champ Nom */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nom & prenom<span className="text-red-500 ml-1">*</span>
+              Nom & prénom<span className="text-red-500 ml-1">*</span>
             </label>
             <input
               type="text"
               value={nomValue}
-              onChange={(e) => onNomChange?.(e.target.value)}
+              onChange={(e) => {
+                if (onNomChange) {
+                  onNomChange(e.target.value);
+                }
+              }}
               placeholder="Nom complet"
               required={checked}
-className="w-full px-4 py-2 border border-gray-300 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-orange-50 transition-colors"
+              className="w-full px-4 py-2 border border-gray-300 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-orange-50 transition-colors"
             />
           </div>
 
@@ -77,10 +81,14 @@ className="w-full px-4 py-2 border border-gray-300 bg-white rounded-full focus:o
             <input
               type="tel"
               value={telephoneValue}
-              onChange={(e) => onTelephoneChange?.(e.target.value)}
+              onChange={(e) => {
+                if (onTelephoneChange) {
+                  onTelephoneChange(e.target.value);
+                }
+              }}
               placeholder="+33 6 12 34 56 78"
               required={checked}
-className="w-full px-4 py-2 border border-gray-300 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-orange-50 transition-colors"
+              className="w-full px-4 py-2 border border-gray-300 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-orange-50 transition-colors"
             />
           </div>
         </div>

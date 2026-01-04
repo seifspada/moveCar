@@ -1,6 +1,7 @@
 import CustomSelect from "@/app/components/customSelect";
 import { CityAutocomplete } from "../mission-components/CityAutocomplete";
 import ToggleSwitch from "@/app/components/ToggleSwitch";
+import { useState } from "react";
 
 // Types pour les props
 interface AddressSectionProps {
@@ -14,7 +15,6 @@ interface AddressSectionProps {
     typeLieuArrivee?: string;
     nomLieuDepart?: string;
     nomLieuArrivee?: string;
-    // Nouveaux champs pour les contacts
     nomContactDepart?: string;
     telephoneContactDepart?: string;
     nomContactArrivee?: string;
@@ -51,7 +51,8 @@ export default function AddressSection({
   const titleColor = type === 'depart' ? 'text-orange-700' : 'text-blue-700';
   const badgeColor = type === 'depart' ? 'bg-orange-500' : 'bg-blue-500';
   const focusRing = type === 'depart' ? 'focus:ring-orange-500' : 'focus:ring-blue-500';
-
+const [notifyNom, setNotifyNom] = useState('');
+const [notifyTelephone, setNotifyTelephone] = useState('');
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     onFormDataChange(prev => ({
@@ -144,12 +145,16 @@ className={`w-full px-4 py-3 border border-gray-300 bg-white rounded-full ${focu
           />
         </div>
 
-        {/* Toggle de notification */}
-        <ToggleSwitch 
-          label={notifyLabel} 
-          checked={notify} 
-          onChange={onNotifyChange} 
-        />
+       {/* Toggle de notification */}
+<ToggleSwitch 
+  label={notifyLabel} 
+  checked={notify} 
+  onChange={onNotifyChange}
+  nomValue={notifyNom}
+  telephoneValue={notifyTelephone}
+  onNomChange={setNotifyNom}
+  onTelephoneChange={setNotifyTelephone}
+/>
       </div>
     </div>
   );

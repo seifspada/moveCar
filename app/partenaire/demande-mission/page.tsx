@@ -31,29 +31,6 @@ type FormData = {
 
 
 
-
-// Composant ToggleSwitch
-const ToggleSwitch = ({ label, checked, onChange }: { 
-  label: string; 
-  checked: boolean; 
-  onChange: (checked: boolean) => void;
-}) => (
-  <div className="flex items-center justify-between bg-white border border-orange-200 px-5 py-4 rounded-full">
-    <span className="text-sm font-semibold text-gray-700">{label}</span>
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors shadow-inner ${
-        checked ? 'bg-orange-500' : 'bg-gray-300'
-      }`}
-    >
-      <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
-        checked ? 'translate-x-6' : 'translate-x-1'
-      }`} />
-    </button>
-  </div>
-);
-
 // Composant principal
 export default function TravelRequestForm() {
   const [formData, setFormData] = useState<FormData>({
@@ -306,22 +283,24 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
         notifyLabel="Prévenir une personne à l'arrivée"
       />
 
-       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
   {/* Document de départ */}
   <div>
     <label className="block text-sm font-semibold text-gray-700 mb-3">
       Document administratif <span className="text-orange-500 text-xs">(facultatif)</span>
     </label>
+
     <label className="flex items-center justify-center w-full h-36 border-2 border-dashed border-orange-300 rounded-full cursor-pointer bg-orange-50/50 hover:border-orange-500 hover:bg-orange-50 transition-all group">
       <div className="text-center p-6">
-        <Upload className="mx-auto h-10 w-10 text-orange-400 group-hover:text-orange-600 transition-colors" />
-        <p className="mt-3 text-sm font-medium text-gray-600 group-hover:text-orange-700">
+        <Upload className="mx-auto h-10 w-10 text-orange-400 group-hover:text-orange-600" />
+        <p className="mt-3 text-sm font-medium text-gray-600">
           Déposer ou cliquer pour uploader
         </p>
         <p className="text-xs text-gray-500 mt-1">
           PDF, JPG, PNG • Max. 10 Mo
         </p>
       </div>
+
       <input
         type="file"
         className="hidden"
@@ -329,32 +308,50 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
         onChange={(e) => handleFileChange(e, 'documentDepart')}
       />
     </label>
-    
-    {files.documentDepart && (
-      <div className="mt-2 flex items-center gap-2 text-sm">
-        <CheckCircle2 className="h-4 w-4 text-green-600" />
-        <span className="text-green-700 truncate max-w-[220px]">
-          {files.documentDepart.name}
-        </span>
-      </div>
-    )}
   </div>
 
-  {/* Document d'arrivée */}
   <div>
     <label className="block text-sm font-semibold text-gray-700 mb-3">
-      Document d'arrivée <span className="text-orange-500 text-xs">(facultatif)</span>
+      Document administratif <span className="text-orange-500 text-xs">(facultatif)</span>
     </label>
+
     <label className="flex items-center justify-center w-full h-36 border-2 border-dashed border-orange-300 rounded-full cursor-pointer bg-orange-50/50 hover:border-orange-500 hover:bg-orange-50 transition-all group">
       <div className="text-center p-6">
-        <Upload className="mx-auto h-10 w-10 text-orange-400 group-hover:text-orange-600 transition-colors" />
-        <p className="mt-3 text-sm font-medium text-gray-600 group-hover:text-orange-700">
+        <Upload className="mx-auto h-10 w-10 text-orange-400 group-hover:text-orange-600" />
+        <p className="mt-3 text-sm font-medium text-gray-600">
           Déposer ou cliquer pour uploader
         </p>
         <p className="text-xs text-gray-500 mt-1">
           PDF, JPG, PNG • Max. 10 Mo
         </p>
       </div>
+
+      <input
+        type="file"
+        className="hidden"
+        accept=".pdf,.jpg,.jpeg,.png"
+        onChange={(e) => handleFileChange(e, 'documentDepart')}
+      />
+    </label>
+  </div>
+
+  {/* Document d'arrivée */}
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 mb-3">
+      Document administratif <span className="text-orange-500 text-xs">(facultatif)</span>
+    </label>
+
+    <label className="flex items-center justify-center w-full h-36 border-2 border-dashed border-orange-300 rounded-full cursor-pointer bg-orange-50/50 hover:border-orange-500 hover:bg-orange-50 transition-all group">
+      <div className="text-center p-6">
+        <Upload className="mx-auto h-10 w-10 text-orange-400 group-hover:text-orange-600" />
+        <p className="mt-3 text-sm font-medium text-gray-600">
+          Déposer ou cliquer pour uploader
+        </p>
+        <p className="text-xs text-gray-500 mt-1">
+          PDF, JPG, PNG • Max. 10 Mo
+        </p>
+      </div>
+
       <input
         type="file"
         className="hidden"
@@ -362,17 +359,9 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
         onChange={(e) => handleFileChange(e, 'documentArrivee')}
       />
     </label>
-    
-    {files.documentArrivee && (
-      <div className="mt-2 flex items-center gap-2 text-sm">
-        <CheckCircle2 className="h-4 w-4 text-green-600" />
-        <span className="text-green-700 truncate max-w-[220px]">
-          {files.documentArrivee.name}
-        </span>
-      </div>
-    )}
   </div>
 </div>
+
 
         {/* Véhicule */}
         <div className="grid grid-cols-3 gap-4 mb-4">
