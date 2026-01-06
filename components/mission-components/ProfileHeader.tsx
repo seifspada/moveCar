@@ -32,7 +32,7 @@ export default function ProfileHeader({
       />
 
       {/* Header responsive */}
-<header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-[2000]">
+      <nav className="fixed inset-x-0 top-0 z-50 bg-slate-800 border-b border-orange-500/30 backdrop-blur-sm animate-slide-blur">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-5">
           <div className="flex items-center justify-between gap-3 sm:gap-4">
 
@@ -69,17 +69,16 @@ export default function ProfileHeader({
                   }`} />
                 </div>
               </button>
-
-             <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-full border-3 sm:border-4 border-orange-500 overflow-hidden shadow-lg">
-    <Image
-      src="/images/logo.jpg"
-      alt="Logo"
-      width={150}
-      height={150}
-      className="w-full h-full object-cover"
-      priority
-    />
-  </div>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-full border-3 sm:border-4 border-orange-500 overflow-hidden shadow-lg">
+                <Image
+                  src="/images/logo.jpg"
+                  alt="Logo"
+                  width={150}
+                  height={150}
+                  className="w-full h-full object-cover"
+                  priority
+                />
+              </div>
             </div>
 
             {/* ✅ Section DROITE: Profil utilisateur - visible sur mobile */}
@@ -103,14 +102,14 @@ export default function ProfileHeader({
               </div>
 
               {/* Bouton Premium - adapté mais visible */}
-              <button className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 rounded-full font-semibold hover:from-yellow-600 hover:to-yellow-700 transition shadow-lg text-xs sm:text-sm md:text-base whitespace-nowrap">
-                <span className="hidden sm:inline">Devenez</span> Premium
+              <button className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 rounded-full font-semibold hover:bg-green-800 hover:from-green-800 hover:to-green-800 transition shadow-lg text-xs sm:text-sm md:text-base whitespace-nowrap">
+                <span className="hidden sm:inline">Devenir</span> Premium
               </button>
             </div>
 
           </div>
         </div>
-      </header>
+      </nav>
     </>
   );
 }

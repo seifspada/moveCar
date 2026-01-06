@@ -24,7 +24,7 @@ export default function SearchBar({ onSearch }: Props) {
   };
 
   return (
-    <div className="relative mb-8">
+    <div className="relative mb-4">
       {/* Container pour group-focus-within */}
       <div className="relative group">
         {/* Input */}

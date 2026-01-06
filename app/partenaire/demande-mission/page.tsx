@@ -12,7 +12,7 @@ import AddressSection from '@/components/partenaire-components/AddressSection';
 // Types
 type FormData = {
   adresseArriveeComplete: string;
-  adresseDepartComplete: string ;
+  adresseDepartComplete: string;
 
   villeDepart: string;
 
@@ -49,12 +49,12 @@ export default function TravelRequestForm() {
   const [showModal, setShowModal] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
- const [inputValueArrivee, setInputValueArrivee] = useState("");
+  const [inputValueArrivee, setInputValueArrivee] = useState("");
   const [selectedCityArrivee, setSelectedCityArrivee] = useState<SelectedCity | null>(null);
   const [inputValueDepart, setInputValueDepart] = useState("");
   const [selectedCityDepart, setSelectedCityDepart] = useState<SelectedCity | null>(null);
   const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
-   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
@@ -81,55 +81,55 @@ export default function TravelRequestForm() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
- const validateForm = (): string[] => {
-  const missing: string[] = [];
+  const validateForm = (): string[] => {
+    const missing: string[] = [];
 
-  const requiredFields = [
-    { value: formData.villeDepart, label: 'Ville de départ' },
-        { value: formData.adresseDepartComplete, label: 'Adresse de départ' },
+    const requiredFields = [
+      { value: formData.villeDepart, label: 'Ville de départ' },
+      { value: formData.adresseDepartComplete, label: 'Adresse de départ' },
 
-    { value: formData.typeLieuDepart, label: 'Type de lieu de départ' },
-    // nomLieuDepart → optionnel
-    
-    { value: formData.villeArrivee, label: "Ville d'arrivée" },
-            { value: formData.adresseArriveeComplete, label: 'Adresse d’arrivée' },
+      { value: formData.typeLieuDepart, label: 'Type de lieu de départ' },
+      // nomLieuDepart → optionnel
 
-    { value: formData.typeLieuArrivee, label: "Type de lieu d'arrivée" },
-    // nomLieuArrivee → optionnel
+      { value: formData.villeArrivee, label: "Ville d'arrivée" },
+      { value: formData.adresseArriveeComplete, label: 'Adresse d’arrivée' },
 
-    { value: formData.typeVehicule, label: 'Type de véhicule' },
-    { value: formData.marqueModele, label: 'Marque et modèle' },
-    { value: formData.immatriculation, label: 'Immatriculation' },
-    { value: formData.nombrePlaces, label: 'Nombre de places' },
-    { value: formData.boiteVitesse, label: 'Boîte de vitesse' },
+      { value: formData.typeLieuArrivee, label: "Type de lieu d'arrivée" },
+      // nomLieuArrivee → optionnel
 
-    { value: selectedDate1, label: 'Date de début' },
-    { value: selectedTime1, label: 'Heure de début' },
-    { value: selectedDate2, label: 'Date de fin' },
-    { value: selectedTime2, label: 'Heure de fin' },
-  ];
+      { value: formData.typeVehicule, label: 'Type de véhicule' },
+      { value: formData.marqueModele, label: 'Marque et modèle' },
+      { value: formData.immatriculation, label: 'Immatriculation' },
+      { value: formData.nombrePlaces, label: 'Nombre de places' },
+      { value: formData.boiteVitesse, label: 'Boîte de vitesse' },
 
-  requiredFields.forEach(field => {
-    if (!field.value?.toString().trim()) {
-      missing.push(field.label);
+      { value: selectedDate1, label: 'Date de début' },
+      { value: selectedTime1, label: 'Heure de début' },
+      { value: selectedDate2, label: 'Date de fin' },
+      { value: selectedTime2, label: 'Heure de fin' },
+    ];
+
+    requiredFields.forEach(field => {
+      if (!field.value?.toString().trim()) {
+        missing.push(field.label);
+      }
+    });
+
+    // Vérification cohérence dates
+    if (selectedDate1 && selectedDate2 && selectedTime1 && selectedTime2) {
+      const start = new Date(`${selectedDate1}T${selectedTime1}`);
+      const end = new Date(`${selectedDate2}T${selectedTime2}`);
+
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        missing.push('Format de date/heure invalide');
+      }
+      else if (end <= start) {
+        missing.push('La date/heure de fin doit être après le début');
+      }
     }
-  });
 
-  // Vérification cohérence dates
-  if (selectedDate1 && selectedDate2 && selectedTime1 && selectedTime2) {
-    const start = new Date(`${selectedDate1}T${selectedTime1}`);
-    const end = new Date(`${selectedDate2}T${selectedTime2}`);
-    
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      missing.push('Format de date/heure invalide');
-    }
-    else if (end <= start) {
-      missing.push('La date/heure de fin doit être après le début');
-    }
-  }
-
-  return missing;
-};
+    return missing;
+  };
   const handleSubmit = () => {
     const missing = validateForm();
     setMissingFields(missing);
@@ -143,15 +143,15 @@ export default function TravelRequestForm() {
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-black to-amber-100 py-12 px-4">
-         <SidebarPartenaire
-                isMobileMenuOpen={isMobileMenuOpen}
-                onMobileMenuToggle={toggleMobileMenu}
-                isDesktopMenuOpen={isDesktopMenuOpen}
-                onDesktopMenuToggle={toggleDesktopMenu}
-              />
-        
-              {/* Profile Header */}
-              <ProfileHeader
+        <SidebarPartenaire
+          isMobileMenuOpen={isMobileMenuOpen}
+          onMobileMenuToggle={toggleMobileMenu}
+          isDesktopMenuOpen={isDesktopMenuOpen}
+          onDesktopMenuToggle={toggleDesktopMenu}
+        />
+
+        {/* Profile Header */}
+        <ProfileHeader
           isMobileMenuOpen={isMobileMenuOpen}
           isDesktopMenuOpen={isDesktopMenuOpen}
           toggleMobileMenu={toggleMobileMenu}
@@ -160,7 +160,7 @@ export default function TravelRequestForm() {
             email: 'transportexpress@gmail.com',
             logoUrl: '/images/logo.jpg',
             isOnline: true
-          }}              />   
+          }} />
         <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden pt-15">
           <div className=" bg-gradient-to-r from-green-600 to-green-500 text-white p-6">
             <h2 className="text-2xl font-semibold flex items-center gap-3">
@@ -201,28 +201,28 @@ export default function TravelRequestForm() {
 
 
   const [files, setFiles] = useState<{
-  documentDepart?: File;
-  documentArrivee?: File;
-}>({});
+    documentDepart?: File;
+    documentArrivee?: File;
+  }>({});
 
-// 2. Fonction de gestion (à ajouter aussi)
-const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'documentDepart' | 'documentArrivee') => {
-  const file = e.target.files?.[0];
-  if (file) {
-    setFiles(prev => ({ ...prev, [key]: file }));
-  }
-};
+  // 2. Fonction de gestion (à ajouter aussi)
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'documentDepart' | 'documentArrivee') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFiles(prev => ({ ...prev, [key]: file }));
+    }
+  };
   return (
     <div className="min-h-screen bg-black">
 
       <SidebarPartenaire
-              isMobileMenuOpen={isMobileMenuOpen}
-              onMobileMenuToggle={toggleMobileMenu}
-              isDesktopMenuOpen={isDesktopMenuOpen}
-              onDesktopMenuToggle={toggleDesktopMenu}
-            />
-      
-            <ProfileHeader
+        isMobileMenuOpen={isMobileMenuOpen}
+        onMobileMenuToggle={toggleMobileMenu}
+        isDesktopMenuOpen={isDesktopMenuOpen}
+        onDesktopMenuToggle={toggleDesktopMenu}
+      />
+
+      <ProfileHeader
         isMobileMenuOpen={isMobileMenuOpen}
         isDesktopMenuOpen={isDesktopMenuOpen}
         toggleMobileMenu={toggleMobileMenu}
@@ -231,7 +231,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
           email: 'transportexpress@gmail.com',
           logoUrl: '/images/logo.jpg',
           isOnline: true
-        }}            />
+        }} />
       <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8 pt-15 md:pt-20 my-10">
         <div className="block lg:hidden border-l-4 border-orange-500 pl-4 mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Demande de Déplacement</h1>
@@ -242,125 +242,125 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
         <div className="grid md:grid-cols-2 gap-4 mb-8">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Entité</label>
-            <input type="text" value="Société Transport Express" readOnly 
+            <input type="text" value="Société Transport Express" readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-full bg-gray-50 text-gray-700" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Adresse</label>
-            <input type="text" value="45 Avenue des Champs-Élysées, 75008 Paris" readOnly 
+            <input type="text" value="45 Avenue des Champs-Élysées, 75008 Paris" readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-full bg-gray-50 text-gray-700" />
           </div>
         </div>
 
- <AddressSection
-        type="depart"
-        stepNumber={1}
-        title="Adresse de départ"
-        formData={formData}
-        onFormDataChange={setFormData}
-        inputValue={inputValueDepart}
-        onInputValueChange={setInputValueDepart}
-        selectedCity={selectedCityDepart}
-        onSelectCity={handleCitySelectDepart}
-        notify={departureNotify}
-        onNotifyChange={setDepartureNotify}
-        notifyLabel="Prévenir une personne au départ"
-      />
+        <AddressSection
+          type="depart"
+          stepNumber={1}
+          title="Adresse de départ"
+          formData={formData}
+          onFormDataChange={setFormData}
+          inputValue={inputValueDepart}
+          onInputValueChange={setInputValueDepart}
+          selectedCity={selectedCityDepart}
+          onSelectCity={handleCitySelectDepart}
+          notify={departureNotify}
+          onNotifyChange={setDepartureNotify}
+          notifyLabel="Prévenir une personne au départ"
+        />
 
-      {/* Section Arrivée */}
-      <AddressSection
-        type="arrivee"
-        stepNumber={2}
-        title="Adresse d'arrivée"
-        formData={formData}
-        onFormDataChange={setFormData}
-        inputValue={inputValueArrivee}
-        onInputValueChange={setInputValueArrivee}
-        selectedCity={selectedCityArrivee}
-        onSelectCity={handleCitySelectArrivee}
-        notify={arrivalNotify}
-        onNotifyChange={setArrivalNotify}
-        notifyLabel="Prévenir une personne à l'arrivée"
-      />
+        {/* Section Arrivée */}
+        <AddressSection
+          type="arrivee"
+          stepNumber={2}
+          title="Adresse d'arrivée"
+          formData={formData}
+          onFormDataChange={setFormData}
+          inputValue={inputValueArrivee}
+          onInputValueChange={setInputValueArrivee}
+          selectedCity={selectedCityArrivee}
+          onSelectCity={handleCitySelectArrivee}
+          notify={arrivalNotify}
+          onNotifyChange={setArrivalNotify}
+          notifyLabel="Prévenir une personne à l'arrivée"
+        />
 
-<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-  {/* Document de départ */}
-  <div>
-    <label className="block text-sm font-semibold text-gray-700 mb-3">
-      Document administratif <span className="text-orange-500 text-xs">(facultatif)</span>
-    </label>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Document de départ */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
+              Document administratif <span className="text-orange-500 text-xs">(facultatif)</span>
+            </label>
 
-    <label className="flex items-center justify-center w-full h-36 border-2 border-dashed border-orange-300 rounded-full cursor-pointer bg-orange-50/50 hover:border-orange-500 hover:bg-orange-50 transition-all group">
-      <div className="text-center p-6">
-        <Upload className="mx-auto h-10 w-10 text-orange-400 group-hover:text-orange-600" />
-        <p className="mt-3 text-sm font-medium text-gray-600">
-          Déposer ou cliquer pour uploader
-        </p>
-        <p className="text-xs text-gray-500 mt-1">
-          PDF, JPG, PNG • Max. 10 Mo
-        </p>
-      </div>
+            <label className="flex items-center justify-center w-full h-36 border-2 border-dashed border-orange-300 rounded-full cursor-pointer bg-orange-50/50 hover:border-orange-500 hover:bg-orange-50 transition-all group">
+              <div className="text-center p-6">
+                <Upload className="mx-auto h-10 w-10 text-orange-400 group-hover:text-orange-600" />
+                <p className="mt-3 text-sm font-medium text-gray-600">
+                  Déposer ou cliquer pour uploader
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  PDF, JPG, PNG • Max. 10 Mo
+                </p>
+              </div>
 
-      <input
-        type="file"
-        className="hidden"
-        accept=".pdf,.jpg,.jpeg,.png"
-        onChange={(e) => handleFileChange(e, 'documentDepart')}
-      />
-    </label>
-  </div>
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => handleFileChange(e, 'documentDepart')}
+              />
+            </label>
+          </div>
 
-  <div>
-    <label className="block text-sm font-semibold text-gray-700 mb-3">
-      Document administratif <span className="text-orange-500 text-xs">(facultatif)</span>
-    </label>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
+              Document administratif <span className="text-orange-500 text-xs">(facultatif)</span>
+            </label>
 
-    <label className="flex items-center justify-center w-full h-36 border-2 border-dashed border-orange-300 rounded-full cursor-pointer bg-orange-50/50 hover:border-orange-500 hover:bg-orange-50 transition-all group">
-      <div className="text-center p-6">
-        <Upload className="mx-auto h-10 w-10 text-orange-400 group-hover:text-orange-600" />
-        <p className="mt-3 text-sm font-medium text-gray-600">
-          Déposer ou cliquer pour uploader
-        </p>
-        <p className="text-xs text-gray-500 mt-1">
-          PDF, JPG, PNG • Max. 10 Mo
-        </p>
-      </div>
+            <label className="flex items-center justify-center w-full h-36 border-2 border-dashed border-orange-300 rounded-full cursor-pointer bg-orange-50/50 hover:border-orange-500 hover:bg-orange-50 transition-all group">
+              <div className="text-center p-6">
+                <Upload className="mx-auto h-10 w-10 text-orange-400 group-hover:text-orange-600" />
+                <p className="mt-3 text-sm font-medium text-gray-600">
+                  Déposer ou cliquer pour uploader
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  PDF, JPG, PNG • Max. 10 Mo
+                </p>
+              </div>
 
-      <input
-        type="file"
-        className="hidden"
-        accept=".pdf,.jpg,.jpeg,.png"
-        onChange={(e) => handleFileChange(e, 'documentDepart')}
-      />
-    </label>
-  </div>
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => handleFileChange(e, 'documentDepart')}
+              />
+            </label>
+          </div>
 
-  {/* Document d'arrivée */}
-  <div>
-    <label className="block text-sm font-semibold text-gray-700 mb-3">
-      Document administratif <span className="text-orange-500 text-xs">(facultatif)</span>
-    </label>
+          {/* Document d'arrivée */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
+              Document administratif <span className="text-orange-500 text-xs">(facultatif)</span>
+            </label>
 
-    <label className="flex items-center justify-center w-full h-36 border-2 border-dashed border-orange-300 rounded-full cursor-pointer bg-orange-50/50 hover:border-orange-500 hover:bg-orange-50 transition-all group">
-      <div className="text-center p-6">
-        <Upload className="mx-auto h-10 w-10 text-orange-400 group-hover:text-orange-600" />
-        <p className="mt-3 text-sm font-medium text-gray-600">
-          Déposer ou cliquer pour uploader
-        </p>
-        <p className="text-xs text-gray-500 mt-1">
-          PDF, JPG, PNG • Max. 10 Mo
-        </p>
-      </div>
+            <label className="flex items-center justify-center w-full h-36 border-2 border-dashed border-orange-300 rounded-full cursor-pointer bg-orange-50/50 hover:border-orange-500 hover:bg-orange-50 transition-all group">
+              <div className="text-center p-6">
+                <Upload className="mx-auto h-10 w-10 text-orange-400 group-hover:text-orange-600" />
+                <p className="mt-3 text-sm font-medium text-gray-600">
+                  Déposer ou cliquer pour uploader
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  PDF, JPG, PNG • Max. 10 Mo
+                </p>
+              </div>
 
-      <input
-        type="file"
-        className="hidden"
-        accept=".pdf,.jpg,.jpeg,.png"
-        onChange={(e) => handleFileChange(e, 'documentArrivee')}
-      />
-    </label>
-  </div>
-</div>
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => handleFileChange(e, 'documentArrivee')}
+              />
+            </label>
+          </div>
+        </div>
 
 
         {/* Véhicule */}
@@ -373,7 +373,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
             <option value="compacte">Compacte</option>
             <option value="cabriolet">Cabriolet</option>
             <option value="monospace">Monospace</option>
-            
+
             <option value="luxe">Voiture de luxe</option>
             <option value="VU3m3">VU 3m3</option>
             <option value="VU6m3">VU 6m3</option>
@@ -419,22 +419,22 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'document
         {/* Disponibilité */}
         <div className="border-2 border-orange-200 rounded-xl p-6 mb-8 bg-gradient-to-br from-orange-50 to-white">
           <h2 className="text-lg font-bold text-orange-700 mb-4">Disponibilité du véhicule</h2>
-          <DateTimePicker 
-            selectedDate={selectedDate1} 
+          <DateTimePicker
+            selectedDate={selectedDate1}
             selectedTime={selectedTime1}
             onDateChange={setSelectedDate1}
             onTimeChange={setSelectedTime1}
             label="Disponible à partir du"
           />
-        <DateTimePicker 
-  selectedDate={selectedDate2} 
-  selectedTime={selectedTime2}
-  onDateChange={setSelectedDate2}
-  onTimeChange={setSelectedTime2}
-  label="Livraison au plus tard"
-  minDate={selectedDate1}
-  minTime={selectedTime1}
-/>
+          <DateTimePicker
+            selectedDate={selectedDate2}
+            selectedTime={selectedTime2}
+            onDateChange={setSelectedDate2}
+            onTimeChange={setSelectedTime2}
+            label="Livraison au plus tard"
+            minDate={selectedDate1}
+            minTime={selectedTime1}
+          />
         </div>
 
         {/* Boutons */}

@@ -179,7 +179,7 @@ export const missionsData: Mission[] = [
     tarifRestitutionAutreEndroit: 1.2,
     conditionsAnnulation: "Selon convention signée",
     carburantInclus: true,
-    peagesInclus: true,
+    peagesInclus: false,
     favorite: true
   },
   {

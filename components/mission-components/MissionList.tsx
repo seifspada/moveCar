@@ -22,7 +22,7 @@ export default function MissionList({ missions }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {missions.map((mission) => (
         <MissionCard key={mission.id} mission={mission} />
       ))}

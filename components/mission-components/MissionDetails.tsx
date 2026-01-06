@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Mission } from "@/app/type/mission";
 import Image from "next/image";
 import { AlertCircle, ArrowLeft, ArrowRight, Clock, MapPin } from "lucide-react";
-import { Car, ChevronDown, Fuel } from "lucide-react";
+import { Car, ArrowBigRightDash, Fuel } from "lucide-react";
 import { missionsData, vehicleIcons, VehicleType, VehiculeCarburant, vehiculeCarburantIcons } from "@/app/data/missions";
 import { useParams } from "next/navigation";
 import DynamicMissionsMap from "./DynamicMissionsMap";
@@ -97,8 +97,8 @@ export default function MissionDetails({
   ];
 
   return (
-    <div className="min-h-screen bg-black py-8 px-4">
-      <div className="max-w-5xl mx-auto bg-white shadow-2xl rounded-lg border border-orange-500 overflow-hidden">
+    <div className="min-h-screen bg-black">
+      <div className="max-w-6xl mx-auto bg-white shadow-2xl rounded-lg border border-orange-500 overflow-hidden">
 
         {/* En-tête */}
         <div className="bg-black text-white px-8 py-6">
@@ -106,7 +106,7 @@ export default function MissionDetails({
           <p className="text-gray-300 mt-1">Détails de la réservation</p>
         </div>
 
-        <div className="p-8 space-y-10">
+        <div className="p-4 space-y-2">
 
           {/* Informations générales */}
           <section>
@@ -128,11 +128,11 @@ export default function MissionDetails({
               Trajet
             </h2>
 
-            <div className="space-y-6">
-              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <div className="flex flex-row space-y-4 justify-between items-center">
+              <div className="bg-gray-200 p-6 w-100 rounded-full border border-gray-200">
                 <div className="flex items-center">
                   <div className="bg-orange-500 text-white p-3 rounded-full mr-5">
-                    <MapPin size={24} />
+                    <MapPin size={20} />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-800 mb-1">Départ</h3>
@@ -145,13 +145,13 @@ export default function MissionDetails({
               </div>
 
               <div className="flex justify-center">
-                <ChevronDown className="text-orange-500" size={40} />
+                <ArrowBigRightDash className="text-orange-500" size={40} />
               </div>
 
-              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+              <div className="bg-gray-200 p-6 w-100 rounded-full border border-gray-200">
                 <div className="flex items-center">
                   <div className="bg-orange-500 text-white p-3 rounded-full mr-5">
-                    <MapPin size={24} />
+                    <MapPin size={20} />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-800 mb-1">Arrivée</h3>
@@ -173,7 +173,7 @@ export default function MissionDetails({
     Itinéraire de la mission
   </h2>
 
-  <div className="w-full h-[500px] rounded-xl overflow-hidden shadow-2xl border border-gray-300">
+  <div className="w-full h-[400px] rounded-xl overflow-hidden shadow-2xl border border-gray-300">
     {mission ? (
       <DynamicMissionsMap mission={mission} />
     ) : (
@@ -193,7 +193,7 @@ export default function MissionDetails({
               Tarif
             </h2>
 
-            <div className="bg-orange-50 p-6 rounded-lg border-2 border-orange-500">
+            <div className="bg-orange-50 p-6 rounded-full border-2 border-orange-500">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-700 font-medium text-lg">Montant total</span>
                 <span className="text-3xl font-bold text-orange-600">{mission.montant.toFixed(2)} €</span>
@@ -230,11 +230,11 @@ export default function MissionDetails({
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 text-center">
+              <div className="bg-gray-200 p-5 rounded-lg border border-gray-200 text-center">
                 <p className="text-sm text-gray-600 mb-1">Nombre de KM</p>
                 <p className="text-3xl font-bold text-gray-900">{mission.nbKm} km</p>
               </div>
-              <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 text-center">
+              <div className="bg-gray-200 p-5 rounded-lg border border-gray-200 text-center">
                 <p className="text-sm text-gray-600 mb-1">KM total autorisé</p>
                 <p className="text-3xl font-bold text-gray-900">{mission.kmTotalAutorise || mission.nbKm} km</p>
               </div>
@@ -250,7 +250,7 @@ export default function MissionDetails({
               Disponibilité véhicule
             </h2>
 
-            <div className="bg-red-50 border-2 border-red-500 p-6 rounded-lg mb-6 text-center">
+            <div className="bg-red-50 border-2 border-red-500 p-4 rounded-full mb-6 text-center">
               <div className="flex items-center justify-center mb-3">
                 <Clock className="text-red-600 mr-2" size={28} />
                 <span className="text-lg font-medium text-red-800">Temps restant pour réservation</span>
@@ -263,11 +263,11 @@ export default function MissionDetails({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div className="bg-gray-200 text-center p-4 rounded-full border border-gray-200">
                 <p className="text-sm text-gray-600 mb-1">Date de départ Min</p>
                 <p className="font-semibold text-gray-900">{mission.dateDebutMin || mission.dateDisposition}</p>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div className="bg-gray-200 text-center p-4 rounded-full border border-gray-200">
                 <p className="text-sm text-gray-600 mb-1">Date de départ Max</p>
                 <p className="font-semibold text-gray-900">{mission.dateDebutMax || mission.dateDisposition}</p>
               </div>
@@ -343,18 +343,18 @@ export default function MissionDetails({
 
           {/* Boutons d'action */}
           <section>
-            <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex justify-center gap-4 pt-8">
               <button
                 onClick={onBack}
-                className="w-full sm:w-auto bg-white hover:bg-gray-50 text-gray-700 font-semibold py-4 px-10 rounded-full border-2 border-gray-300 transition-all duration-200 flex items-center justify-center"
+                className="flex flex-row px-6 py-2 bg-gradient-to-r from-orange-600 to-orange-800 text-white rounded-full focus:outline-none font-semibold hover:bg-black hover:from-black hover:to-black transition-colors"
               >
-                <ArrowLeft className="mr-2" size={22} />
+                <ArrowLeft className="mr-2" size={26} />
                 Retour
               </button>
 
               <button
                 onClick={onReserve}
-                className="w-full sm:flex-1 bg-orange-500 hover:bg-green-600 text-white font-bold py-4 px-10 rounded-full transition-all duration-300 flex items-center justify-center group text-lg"
+                className="flex flex-row px-10 py-2 bg-gradient-to-r from-orange-600 to-orange-800 text-white rounded-full focus:outline-none font-semibold hover:bg-green-800 hover:from-green-800 hover:to-green-800 transition-colors"
               >
                 Réserver cette mission
                 <ArrowRight className="ml-4 group-hover:translate-x-2 transition-transform" size={26} />

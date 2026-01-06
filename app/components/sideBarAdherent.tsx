@@ -30,6 +30,7 @@ export default function SidebarAdherent({
     { key: 'reservations', icon: Calendar, label: 'Réservations', href: '/adherent/reservations' },
     { key: 'favoris', icon: Heart, label: 'Favoris', href: '/adherent/favoris' },
     { key: 'compte', icon: User, label: 'Mon profile', href: '/adherent/profile-adherent' },
+    { key: 'depart-mission', icon: User, label: 'Départ mission', href: `/adherent/depart-mission/2` },
   ];
 
   // ✅ Détection automatique de la page active au chargement et après navigation
