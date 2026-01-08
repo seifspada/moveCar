@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Navigation, AlertCircle, RefreshCw } from 'lucide-react';
-import { Mission as MissionType } from '@/app/data/missions'; // Import your actual Mission type
-
+import { Mission as MissionType } from '@/app/data/missions';
 
 interface RouteStats {
   distance: string | number;
@@ -18,11 +17,12 @@ interface RouteData {
 }
 
 interface DynamicMissionsMapProps {
-  mission?: MissionType; // Utiliser le type importé
+  mission?: MissionType;
   missionId?: number;
-  missionsData?: MissionType[]; // Utiliser le type importé
+  missionsData?: MissionType[];
   onBack?: () => void;
   onReserve?: () => void;
+  onDurationCalculated?: (duration: number) => void; // ✅ Nouveau paramètre
 }
 
 export default function DynamicMissionsMap({ 
@@ -30,7 +30,8 @@ export default function DynamicMissionsMap({
   missionId, 
   missionsData: missionsDataProp, 
   onBack, 
-  onReserve 
+  onReserve,
+  onDurationCalculated // ✅ Ajout du paramètre manquant
 }: DynamicMissionsMapProps) {
 
   const mission = missionProp || (missionId && missionsDataProp ? missionsDataProp.find(m => m.id === missionId) : null);
@@ -46,6 +47,7 @@ export default function DynamicMissionsMap({
       </div>
     );
   }
+
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const routeLayersRef = useRef<any[]>([]);
@@ -56,7 +58,7 @@ export default function DynamicMissionsMap({
   const [routeStats, setRouteStats] = useState<RouteStats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
- // Geocoding function - utilise uniquement les noms de villes
+  // Geocoding function - utilise uniquement les noms de villes
   const geocodeCity = async (cityName: string): Promise<Coordinates | null> => {
     if (geocodeCache.current[cityName]) {
       return geocodeCache.current[cityName];
@@ -149,10 +151,17 @@ export default function DynamicMissionsMap({
 
       if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
         const route = data.routes[0];
+        const durationMinutes = Math.round(route.duration / 60);
+        
+        // ✅ Transmettre la durée au parent
+        if (onDurationCalculated) {
+          onDurationCalculated(durationMinutes);
+        }
+        
         return {
           coordinates: route.geometry.coordinates.map((coord: number[]) => [coord[1], coord[0]] as Coordinates),
           distance: (route.distance / 1000).toFixed(1),
-          duration: Math.round(route.duration / 60)
+          duration: durationMinutes
         };
       }
     } catch (error) {
@@ -182,15 +191,11 @@ export default function DynamicMissionsMap({
       setLoading(true);
       setError(null);
 
-      const startCoords = await geocodeCity(
-        mission.villeDepart, 
-      );
+      const startCoords = await geocodeCity(mission.villeDepart);
       
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const endCoords = await geocodeCity(
-        mission.villeArrivee, 
-      );
+      const endCoords = await geocodeCity(mission.villeArrivee);
 
       if (!startCoords || !endCoords) {
         setError(`Impossible de localiser ${!startCoords ? mission.villeDepart : mission.villeArrivee}`);
@@ -278,7 +283,7 @@ export default function DynamicMissionsMap({
     };
 
     loadRoute();
-  }, [isMapLoaded, mission]);
+  }, [isMapLoaded, mission, onDurationCalculated]); // ✅ Ajout de la dépendance
 
   return (
     <div className="w-full h-full">

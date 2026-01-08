@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Briefcase, Calendar, Heart, User, LogOut } from 'lucide-react';
+import { Menu, X, Briefcase, Calendar, Heart, User, LogOut, Flag } from 'lucide-react';
 import Image from "next/image";
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -30,7 +30,7 @@ export default function SidebarAdherent({
     { key: 'reservations', icon: Calendar, label: 'Réservations', href: '/adherent/reservations' },
     { key: 'favoris', icon: Heart, label: 'Favoris', href: '/adherent/favoris' },
     { key: 'compte', icon: User, label: 'Mon profile', href: '/adherent/profile-adherent' },
-    { key: 'depart-mission', icon: User, label: 'Départ mission', href: `/adherent/depart-mission/2` },
+     { key: 'departMission', icon: Flag, label: 'Depart Mission', href: '/adherent/depart-mission/2' },
   ];
 
   // ✅ Détection automatique de la page active au chargement et après navigation

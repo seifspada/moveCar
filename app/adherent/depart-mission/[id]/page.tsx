@@ -1,13 +1,14 @@
 "use client";
 
-import { use } from "react"; // ✅ Import de React.use()
+import { use, useState } from "react";
 import SidebarAdherent from "@/app/components/sideBarAdherent";
-import { missionsData, Mission } from "@/app/data/missions";
-import MissionDeparture from "@/components/mission-components/MissionStartValidation";
+import { missionsData } from "@/app/data/missions";
 import ProfileHeader from "@/components/mission-components/ProfileHeader";
-import { useState } from "react";
 import { notFound } from "next/navigation";
 import StepperStartMission from "@/app/components/StepperStartMission";
+import MissionStartValidation from "@/components/mission-components/DepartMission/MissionStartValidation";
+import InstructionMission from "@/components/mission-components/DepartMission/InstructionMission";
+
 export default function MissionDeparturePage({
   params
 }: {
@@ -24,19 +25,25 @@ export default function MissionDeparturePage({
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState<'validation' | 'instructions'>('validation');
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
   const toggleDesktopMenu = () => setIsDesktopMenuOpen(prev => !prev);
 
   const handleValidate = () => {
     console.log('Mission validée:', mission.id);
+    // Passer à l'étape suivante : Instructions
+    setCurrentStep('instructions');
+  };
+
+  const handleInstructionsValidate = () => {
+    console.log('Instructions validées pour la mission:', mission.id);
     // TODO: Rediriger vers la page "Mission en cours" ou mettre à jour le statut
     // router.push('/missions/en-cours/' + mission.id);
   };
 
   return (
-<div className=" min-h-screen">
-
+    <div className="min-h-screen">
       {/* Sidebar Component */}
       <SidebarAdherent
         isMobileMenuOpen={isMobileMenuOpen}
@@ -45,7 +52,6 @@ export default function MissionDeparturePage({
         onDesktopMenuToggle={toggleDesktopMenu}
       />
 
-
       {/* Profile Header */}
       <ProfileHeader
         isMobileMenuOpen={isMobileMenuOpen}
@@ -53,15 +59,23 @@ export default function MissionDeparturePage({
         toggleMobileMenu={toggleMobileMenu}
         toggleDesktopMenu={toggleDesktopMenu}
       />
-<div className="bg-black">
-      <StepperStartMission currentStep={0} />
 
-</div>
-      {/* Mission Departure Component */}
-      <MissionDeparture 
-        mission={mission} 
-        onValidate={handleValidate}
-      />
+      <div className="bg-black">
+        <StepperStartMission currentStep={currentStep === 'validation' ? 0 : 1} />
+      </div>
+
+      {/* Affichage conditionnel selon l'étape */}
+      {currentStep === 'validation' ? (
+        <MissionStartValidation 
+          mission={mission} 
+          onValidate={handleValidate}
+        />
+      ) : (
+        <InstructionMission 
+          mission={mission}
+          onValidate={handleInstructionsValidate}
+        />
+      )}
     </div>
   );
 }

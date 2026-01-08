@@ -139,6 +139,7 @@ export interface Mission {
   dateDebutMax: string;
   dateHeureExpiration: string;
   modeleVehicule: string;
+  immatriculation: string;
   typeBoite: "Manuelle" | "Automatique";
   typeCarburant: VehiculeCarburant;
   tarifDepassementKm: number;
@@ -167,10 +168,11 @@ export const missionsData: Mission[] = [
     lieuArrivee: "Gare Part-Dieu Lyon",
     adresseArriveeComplete: "Place Charles Béraudier",
     kmTotalAutorise: 500,
-    dateDebutMin: "15/12/2025 - 08:00",
-    dateDebutMax: "15/12/2025 - 18:00",
+    dateDebutMin: "10/01/2026 - 08:00",
+    dateDebutMax: "12/01/2026 - 18:00",
     dateHeureExpiration: "2025-12-15T18:00:00",
     modeleVehicule: "Peugeot 508",
+    immatriculation: "AB-123-CD",
     typeBoite: "Automatique",
     typeCarburant: "Diesel", // ✅ Plus besoin de typeCarburantIcon
     tarifDepassementKm: 0.50,
@@ -179,7 +181,7 @@ export const missionsData: Mission[] = [
     tarifRestitutionAutreEndroit: 1.2,
     conditionsAnnulation: "Selon convention signée",
     carburantInclus: true,
-    peagesInclus: false,
+    peagesInclus: true,
     favorite: true
   },
   {
@@ -201,6 +203,7 @@ export const missionsData: Mission[] = [
     dateDebutMax: "18/12/2025 - 17:00",
     dateHeureExpiration: "2025-12-18T17:00:00",
     modeleVehicule: "Toyota RAV4",
+    immatriculation: "EF-456-GH",
     typeBoite: "Automatique",
     typeCarburant: "Hybride",
     tarifDepassementKm: 0.6,
@@ -231,6 +234,7 @@ export const missionsData: Mission[] = [
     dateDebutMax: "20/12/2025 - 12:00",
     dateHeureExpiration: "2025-12-20T12:00:00",
     modeleVehicule: "Renault Clio",
+    immatriculation:'AF-154',
     typeBoite: "Manuelle",
     typeCarburant: "Essence",
     tarifDepassementKm: 0.4,
@@ -261,6 +265,7 @@ export const missionsData: Mission[] = [
     dateDebutMax: "22/12/2025 - 16:00",
     dateHeureExpiration: "2025-12-22T16:00:00",
     modeleVehicule: "Skoda Octavia",
+    immatriculation:'AER-15-df',
     typeBoite: "Manuelle",
     typeCarburant: "Electrique",
     tarifDepassementKm: 0.55,
@@ -291,6 +296,7 @@ export const missionsData: Mission[] = [
     dateDebutMax: "23/12/2025 - 14:00",
     dateHeureExpiration: "2025-12-23T14:00:00",
     modeleVehicule: "BMW Série 3",
+    immatriculation: "ZX-789-YU",
     typeBoite: "Automatique",
     typeCarburant: "Electrique",
     tarifDepassementKm: 0.7,

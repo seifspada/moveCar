@@ -27,6 +27,7 @@ export interface Mission {
 
   modeleVehicule: string;
   typeBoite: "Manuelle" | "Automatique";
+  immatriculation:string;
   typeCarburant: VehiculeCarburant;
 
   tarifDepassementKm: number;

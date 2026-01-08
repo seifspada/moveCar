@@ -16,7 +16,7 @@ export default function NavBarClient() {
   if (hideNavbar) return null;
 
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 bg-slate-800 border-b border-orange-500/30 backdrop-blur-sm animate-slide-blur">
+    <nav className="fixed inset-x-0 top-0 z-50 bg-slate-800 border-b border-orange-500/30 backdrop-blur-sm animate-slide-blur -lg:py-4">
       <style>{`
         @keyframes slide-blur {
           0% { transform: translateY(-20px); opacity: 0; filter: blur(6px); }
