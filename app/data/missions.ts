@@ -1,9 +1,7 @@
-// app/data/missions.ts
-
 import { FaGasPump, FaLeaf, FaBolt } from "react-icons/fa";
 import { MdLocalGasStation } from "react-icons/md";
-import { FuelType } from "../type/fuelConfig";
-import { image } from "framer-motion/client";
+
+// ==================== TYPES ====================
 
 // Types de véhicules disponibles
 export type VehicleType = 
@@ -23,17 +21,111 @@ export type VehicleType =
   | "VU25m3"
   | "VU30m3"; 
 
+export type VehiculeCarburant = "Essence" | "Diesel" | "Hybride" | "Electrique";
 
-  export type VehiculeCarburant = "Essence" | "Diesel" | "Hybride" | "Electrique";
+// ✅ Types pour l'état de la mission
+export type EtatMission = 
+  | "en_attente"           // Mission créée mais pas encore commencée
+  | "en_cours"             // Mission en cours de route
+  | "pause"                // Mission mise en pause
+  | "terminee"             // Mission complétée avec succès
+  | "annulee"              // Mission annulée
+  | "expiree";             // Mission expirée (date limite dépassée)
 
+// ✅ Interface Mission principale
+export interface Mission {
+  id: number;
+  villeDepart: string;
+  villeArrivee: string;
+  dateDisposition: string;
+  nbKm: number;
+  fraisPeage: string;
+  montant: number;
+  vehicleType: VehicleType;
+  entite: string;
 
+  lieuDepart?: string;
+  adresseDepartComplete?: string;
+  lieuArrivee?: string;
+  adresseArriveeComplete?: string;
 
-  export const vehiculeCarburantIcons: Record<VehiculeCarburant,{ image: string; label: string }> = {
-     Essence: { label: "essence", image: "/icons/vehicles/pompe-m.png" },
+  kmTotalAutorise: number;
+  dateDebutMin: string;
+  dateDebutMax: string;
+  dateHeureExpiration: string;
+  modeleVehicule: string;
+  immatriculation: string;
+  typeBoite: "Manuelle" | "Automatique";
+  typeCarburant: VehiculeCarburant;
+  tarifDepassementKm: number;
+  tarifRetardHeure: number;
+  tarifCarburant: string;
+  tarifRestitutionAutreEndroit: number;
+  conditionsAnnulation: string;
+  carburantInclus: boolean;
+  peagesInclus: boolean;
+  favorite?: boolean;
+
+  // ✅ Attributs pour le suivi de la mission
+  etatMission: EtatMission;
+  dateHeureDebut?: string;
+  dateHeureFin?: string;
+}
+
+// ==================== CONFIGURATIONS ====================
+
+// ✅ Configuration des couleurs et labels pour chaque état
+export const etatMissionConfig: Record<EtatMission, { 
+  label: string; 
+  color: string; 
+  bgColor: string;
+  icon: string;
+}> = {
+  en_attente: {
+    label: "En attente",
+    color: "text-slate-600",
+    bgColor: "bg-slate-100",
+    icon: "⏳"
+  },
+  en_cours: {
+    label: "En cours de route",
+    color: "text-blue-600",
+    bgColor: "bg-blue-100",
+    icon: "🚗"
+  },
+  pause: {
+    label: "En pause",
+    color: "text-orange-600",
+    bgColor: "bg-orange-100",
+    icon: "⏸️"
+  },
+  terminee: {
+    label: "Terminée",
+    color: "text-green-600",
+    bgColor: "bg-green-100",
+    icon: "✅"
+  },
+  annulee: {
+    label: "Annulée",
+    color: "text-red-600",
+    bgColor: "bg-red-100",
+    icon: "❌"
+  },
+  expiree: {
+    label: "Expirée",
+    color: "text-gray-600",
+    bgColor: "bg-gray-100",
+    icon: "⏱️"
+  }
+};
+
+export const vehiculeCarburantIcons: Record<VehiculeCarburant, { image: string; label: string }> = {
+  Essence: { label: "essence", image: "/icons/vehicles/pompe-m.png" },
   Diesel: { label: "diesel", image: "/icons/vehicles/pompe-m.png" },
   Hybride: { label: "hybride", image: "/icons/vehicles/pompe-m.png" },
   Electrique: { label: "electrique", image: "/icons/vehicles/carE.png" },
-  }
+};
+
 // Configuration des icônes pour chaque type de véhicule
 export const vehicleIcons: Record<VehicleType, { image: string; label: string; examples: string }> = {
   citadine: {
@@ -76,7 +168,7 @@ export const vehicleIcons: Record<VehicleType, { image: string; label: string; e
     examples: "Dmax",
     image: "/icons/vehicles/camionette.png"
   },
-VU6m3: {
+  VU6m3: {
     label: "VU 6m3",
     examples: "Dmax",
     image: "/icons/vehicles/camionette.png"
@@ -91,7 +183,7 @@ VU6m3: {
     examples: "Dmax",
     image: "/icons/vehicles/camionette.png"
   },
-VU15m3: {
+  VU15m3: {
     label: "VU 15m3",
     examples: "Dmax",
     image: "/icons/vehicles/camionette.png"
@@ -106,51 +198,14 @@ VU15m3: {
     examples: "Dmax",
     image: "/icons/vehicles/camionette.png"
   },
-    VU30m3: {
+  VU30m3: {
     label: "VU 30m3",
     examples: "Dmax",
     image: "/icons/vehicles/camionette.png"
   },
-
-
-
-
 };
 
-
-export interface Mission {
-  id: number;
-  villeDepart: string;
-  villeArrivee: string;
-  dateDisposition: string;
-  nbKm: number;
-  fraisPeage: string;
-  montant: number;
-  vehicleType: VehicleType;
-  entite: string;
-  
-  lieuDepart?: string;              // ✅ Rendu optionnel
-  adresseDepartComplete?: string;
-  lieuArrivee?: string;             // ✅ Rendu optionnel
-  adresseArriveeComplete?: string;
-
-  kmTotalAutorise: number;
-  dateDebutMin: string;
-  dateDebutMax: string;
-  dateHeureExpiration: string;
-  modeleVehicule: string;
-  immatriculation: string;
-  typeBoite: "Manuelle" | "Automatique";
-  typeCarburant: VehiculeCarburant;
-  tarifDepassementKm: number;
-  tarifRetardHeure: number;
-  tarifCarburant: string;
-  tarifRestitutionAutreEndroit: number;
-  conditionsAnnulation: string;
-  carburantInclus: boolean;
-  peagesInclus: boolean;
-  favorite?: boolean;
-}
+// ==================== DONNÉES ====================
 
 export const missionsData: Mission[] = [
   {
@@ -174,7 +229,7 @@ export const missionsData: Mission[] = [
     modeleVehicule: "Peugeot 508",
     immatriculation: "AB-123-CD",
     typeBoite: "Automatique",
-    typeCarburant: "Diesel", // ✅ Plus besoin de typeCarburantIcon
+    typeCarburant: "Diesel",
     tarifDepassementKm: 0.50,
     tarifRetardHeure: 25.0,
     tarifCarburant: "Prix selon convention signée",
@@ -182,7 +237,9 @@ export const missionsData: Mission[] = [
     conditionsAnnulation: "Selon convention signée",
     carburantInclus: true,
     peagesInclus: true,
-    favorite: true
+    favorite: true,
+    etatMission: "en_cours",
+    dateHeureDebut: "2026-01-10T08:30:00"
   },
   {
     id: 2,
@@ -213,7 +270,8 @@ export const missionsData: Mission[] = [
     conditionsAnnulation: "48h avant départ",
     carburantInclus: true,
     peagesInclus: true,
-    favorite: false
+    favorite: false,
+    etatMission: "en_attente"
   },
   {
     id: 3,
@@ -234,7 +292,7 @@ export const missionsData: Mission[] = [
     dateDebutMax: "20/12/2025 - 12:00",
     dateHeureExpiration: "2025-12-20T12:00:00",
     modeleVehicule: "Renault Clio",
-    immatriculation:'AF-154',
+    immatriculation: "AF-154",
     typeBoite: "Manuelle",
     typeCarburant: "Essence",
     tarifDepassementKm: 0.4,
@@ -244,7 +302,10 @@ export const missionsData: Mission[] = [
     conditionsAnnulation: "Non remboursable",
     carburantInclus: false,
     peagesInclus: false,
-    favorite: true
+    favorite: true,
+    etatMission: "terminee",
+    dateHeureDebut: "2025-12-20T08:00:00",
+    dateHeureFin: "2025-12-20T09:30:00"
   },
   {
     id: 4,
@@ -265,7 +326,7 @@ export const missionsData: Mission[] = [
     dateDebutMax: "22/12/2025 - 16:00",
     dateHeureExpiration: "2025-12-22T16:00:00",
     modeleVehicule: "Skoda Octavia",
-    immatriculation:'AER-15-df',
+    immatriculation: "AER-15-df",
     typeBoite: "Manuelle",
     typeCarburant: "Electrique",
     tarifDepassementKm: 0.55,
@@ -275,7 +336,8 @@ export const missionsData: Mission[] = [
     conditionsAnnulation: "24h avant",
     carburantInclus: true,
     peagesInclus: true,
-    favorite: true
+    favorite: true,
+    etatMission: "en_attente"
   },
   {
     id: 5,
@@ -306,6 +368,38 @@ export const missionsData: Mission[] = [
     conditionsAnnulation: "Selon contrat",
     carburantInclus: true,
     peagesInclus: true,
-    favorite: false
+    favorite: false,
+    etatMission: "annulee"
   }
 ];
+
+// ==================== FONCTIONS UTILITAIRES ====================
+
+export const missionHelpers = {
+  // Vérifier si une mission est active
+  isActive: (mission: Mission): boolean => {
+    return mission.etatMission === "en_cours";
+  },
+
+  // Vérifier si une mission peut être démarrée
+  canStart: (mission: Mission): boolean => {
+    return mission.etatMission === "en_attente" || mission.etatMission === "pause";
+  },
+
+  // Calculer le temps estimé en secondes (basé sur vitesse moyenne de 80 km/h)
+  calculateEstimatedTime: (distanceKm: number, averageSpeed: number = 80): number => {
+    return Math.round((distanceKm / averageSpeed) * 3600);
+  },
+
+  // Filtrer les missions par état
+  filterByEtat: (missions: Mission[], etat: EtatMission): Mission[] => {
+    return missions.filter(m => m.etatMission === etat);
+  },
+
+  // Formater le temps en heures et minutes
+  formatDuration: (seconds: number): string => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return h > 0 ? `${h}h ${m}min` : `${m}min`;
+  }
+};

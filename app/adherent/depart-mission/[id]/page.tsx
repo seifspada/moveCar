@@ -8,6 +8,8 @@ import { notFound } from "next/navigation";
 import StepperStartMission from "@/app/components/StepperStartMission";
 import MissionStartValidation from "@/components/mission-components/DepartMission/MissionStartValidation";
 import InstructionMission from "@/components/mission-components/DepartMission/InstructionMission";
+import ReconnaissanceAdherent from "@/components/mission-components/DepartMission/ReconnaissanceAdherent";
+import EtatDesLieux from "@/components/mission-components/DepartMission/EtatDesLieux";
 
 export default function MissionDeparturePage({
   params
@@ -25,7 +27,9 @@ export default function MissionDeparturePage({
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'validation' | 'instructions'>('validation');
+const [currentStep, setCurrentStep] = useState<
+  'validation' | 'instructions' | 'reconnaissance' |'etat'
+>('validation');
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
   const toggleDesktopMenu = () => setIsDesktopMenuOpen(prev => !prev);
@@ -36,11 +40,22 @@ export default function MissionDeparturePage({
     setCurrentStep('instructions');
   };
 
-  const handleInstructionsValidate = () => {
-    console.log('Instructions validées pour la mission:', mission.id);
-    // TODO: Rediriger vers la page "Mission en cours" ou mettre à jour le statut
-    // router.push('/missions/en-cours/' + mission.id);
-  };
+const handleInstructionsValidate = () => {
+  console.log('Instructions validées pour la mission:', mission.id);
+  setCurrentStep('reconnaissance');
+};
+
+const handleReconnaissanceValidate = () => {
+  console.log('Reconnaissance validée pour la mission:', mission.id);
+  setCurrentStep('etat');
+};
+
+const handleEtatValidate = () => {
+  console.log('État des lieux validé pour la mission:', mission.id);
+  // Vous pouvez ajouter une action ici, comme rediriger l'utilisateur ou afficher un message de confirmation
+}
+
+
 
   return (
     <div className="min-h-screen">
@@ -60,22 +75,38 @@ export default function MissionDeparturePage({
         toggleDesktopMenu={toggleDesktopMenu}
       />
 
-      <div className="bg-black">
-        <StepperStartMission currentStep={currentStep === 'validation' ? 0 : 1} />
-      </div>
+    <div className="bg-black">
+  <StepperStartMission 
+    currentStep={
+      currentStep === 'validation' ? 0 : 
+      currentStep === 'instructions' ? 1 : 
+      currentStep === 'reconnaissance' ? 2 : 
+      currentStep === 'etat' ? 3 : 4
+    } 
+  />
+</div>
 
-      {/* Affichage conditionnel selon l'étape */}
-      {currentStep === 'validation' ? (
-        <MissionStartValidation 
-          mission={mission} 
-          onValidate={handleValidate}
-        />
-      ) : (
-        <InstructionMission 
-          mission={mission}
-          onValidate={handleInstructionsValidate}
-        />
-      )}
+{/* Affichage conditionnel selon l'étape */}
+{currentStep === 'validation' ? (
+  <MissionStartValidation 
+    mission={mission} 
+    onValidate={handleValidate}
+  />
+) : currentStep === 'instructions' ? (
+  <InstructionMission 
+    mission={mission}
+    onValidate={handleInstructionsValidate}
+  />
+) : currentStep === 'reconnaissance' ? (
+  <ReconnaissanceAdherent 
+      mission={mission}
+      onValidate={handleReconnaissanceValidate}
+  />
+) : currentStep === 'etat' ? (
+  <EtatDesLieux />
+) : null}
+
+
     </div>
   );
 }

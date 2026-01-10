@@ -1,8 +1,6 @@
-
-import React, { useState, useEffect } from 'react';
-import { Car, Fuel, Clock, MapPin, Euro, AlertCircle, ArrowRight, ChevronDown, ArrowLeft } from 'lucide-react';
-import { VehicleType, VehiculeCarburant } from '../data/missions';
 // app/types/mission.ts
+import { EtatMission, VehicleType, VehiculeCarburant } from '../data/missions';
+
 export interface Mission {
   id: number;
   villeDepart: string;
@@ -12,10 +10,9 @@ export interface Mission {
   fraisPeage: string;
   montant: number;
   vehicleType: VehicleType;
-
   entite: string;
 
-  lieuDepart?: string;                // ← make optional if some missions may not have it
+  lieuDepart?: string;
   adresseDepartComplete?: string;
   lieuArrivee?: string;
   adresseArriveeComplete?: string;
@@ -27,7 +24,7 @@ export interface Mission {
 
   modeleVehicule: string;
   typeBoite: "Manuelle" | "Automatique";
-  immatriculation:string;
+  immatriculation: string;
   typeCarburant: VehiculeCarburant;
 
   tarifDepassementKm: number;
@@ -38,4 +35,9 @@ export interface Mission {
   conditionsAnnulation: string;
   carburantInclus: boolean;
   peagesInclus: boolean;
+  favorite?: boolean;
+
+  etatMission: EtatMission;
+  dateHeureDebut?: string;
+  dateHeureFin?: string;
 }
