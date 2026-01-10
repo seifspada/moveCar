@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle, Camera, Video, Car, Gauge, Fuel, RotateCcw, Calendar, Clock } from 'lucide-react';
+import { CheckCircle, Camera, Video, Car, Gauge, RotateCcw } from 'lucide-react';
 import { CameraMode } from './CameraMode';
 import NiveauCarburant from './CarburantLevel';
 import ValidationButtons from './ValidationButtom';
 import ToggleCondition from './ToggleCondition';
+import { Mission } from '@/app/data/missions';
 
 interface PhotoData {
   dataUrl: string;
@@ -28,13 +29,18 @@ interface EtatDesLieuxData {
   videoInterieur: VideoData | null;
 }
 
+interface EtatDesLieuxProps {
+  mission: Mission;
+  onValidate: () => void;
+}
+
 type CameraModeType = null | 'tableau-bord' | 'immatriculation' | 'video-exterieur' | 'video-interieur';
 
-export default function EtatDesLieux() {
+export default function EtatDesLieux({ mission, onValidate }: EtatDesLieuxProps) {
   const [data, setData] = useState<EtatDesLieuxData>({
     dateDepart: new Date().toISOString().split('T')[0],
     heureDepart: new Date().toTimeString().slice(0, 5),
-    immatriculation: '',
+    immatriculation: mission.immatriculation || '',
     kilometres: '',
     niveauCarburant: 50,
     photoTableauBord: null,
@@ -95,18 +101,24 @@ export default function EtatDesLieux() {
       return;
     }
 
+    if (!conditionsAccepted) {
+      alert('⚠️ Veuillez accepter les conditions avant de continuer');
+      return;
+    }
+
     setIsValidating(true);
     
     setTimeout(() => {
       setIsValidating(false);
-      alert('✅ État des lieux validé avec succès !');
-      console.log('Données:', data);
+      console.log('État des lieux validé - Données:', data);
+      onValidate(); // Appeler la fonction de validation du parent
     }, 1500);
   };
 
   const isFormComplete = data.immatriculation && data.kilometres && 
                          data.photoTableauBord && data.photoImmatriculation &&
-                         data.videoExterieur && data.videoInterieur;
+                         data.videoExterieur && data.videoInterieur &&
+                         conditionsAccepted;
 
   return (
     <div className="min-h-screen bg-black p-4 md:p-8">
@@ -135,7 +147,6 @@ export default function EtatDesLieux() {
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
                 <div>
                   <div className="flex items-center gap-2 mb-2 md:pt-5">
                     <Car className="w-5 h-5 text-slate-800" />
@@ -143,16 +154,15 @@ export default function EtatDesLieux() {
                       Immatriculation *
                     </label>
                   </div>
-                 <input
-  type="text"
-  value={data.immatriculation}
-  readOnly
-  placeholder="AB-123-CD"
-  className="w-full px-3 py-2 bg-slate-100 border border-orange-600 rounded-full
-             text-slate-900 font-mono text-sm uppercase
-             cursor-not-allowed"
-/>
-
+                  <input
+                    type="text"
+                    value={data.immatriculation}
+                    readOnly
+                    placeholder="AB-123-CD"
+                    className="w-full px-3 py-2 bg-slate-100 border border-orange-600 rounded-full
+                               text-slate-900 font-mono text-sm uppercase
+                               cursor-not-allowed"
+                  />
                 </div>
 
                 <div>
@@ -175,11 +185,10 @@ export default function EtatDesLieux() {
 
             <div className="border-t border-slate-200"></div>
 
- <NiveauCarburant
-      value={data.niveauCarburant}
-      onChange={(newValue) => setData(prev => ({ ...prev, niveauCarburant: newValue }))}
-    />
-
+            <NiveauCarburant
+              value={data.niveauCarburant}
+              onChange={(newValue) => setData(prev => ({ ...prev, niveauCarburant: newValue }))}
+            />
 
             <div className="border-t border-slate-200"></div>
 
@@ -360,6 +369,7 @@ export default function EtatDesLieux() {
                 </div>
               </div>
             </div>
+
 
             <div className="border-t border-slate-200"></div>
 

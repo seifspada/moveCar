@@ -27,35 +27,39 @@ export default function MissionDeparturePage({
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
-const [currentStep, setCurrentStep] = useState<
-  'validation' | 'instructions' | 'reconnaissance' |'etat'
->('validation');
+  const [currentStep, setCurrentStep] = useState<
+    'validation' | 'instructions' | 'reconnaissance' | 'etat'
+  >('validation');
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
   const toggleDesktopMenu = () => setIsDesktopMenuOpen(prev => !prev);
 
   const handleValidate = () => {
     console.log('Mission validée:', mission.id);
-    // Passer à l'étape suivante : Instructions
     setCurrentStep('instructions');
   };
 
-const handleInstructionsValidate = () => {
-  console.log('Instructions validées pour la mission:', mission.id);
-  setCurrentStep('reconnaissance');
-};
+  const handleInstructionsValidate = () => {
+    console.log('Instructions validées pour la mission:', mission.id);
+    setCurrentStep('reconnaissance');
+  };
 
-const handleReconnaissanceValidate = () => {
-  console.log('Reconnaissance validée pour la mission:', mission.id);
-  setCurrentStep('etat');
-};
+  const handleReconnaissanceValidate = () => {
+    console.log('Reconnaissance validée pour la mission:', mission.id);
+    setCurrentStep('etat');
+  };
 
-const handleEtatValidate = () => {
-  console.log('État des lieux validé pour la mission:', mission.id);
-  // Vous pouvez ajouter une action ici, comme rediriger l'utilisateur ou afficher un message de confirmation
-}
+  const handleEtatValidate = () => {
+    console.log('État des lieux validé pour la mission:', mission.id);
+    // Redirection ou action finale
+  };
 
-
+  // Convertir currentStep en numéro pour le stepper
+  const stepNumber = 
+    currentStep === 'validation' ? 1 : 
+    currentStep === 'instructions' ? 2 : 
+    currentStep === 'reconnaissance' ? 3 : 
+    currentStep === 'etat' ? 4 : 1;
 
   return (
     <div className="min-h-screen">
@@ -75,38 +79,38 @@ const handleEtatValidate = () => {
         toggleDesktopMenu={toggleDesktopMenu}
       />
 
-    <div className="bg-black">
-  <StepperStartMission 
-    currentStep={
-      currentStep === 'validation' ? 0 : 
-      currentStep === 'instructions' ? 1 : 
-      currentStep === 'reconnaissance' ? 2 : 
-      currentStep === 'etat' ? 3 : 4
-    } 
-  />
-</div>
+      <div className="bg-black">
+        <StepperStartMission currentStep={stepNumber} />
+      </div>
 
-{/* Affichage conditionnel selon l'étape */}
-{currentStep === 'validation' ? (
-  <MissionStartValidation 
-    mission={mission} 
-    onValidate={handleValidate}
-  />
-) : currentStep === 'instructions' ? (
-  <InstructionMission 
-    mission={mission}
-    onValidate={handleInstructionsValidate}
-  />
-) : currentStep === 'reconnaissance' ? (
-  <ReconnaissanceAdherent 
-      mission={mission}
-      onValidate={handleReconnaissanceValidate}
-  />
-) : currentStep === 'etat' ? (
-  <EtatDesLieux />
-) : null}
-
-
+      {/* Affichage conditionnel selon l'étape */}
+      {currentStep === 'validation' && (
+        <MissionStartValidation 
+          mission={mission} 
+          onValidate={handleValidate}
+        />
+      )}
+      
+      {currentStep === 'instructions' && (
+        <InstructionMission 
+          mission={mission}
+          onValidate={handleInstructionsValidate}
+        />
+      )}
+      
+      {currentStep === 'reconnaissance' && (
+        <ReconnaissanceAdherent 
+          mission={mission}
+          onValidate={handleReconnaissanceValidate}
+        />
+      )}
+      
+      {currentStep === 'etat' && (
+        <EtatDesLieux 
+          mission={mission}
+          onValidate={handleEtatValidate}
+        />
+      )}
     </div>
   );
 }
