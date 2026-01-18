@@ -1,7 +1,9 @@
 // ProfileHeader.tsx
 'use client';
 
-import { Menu, X } from "lucide-react";
+import { useUser } from "@/app/context/userContext";
+import { obtenirInitiales } from "@/app/data/adherent";
+import { Menu, X, Crown } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
@@ -19,34 +21,38 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   }
 };
 
-// Fonction pour matcher les routes dynamiques
 const getPageTitle = (pathname: string) => {
-  // Routes exactes
   if (PAGE_TITLES[pathname]) {
     return PAGE_TITLES[pathname];
   }
-  
-  // Routes avec ID dynamique
+
   if (pathname.includes('/adherent/mission-reservation/')) {
     return {
       title: 'Mission de Transport',
       subtitle: 'Détails de la réservation'
     };
   }
-  
+
   if (pathname.includes('/adherent/depart-mission/')) {
     return {
       title: 'Départ de la Mission',
       subtitle: 'Validation requise avant le démarrage'
     };
   }
-  
-  // Default - pas de titre
+
   return null;
 };
 
 // ============================================
-// PROFILE HEADER COMPONENT - Totalement responsive
+// FONCTION UTILITAIRE POUR TRONQUER LE TEXTE
+// ============================================
+const truncateText = (text: string, maxLength: number) => {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
+};
+
+// ============================================
+// PROFILE HEADER COMPONENT
 // ============================================
 interface ProfileHeaderProps {
   isMobileMenuOpen: boolean;
@@ -63,6 +69,21 @@ export default function ProfileHeader({
 }: ProfileHeaderProps) {
   const pathname = usePathname();
   const pageTitle = getPageTitle(pathname);
+  const { currentUser } = useUser();
+
+  // Si pas d'utilisateur connecté, afficher un message par défaut
+  if (!currentUser) {
+    return (
+      <header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-[2000]">
+        {/* ✅ Hauteur augmentée: py-4 sm:py-5 md:py-6 lg:py-7 */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-5 md:py-6 lg:py-7">
+          <div className="flex items-center justify-center">
+            <p className="text-white">Chargement...</p>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <>
@@ -77,20 +98,21 @@ export default function ProfileHeader({
         }}
       />
 
-      {/* Header responsive */}
+      {/* Header responsive avec hauteur augmentée */}
       <header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-[2000]">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-5">
-          <div className="flex items-center justify-between gap-3 sm:gap-4">
+        {/* ✅ Hauteur augmentée: py-4 sm:py-5 md:py-6 lg:py-7 xl:py-8 */}
+        <div className="max-w-7xl mx-auto px-2 sm:px-3 md:px-6 lg:px-8 py-4 sm:py-5 md:py-6 lg:py-7 xl:py-3">
+          <div className="flex items-center justify-between gap-1 sm:gap-2 md:gap-4">
 
             {/* ✅ Section GAUCHE: Bouton Menu + Logo */}
-            <div className="flex items-center gap-3 sm:gap-4">
-              {/* Bouton hamburger MOBILE */}
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-4">
+              {/* Bouton hamburger MOBILE - Taille augmentée */}
               <button
                 onClick={toggleMobileMenu}
-                className="md:hidden text-white p-2 sm:p-3 hover:bg-orange-500/20 rounded-xl transition-all duration-300 transform hover:scale-110 active:scale-95"
+                className="md:hidden text-white p-2 sm:p-2.5 hover:bg-orange-500/20 rounded-xl transition-all duration-300 transform hover:scale-110 active:scale-95"
                 aria-label="Menu Mobile"
               >
-                <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                <div className="relative w-6 h-6">
                   <Menu className={`w-full h-full absolute transition-all duration-300 ${
                     isMobileMenuOpen ? 'opacity-0 rotate-90' : 'opacity-100 rotate-0'
                   }`} />
@@ -100,24 +122,24 @@ export default function ProfileHeader({
                 </div>
               </button>
 
-              {/* Bouton hamburger DESKTOP */}
+              {/* Bouton hamburger DESKTOP - Taille augmentée */}
               <button
                 onClick={toggleDesktopMenu}
-                className="hidden md:block text-white p-3 hover:bg-orange-500/20 rounded-xl transition-all duration-300 transform hover:scale-110 active:scale-95"
+                className="hidden md:block text-white p-3 md:p-3.5 lg:p-4 hover:bg-orange-500/20 rounded-xl transition-all duration-300 transform hover:scale-110 active:scale-95"
                 aria-label="Menu Desktop"
               >
-                <div className="relative w-6 h-6">
-                  <Menu className={`w-6 h-6 absolute transition-all duration-300 ${
+                <div className="relative w-7 h-7">
+                  <Menu className={`w-7 h-7 absolute transition-all duration-300 ${
                     isDesktopMenuOpen ? 'opacity-0 rotate-90' : 'opacity-100 rotate-0'
                   }`} />
-                  <X className={`w-6 h-6 absolute transition-all duration-300 ${
+                  <X className={`w-7 h-7 absolute transition-all duration-300 ${
                     isDesktopMenuOpen ? 'opacity-100 rotate-0' : 'opacity-0 -rotate-90'
                   }`} />
                 </div>
               </button>
 
-              {/* Logo */}
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-full border-3 sm:border-4 border-orange-500 overflow-hidden shadow-lg">
+              {/* Logo - Taille augmentée */}
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-full border-2 sm:border-3 md:border-4 border-orange-500 overflow-hidden shadow-lg flex-shrink-0">
                 <Image
                   src="/images/logo.jpg"
                   alt="Logo"
@@ -131,36 +153,65 @@ export default function ProfileHeader({
 
             {/* ✅ Section CENTRE: Titre dynamique (visible uniquement en desktop) */}
             {pageTitle && (
-              <div className="hidden md:block border-l-4 border-orange-500 pl-8 mb-1">
-                <h1 className="text-3xl font-bold text-white">{pageTitle.title}</h1>
-                <p className="text-sm text-white mt-1">{pageTitle.subtitle}</p>
+              <div className="hidden lg:block border-l-4 border-orange-500 pl-4 xl:pl-8 mb-1">
+                <h1 className="text-2xl xl:text-4xl font-bold text-white truncate max-w-xs xl:max-w-none">
+                  {pageTitle.title}
+                </h1>
+                <p className="text-sm xl:text-base text-white mt-1 truncate max-w-xs xl:max-w-none">
+                  {pageTitle.subtitle}
+                </p>
               </div>
             )}
 
-            {/* ✅ Section DROITE: Profil utilisateur - visible sur mobile */}
-            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6">
-              {/* Texte utilisateur - TOUJOURS visible */}
-              <div className="text-right">
-                <h2 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-white leading-tight">
-                  Prénom Nom
+            {/* ✅ Section DROITE: Profil utilisateur */}
+            <div className="flex items-center gap-1 sm:gap-2 md:gap-3 lg:gap-4">
+              {/* Texte utilisateur avec troncature - Taille augmentée */}
+              <div className="text-right max-w-[100px] sm:max-w-[140px] md:max-w-[180px] lg:max-w-none">
+                <h2 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-white leading-tight truncate">
+                  {truncateText(`${currentUser.prenom} ${currentUser.nom}`, 20)}
                 </h2>
-                <p className="text-[11px] sm:text-xs md:text-sm lg:text-base text-orange-400 font-medium leading-tight">
-                  prenom.nom@email.com
+                <p className="text-xs sm:text-xs md:text-sm lg:text-base text-orange-400 font-medium leading-tight truncate">
+                  {truncateText(currentUser.email, 25)}
                 </p>
               </div>
-              
-              {/* Avatar responsive - tailles augmentées */}
+
+              {/* Avatar avec photo ou initiales - Taille augmentée */}
               <div className="relative flex-shrink-0">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full border-3 sm:border-4 border-orange-500 flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">PN</span>
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 border-2 border-black rounded-full"></div>
+                {currentUser.photoPersonnelle ? (
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-full border-2 sm:border-3 md:border-4 border-orange-500 overflow-hidden shadow-lg">
+                    <Image
+                      src={currentUser.photoPersonnelle}
+                      alt={`${currentUser.prenom} ${currentUser.nom}`}
+                      width={100}
+                      height={100}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full border-2 sm:border-3 md:border-4 border-orange-500 flex items-center justify-center shadow-lg">
+                    <span className="text-white font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">
+                      {obtenirInitiales(currentUser)}
+                    </span>
+                  </div>
+                )}
+                <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 border-2 border-slate-800 rounded-full"></div>
               </div>
 
-              {/* Bouton Premium - adapté mais visible */}
-              <button className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 rounded-full font-semibold hover:from-yellow-600 hover:to-yellow-700 transition shadow-lg text-xs sm:text-sm md:text-base whitespace-nowrap">
-                <span className="hidden sm:inline">Devenez</span> Premium
-              </button>
+              {/* ✅ BASIQUE: Bouton "Devenir Premium" en GOLD - Taille augmentée */}
+              {currentUser.pack === 'basique' && (
+                <button className="flex items-center gap-1 sm:gap-1.5 bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-600 text-white px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3.5 rounded-full font-bold hover:from-yellow-600 hover:to-yellow-700 transition-all duration-300 shadow-lg text-xs sm:text-sm md:text-base whitespace-nowrap hover:scale-105 active:scale-95">
+                  <Crown className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span>Devenir Premium</span>
+                </button>
+              )}
+              
+              {/* ✅ PREMIUM: Badge "Premium" avec étoile en GOLD - Taille augmentée */}
+              {currentUser.pack === 'premium' && (
+                <div className="flex items-center gap-1 sm:gap-1.5 bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-600 text-white px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3.5 rounded-full font-bold shadow-lg text-xs sm:text-sm md:text-base whitespace-nowrap border-2 border-yellow-300">
+                  <span className="text-base sm:text-lg md:text-xl">⭐</span>
+                  <span>Premium</span>
+                </div>
+              )}
             </div>
 
           </div>

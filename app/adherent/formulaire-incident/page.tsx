@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { Camera, AlertTriangle, X } from "lucide-react";
 import ProfileHeader from "@/components/mission-components/ProfileHeader";
 import GPSLocationButton from "@/app/components/GPSLocationButton";
 import SidebarAdherent from "@/app/components/sideBarAdherent";
+import { useRoleProtection } from "@/app/hooks/userRoleProtection";
 
 // Types
 enum TypeIncident {
@@ -48,6 +49,11 @@ const Input = ({
 );
 
 export default function FormulaireIncident() {
+  // ✅ Protection du rôle adherent
+  const { isAuthorized, isLoading } = useRoleProtection({
+    allowedRoles: ['adherent']
+  });
+
   // États groupés logiquement
   const [numeroMission] = useState("M-2024-001");
   const [villeDepart] = useState("Paris");
@@ -157,6 +163,24 @@ export default function FormulaireIncident() {
     }
   }, []);
 
+  // ✅ Afficher un loader pendant la vérification
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-white">Vérification des permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Ne rien afficher si pas autorisé (redirection en cours)
+  if (!isAuthorized) {
+    return null;
+  }
+
+  // ✅ Contenu protégé - affiché uniquement si autorisé
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black px-3 py-4 sm:px-6 sm:py-6 md:px-8 md:py-6 lg:px-10 lg:py-8">
       <SidebarAdherent
@@ -194,8 +218,8 @@ export default function FormulaireIncident() {
               <Input label="Numéro de mission" value={numeroMission} readOnly />
               <Input 
                 label="Numéro RC circulation" 
-                value={numeroRC}  readOnly
-              
+                value={numeroRC}
+                onChange={(e: any) => setNumeroRC(e.target.value)}
               />
             </div>
 

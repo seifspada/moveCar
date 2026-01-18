@@ -12,7 +12,7 @@ interface CameraProps {
   title?: string;
   instruction?: string;
   tip?: string;
-  mode?: 'photo' | 'video'; // NOUVEAU : mode photo ou vidéo
+  mode?: 'photo' | 'video';
   multiCapture?: boolean;
   captureCount?: number;
   currentCaptureIndex?: number;
@@ -27,7 +27,7 @@ export function CameraMode({
   title = "Prendre une photo",
   instruction = "📸 Positionnez votre sujet au centre",
   tip = "💡 Conseil : Assurez-vous d'avoir un bon éclairage",
-  mode = 'photo', // NOUVEAU
+  mode = 'photo',
   multiCapture = false,
   captureCount = 2,
   currentCaptureIndex = 0
@@ -36,11 +36,11 @@ export function CameraMode({
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
   
-  // NOUVEAU : États pour la vidéo
+  // États pour la vidéo
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+  const recordedChunksRef = useRef<Blob[]>([]);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -99,7 +99,7 @@ export function CameraMode({
       
       setStream(mediaStream);
       
-      // NOUVEAU : Initialiser MediaRecorder pour les vidéos
+      // Initialiser MediaRecorder pour les vidéos
       if (mode === 'video') {
         const recorder = new MediaRecorder(mediaStream, {
           mimeType: 'video/webm;codecs=vp8,opus'
@@ -107,16 +107,16 @@ export function CameraMode({
         
         recorder.ondataavailable = (event) => {
           if (event.data.size > 0) {
-            setRecordedChunks(prev => [...prev, event.data]);
+            recordedChunksRef.current.push(event.data);
           }
         };
         
         recorder.onstop = () => {
-          const blob = new Blob(recordedChunks, { type: 'video/webm' });
-          if (onVideoCapture) {
+          const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+          if (onVideoCapture && blob.size > 0) {
             onVideoCapture(blob);
           }
-          setRecordedChunks([]);
+          recordedChunksRef.current = [];
         };
         
         setMediaRecorder(recorder);
@@ -184,22 +184,29 @@ export function CameraMode({
     setRecordingTime(0);
   };
 
-  // NOUVEAU : Démarrer l'enregistrement vidéo
+  // Démarrer l'enregistrement vidéo
   const startRecording = () => {
     if (mediaRecorder && mediaRecorder.state === 'inactive') {
-      setRecordedChunks([]);
-      mediaRecorder.start();
+      recordedChunksRef.current = [];
+      mediaRecorder.start(100); // Collecter les données toutes les 100ms
       setIsRecording(true);
       setRecordingTime(0);
       
-      // Timer
+      // Timer avec limite de 2 minutes
       timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime(prev => {
+          const newTime = prev + 1;
+          // Arrêter automatiquement à 120 secondes (2 minutes)
+          if (newTime >= 120) {
+            stopRecording();
+          }
+          return newTime;
+        });
       }, 1000);
     }
   };
 
-  // NOUVEAU : Arrêter l'enregistrement vidéo
+  // Arrêter l'enregistrement vidéo
   const stopRecording = () => {
     if (mediaRecorder && mediaRecorder.state === 'recording') {
       mediaRecorder.stop();
@@ -210,8 +217,11 @@ export function CameraMode({
         timerRef.current = null;
       }
       
-      stopCamera();
-      onClose();
+      // Utiliser setTimeout pour éviter l'erreur de mise à jour pendant le rendu
+      setTimeout(() => {
+        stopCamera();
+        onClose();
+      }, 0);
     }
   };
 
@@ -289,13 +299,6 @@ export function CameraMode({
           {multiCapture && mode === 'photo' && (
             <span className="text-orange-400 text-xs bg-orange-500/20 px-2 py-1 rounded-full">
               {currentCaptureIndex + 1}/{captureCount}
-            </span>
-          )}
-          {/* Timer d'enregistrement */}
-          {isRecording && (
-            <span className="text-red-500 text-sm font-mono bg-red-500/20 px-3 py-1 rounded-full flex items-center gap-2 animate-pulse">
-              <Circle className="w-2 h-2 fill-red-500" />
-              {formatTime(recordingTime)}
             </span>
           )}
         </div>
@@ -384,6 +387,25 @@ export function CameraMode({
         {/* Contrôles en bas */}
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/80 to-transparent">
           <div className="max-w-lg mx-auto space-y-4">
+            {/* Décompteur vidéo - visible et centré */}
+            {mode === 'video' && isRecording && (
+              <div className="flex flex-col items-center justify-center mb-4">
+                <div className={`text-4xl font-bold font-mono px-6 py-3 rounded-2xl flex items-center gap-3 ${
+                  120 - recordingTime <= 20 
+                    ? 'text-red-500 bg-red-500/30 animate-pulse shadow-lg shadow-red-500/50' 
+                    : 'text-orange-400 bg-orange-500/30 shadow-lg shadow-orange-500/30'
+                }`}>
+                  <Circle className="w-4 h-4 fill-current animate-pulse" />
+                  {formatTime(120 - recordingTime)}
+                </div>
+                {120 - recordingTime <= 20 && (
+                  <span className="text-yellow-300 text-sm font-semibold mt-2 animate-pulse">
+                    ⚠️ Dernières secondes !
+                  </span>
+                )}
+              </div>
+            )}
+            
             {/* Conseil */}
             {isCameraReady && !isRecording && (
               <div className="bg-black/60 backdrop-blur-sm px-4 py-3 rounded-xl border border-white/10">

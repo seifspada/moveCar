@@ -31,6 +31,7 @@ export default function SidebarAdherent({
     { key: 'favoris', icon: Heart, label: 'Favoris', href: '/adherent/favoris' },
     { key: 'compte', icon: User, label: 'Mon profile', href: '/adherent/profile-adherent' },
      { key: 'departMission', icon: Flag, label: 'Depart Mission', href: '/adherent/depart-mission/2' },
+      { key: 'suivieMission', icon: Flag, label: 'Suivie Mission', href: '/adherent/suivie-mission/1' },
   ];
 
   // ✅ Détection automatique de la page active au chargement et après navigation
@@ -151,12 +152,12 @@ export default function SidebarAdherent({
           MOBILE SIDEBAR avec détection automatique
       ======================================== */}
       <aside 
-        className={`md:hidden fixed left-0 top-0 h-screen w-80 bg-black border-r-2 border-orange-500 z-50 transform transition-all duration-700 ease-out shadow-2xl ${
+        className={`md:hidden fixed left-0 top-0 h-screen w-80 bg-black border-r-2 border-orange-500 z-[3000] transform transition-all duration-700 ease-out shadow-2xl ${
           isMobileMenuOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
         }`}
       >
         {/* Header */}
-        <div className="h-26 flex items-center justify-between px-6 border-b border-orange-500/30 bg-slate-800">
+        <div className="h-20 flex items-center justify-between px-6 border-b border-orange-500/30 bg-slate-800">
           <div onClick={handleLogoClick} className="flex items-center gap-3 cursor-pointer">
             <Image
               src="/images/R-bg.png"

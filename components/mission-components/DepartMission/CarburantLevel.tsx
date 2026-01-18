@@ -25,7 +25,7 @@ export default function NiveauCarburant({ value, onChange, step = 5 }: NiveauCar
   return (
     <div>
       <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-        <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
+        <div className="w-1 h-6 bg-orange-600 rounded-full"></div>
         Niveau de carburant
       </h2>
       
@@ -115,7 +115,7 @@ export default function NiveauCarburant({ value, onChange, step = 5 }: NiveauCar
               >
                 −
               </button>
-              <span className="text-3xl font-bold text-blue-600 min-w-[4rem]">{value}%</span>
+              <span className="text-3xl font-bold text-orange-600 min-w-[4rem]">{value}%</span>
               <button
                 onClick={handleIncrement}
                 disabled={value >= 100}

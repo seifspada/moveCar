@@ -10,6 +10,7 @@ import MissionStartValidation from "@/components/mission-components/DepartMissio
 import InstructionMission from "@/components/mission-components/DepartMission/InstructionMission";
 import ReconnaissanceAdherent from "@/components/mission-components/DepartMission/ReconnaissanceAdherent";
 import EtatDesLieux from "@/components/mission-components/DepartMission/EtatDesLieux";
+import { useRoleProtection } from "@/app/hooks/userRoleProtection";
 
 export default function MissionDeparturePage({
   params
@@ -19,17 +20,40 @@ export default function MissionDeparturePage({
   const resolvedParams = use(params);
   const missionId = Number(resolvedParams.id);
 
-  const mission = missionsData.find((m) => m.id === missionId);
-
-  if (!mission) {
-    notFound();
-  }
+  // ✅ Protection du rôle adherent
+  const { isAuthorized, isLoading } = useRoleProtection({
+    allowedRoles: ['adherent']
+  });
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<
     'validation' | 'instructions' | 'reconnaissance' | 'etat'
   >('validation');
+
+  // ✅ Afficher un loader pendant la vérification
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-white">Vérification des permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Ne rien afficher si pas autorisé (redirection en cours)
+  if (!isAuthorized) {
+    return null;
+  }
+
+  // ✅ Vérifier que la mission existe après l'autorisation
+  const mission = missionsData.find((m) => m.id === missionId);
+
+  if (!mission) {
+    notFound();
+  }
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
   const toggleDesktopMenu = () => setIsDesktopMenuOpen(prev => !prev);
@@ -61,6 +85,7 @@ export default function MissionDeparturePage({
     currentStep === 'reconnaissance' ? 3 : 
     currentStep === 'etat' ? 4 : 1;
 
+  // ✅ Contenu protégé - affiché uniquement si autorisé
   return (
     <div className="min-h-screen">
       {/* Sidebar Component */}
