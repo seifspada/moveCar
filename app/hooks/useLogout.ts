@@ -13,7 +13,7 @@ export function useLogout() {
     localStorage.removeItem('user');
     
     // Rediriger vers login
-    router.push('/signin');
+    router.push('/auth/login');
   };
 
   return { logout };

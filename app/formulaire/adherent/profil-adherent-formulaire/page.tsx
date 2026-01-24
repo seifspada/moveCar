@@ -169,7 +169,7 @@ export default function InscriptionForm() {
                       Revenir à l’accueil
                     </button>
                     <button
-                      onClick={() => router.push('/signin')}
+                      onClick={() => router.push('/auth/login')}
                       className="px-10 py-4 bg-white text-orange-600 border-2 border-orange-600 rounded-full font-semibold hover:bg-orange-50 transition-colors"
                     >
                       Se connecter

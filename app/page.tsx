@@ -94,13 +94,13 @@ export default function Page() {
                 
                 {/* Boutons */}
    <div className="flex justify-between items-center gap-2 mt-4 sm:justify-start">
-  <Link href="/partenaire/fiche-partenaire" className="flex-1">
+  <Link href="/formulaire/partenaire/inscription-partenaire" className="flex-1">
     <button className="w-full h-10 sm:h-12 px-2 sm:px-4 bg-orange-500 hover:bg-orange-600 text-white text-[11px] sm:text-sm font-bold rounded-lg transition-colors duration-200 whitespace-nowrap">
       Devenir partenaire
     </button>
   </Link>
 
-  <Link href="/adherent/inscription-formulaire" className="flex-1">
+  <Link href="/formulaire/adherent/inscription-formulaire" className="flex-1">
     <button className="w-full h-10 sm:h-12 px-2 sm:px-4 bg-orange-500 hover:bg-orange-600 text-white text-[11px] sm:text-sm font-bold rounded-lg transition-colors duration-200 whitespace-nowrap">
       Adhérent
     </button>

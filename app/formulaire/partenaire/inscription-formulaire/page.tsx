@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, EyeOff, CheckCircle2, AlertCircle, UserPlus } from 'lucide-react';
 import NavFormulaire from '@/app/components/navFormulaire';
 import { CityAutocomplete, SelectedCity } from '@/components/mission-components/CityAutocomplete';
@@ -42,13 +42,24 @@ export default function FormulairePartenaire() {
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [inputValue, setInputValue] = useState("");
   const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
+  
+  // Nouveau state pour gérer le readOnly
+  const [isReadOnly, setIsReadOnly] = useState(true);
+
+  // Désactiver readOnly après le chargement
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsReadOnly(false);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Gestion de la sélection de ville avec synchronisation
   const handleCitySelect = (city: SelectedCity | null) => {
     setSelectedCity(city);
     setFormData({ ...formData, ville: city?.name || '' });
@@ -80,7 +91,6 @@ export default function FormulairePartenaire() {
       i++;
     }
 
-    // Validation email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.email && !emailRegex.test(formData.email)) {
       missing.push('Format email invalide');
@@ -90,7 +100,6 @@ export default function FormulairePartenaire() {
       missing.push('Les emails ne correspondent pas');
     }
 
-    // Validation mot de passe
     if (formData.motDePasse && formData.motDePasse.length < 8) {
       missing.push('Mot de passe minimum 8 caractères');
     }
@@ -111,7 +120,6 @@ export default function FormulairePartenaire() {
 
     if (missing.length === 0) {
       console.log('Formulaire partenaire complet soumis', formData);
-      // Ici appel API
       setIsSubmitted(true);
     }
   };
@@ -135,7 +143,6 @@ export default function FormulairePartenaire() {
     setSelectedCity(null);
   };
 
-  // Page de confirmation après soumission
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-100 py-12 px-4">
@@ -208,7 +215,6 @@ export default function FormulairePartenaire() {
     );
   }
 
-  // Formulaire d'inscription
   return (
     <div className="min-h-screen bg-black py-12 px-4 lg:pt-35 sm:pt-25">
       <NavFormulaire />
@@ -225,29 +231,109 @@ export default function FormulairePartenaire() {
           </div>
 
           <div className="p-8">
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Code unique partenaire <span className="text-orange-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="codePartenaire"
-                  value={formData.codePartenaire}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
-                />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
+            <form autoComplete="off">
+              <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Entité Groupe <span className="text-orange-500">*</span>
+                    Code unique partenaire <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="text"
-                    name="entiteGroupe"
-                    value={formData.entiteGroupe}
+                    name="codePartenaire"
+                    value={formData.codePartenaire}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Entité Groupe <span className="text-orange-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="entiteGroupe"
+                      value={formData.entiteGroupe}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Entité Agence <span className="text-orange-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="entiteAgence"
+                      value={formData.entiteAgence}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nom <span className="text-orange-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="nom"
+                      value={formData.nom}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Prénom <span className="text-orange-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="prenom"
+                      value={formData.prenom}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Adresse agence <span className="text-orange-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="adresseAgence"
+                    value={formData.adresseAgence}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <CityAutocomplete
+                    value={inputValue}
+                    onValueChange={setInputValue}
+                    selectedCity={selectedCity}
+                    onSelectCity={handleCitySelect}
+                    theme="light"
+                    placeholder="Entrez votre ville (min. 2 caractères)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Numéro téléphone
+                  </label>
+                  <input
+                    type="tel"
+                    name="telephone"
+                    value={formData.telephone}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
                   />
@@ -255,175 +341,104 @@ export default function FormulairePartenaire() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Entité Agence <span className="text-orange-500">*</span>
+                    Adresse mail <span className="text-orange-500">*</span>
                   </label>
                   <input
-                    type="text"
-                    name="entiteAgence"
-                    value={formData.entiteAgence}
+                    type="email"
+                    name="email"
+                    value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
-                  />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nom <span className="text-orange-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="nom"
-                    value={formData.nom}
-                    onChange={handleInputChange}
+                    readOnly={isReadOnly}
+                    onFocus={(e) => e.target.removeAttribute('readonly')}
+                    autoComplete="off"
                     className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Prénom <span className="text-orange-500">*</span>
+                    Confirmation adresse mail <span className="text-orange-500">*</span>
                   </label>
                   <input
-                    type="text"
-                    name="prenom"
-                    value={formData.prenom}
+                    type="email"
+                    name="confirmEmail"
+                    value={formData.confirmEmail}
                     onChange={handleInputChange}
+                    readOnly={isReadOnly}
+                    onFocus={(e) => e.target.removeAttribute('readonly')}
+                    autoComplete="off"
                     className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Adresse agence <span className="text-orange-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="adresseAgence"
-                  value={formData.adresseAgence}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mot de passe <span className="text-orange-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="motDePasse"
+                      value={formData.motDePasse}
+                      onChange={handleInputChange}
+                      readOnly={isReadOnly}
+                      onFocus={(e) => e.target.removeAttribute('readonly')}
+                      autoComplete="new-password"
+                      className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
 
-              {/* CityAutocomplete avec synchronisation */}
-            <div className="flex flex-col gap-1">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Confirmation mot de passe <span className="text-orange-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmMotDePasse"
+                      value={formData.confirmMotDePasse}
+                      onChange={handleInputChange}
+                      readOnly={isReadOnly}
+                      onFocus={(e) => e.target.removeAttribute('readonly')}
+                      autoComplete="new-password"
+                      className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
 
-
-  <CityAutocomplete
-    value={inputValue}
-    onValueChange={setInputValue}
-    selectedCity={selectedCity}
-    onSelectCity={handleCitySelect}
-    theme="light"
-    placeholder="Entrez votre ville (min. 2 caractères)"
-  />
-</div>
-
-
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Numéro téléphone
-                </label>
-                <input
-                  type="tel"
-                  name="telephone"
-                  value={formData.telephone}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Adresse mail <span className="text-orange-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirmation adresse mail <span className="text-orange-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  name="confirmEmail"
-                  value={formData.confirmEmail}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mot de passe <span className="text-orange-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="motDePasse"
-                    value={formData.motDePasse}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
-                  />
+                <div className="flex flex-col sm:flex-row gap-4 pt-6">
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    onClick={handleCancel}
+                    className="flex-1 bg-gray-200 text-gray-700 font-semibold py-3.5 px-6 rounded-full hover:bg-gray-300 transition-all duration-200 shadow hover:shadow-md"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onSubmit}
+                    className="flex-1 bg-orange-600 text-white font-semibold py-3.5 px-6 rounded-full hover:bg-green-600 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    Envoyer le formulaire
                   </button>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirmation mot de passe <span className="text-orange-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmMotDePasse"
-                    value={formData.confirmMotDePasse}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  >
-                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="flex-1 bg-gray-200 text-gray-700 font-semibold py-3.5 px-6 rounded-full hover:bg-gray-300 transition-all duration-200 shadow hover:shadow-md"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="button"
-                  onClick={onSubmit}
-                  className="flex-1 bg-orange-600 text-white font-semibold py-3.5 px-6 rounded-full hover:bg-green-600 transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  Envoyer le formulaire
-                </button>
-              </div>
-            </div>
+            </form>
           </div>
         </div>
 

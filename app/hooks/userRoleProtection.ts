@@ -26,7 +26,7 @@ export function useRoleProtection(options: UseRoleProtectionOptions) {
 
       if (!role) {
         console.log('❌ Pas de rôle - Redirection vers /login');
-        router.push(options.redirectTo || '/login');
+        router.push(options.redirectTo || '/auth/login');
         return;
       }
 
@@ -41,7 +41,7 @@ export function useRoleProtection(options: UseRoleProtectionOptions) {
           manager: '/manager/home',
         };
         
-        router.push(roleRedirects[role] || '/login');
+        router.push(roleRedirects[role] || '/auth2');
         return;
       }
 

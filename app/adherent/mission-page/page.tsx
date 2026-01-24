@@ -23,6 +23,7 @@ export default function MissionsPage() {
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
 
 // app/adherent/mission-page/page.tsx
+
 useEffect(() => {
   const checkAuth = () => {
     // ✅ LIRE LE RÔLE DEPUIS LOCALSTORAGE
@@ -32,7 +33,7 @@ useEffect(() => {
 
     if (!role) {
       console.log("❌ Pas de rôle - Redirection vers /login");
-      router.push('/login');
+      router.push('/auth/login');
       return;
     }
 
@@ -89,9 +90,10 @@ useEffect(() => {
   }
 
   // ✅ Si pas autorisé, ne rien afficher (redirection en cours)
+ 
   if (!isAuthorized) {
     return null;
-  }
+  } 
 
   // ✅ Contenu protégé - affiché uniquement si autorisé
   return (

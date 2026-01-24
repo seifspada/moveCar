@@ -24,7 +24,7 @@ export function middleware(request: NextRequest) {
   console.log("Role:", role);
 
   // ✅ 1. Si sur /login et connecté → rediriger vers dashboard
-  if (pathname === "/login") {
+  if (pathname === "/auth/login") {
     if (role && roleRedirects[role]) {
       console.log("→ Déjà connecté, redirection vers:", roleRedirects[role]);
       return NextResponse.redirect(new URL(roleRedirects[role], request.url));
@@ -44,7 +44,7 @@ export function middleware(request: NextRequest) {
     // ✅ 2a. Pas de rôle → rediriger vers /login
     if (!role) {
       console.log("🔒 Pas de rôle - Redirection vers /login");
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(new URL("/auth/login", request.url));
     }
 
     // ✅ 2b. Extraire le rôle requis depuis le path (ex: /adherent → "adherent")
@@ -62,7 +62,7 @@ export function middleware(request: NextRequest) {
       }
       
       // Fallback vers /login si rôle inconnu
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(new URL("/auth/login", request.url));
     }
 
     console.log("✅ Rôle correct - Accès autorisé");

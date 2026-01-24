@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,77 +15,105 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-// app/login/page.tsx - Dans handleSubmit
-// app/login/page.tsx (ou signin/page.tsx)
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
-
-  try {
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
+  // ✅ Vider les champs au chargement de la page
+  useEffect(() => {
+    setFormData({
+      email: "",
+      password: "",
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Erreur de connexion");
-    }
-
-    console.log("Réponse API Next.js:", data);
-
-    // ✅ TOUT SAUVEGARDER DANS LOCALSTORAGE
-    const token = data.access_token || data.accessToken;
-    if (token) {
-      localStorage.setItem("accessToken", token);
-    }
+    setError("");
     
-    if (data.user) {
-      localStorage.setItem("user", JSON.stringify(data.user));
+    // ✅ Forcer le navigateur à vider les champs après un court délai
+    setTimeout(() => {
+      const emailInput = document.getElementById('email') as HTMLInputElement;
+      const passwordInput = document.getElementById('password') as HTMLInputElement;
+      
+      if (emailInput) emailInput.value = '';
+      if (passwordInput) passwordInput.value = '';
+    }, 100);
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Erreur de connexion");
+      }
+
+      console.log("Réponse API Next.js:", data);
+
+      // ✅ TOUT SAUVEGARDER DANS LOCALSTORAGE
+      const token = data.access_token || data.accessToken;
+      if (token) {
+        localStorage.setItem("accessToken", token);
+      }
+      
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
+      const userRole = data.role;
+
+      if (!userRole || typeof userRole !== 'string') {
+        throw new Error("Rôle utilisateur invalide ou manquant");
+      }
+
+      // ✅ SAUVEGARDER LE RÔLE DANS LOCALSTORAGE
+      localStorage.setItem("role", userRole);
+      
+      console.log("✅ Rôle sauvegardé dans localStorage:", userRole);
+
+      const roleRoutes: Record<string, string> = {
+        adherent: '/adherent/mission-page',
+        partenaire: '/partenaire/demande-mission',
+        admin: '/admin/overview',
+        manager: '/manager/home',
+      };
+
+      const redirectPath = roleRoutes[userRole];
+      
+      if (!redirectPath) {
+        throw new Error(`Rôle non autorisé: ${userRole}`);
+      }
+
+      console.log("✅ Redirection vers:", redirectPath);
+
+      // ✅ RÉINITIALISER LE FORMULAIRE AVANT LA REDIRECTION
+      setFormData({
+        email: "",
+        password: "",
+      });
+
+      // ✅ Vider physiquement les inputs
+      const emailInput = document.getElementById('email') as HTMLInputElement;
+      const passwordInput = document.getElementById('password') as HTMLInputElement;
+      
+      if (emailInput) emailInput.value = '';
+      if (passwordInput) passwordInput.value = '';
+
+      // ✅ Utiliser replace au lieu de push pour éviter de revenir à la page login
+      router.replace(redirectPath);
+
+    } catch (err: any) {
+      console.error("Erreur de connexion:", err);
+      setError(err.message || "Une erreur est survenue");
+    } finally {
+      setLoading(false);
     }
-
-    const userRole = data.role;
-
-    if (!userRole || typeof userRole !== 'string') {
-      throw new Error("Rôle utilisateur invalide ou manquant");
-    }
-
-    // ✅ SAUVEGARDER LE RÔLE DANS LOCALSTORAGE
-    localStorage.setItem("role", userRole);
-    
-    console.log("✅ Rôle sauvegardé dans localStorage:", userRole);
-
-    const roleRoutes: Record<string, string> = {
-      adherent: '/adherent/mission-page',
-      partenaire: '/partenaire/dashboard',
-      admin: '/admin/overview',
-      manager: '/manager/home',
-    };
-
-    const redirectPath = roleRoutes[userRole];
-    
-    if (!redirectPath) {
-      throw new Error(`Rôle non autorisé: ${userRole}`);
-    }
-
-    console.log("✅ Redirection vers:", redirectPath);
-
-    router.push(redirectPath);
-    router.refresh();
-
-  } catch (err: any) {
-    console.error("Erreur de connexion:", err);
-    setError(err.message || "Une erreur est survenue");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -206,7 +234,12 @@ const handleSubmit = async (e: React.FormEvent) => {
             </div>
           )}
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          {/* ✅ Ajout de autoComplete="off" sur le formulaire */}
+          <form className="space-y-6" onSubmit={handleSubmit} autoComplete="off">
+            {/* ✅ Champs cachés pour tromper l'autocomplete */}
+            <input type="email" name="fake_email" style={{ display: 'none' }} />
+            <input type="password" name="fake_password" style={{ display: 'none' }} />
+
             <div className="space-y-5">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -216,7 +249,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   id="email"
                   name="email"
                   type="email"
-                  autoComplete="email"
+                  autoComplete="new-email"
                   required
                   value={formData.email}
                   onChange={handleChange}
@@ -234,7 +267,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   id="password"
                   name="password"
                   type="password"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   required
                   value={formData.password}
                   onChange={handleChange}
