@@ -1,28 +1,77 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { CheckCircle, User, Mail, Lock, CreditCard } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { CheckCircle, User, Mail, CreditCard, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import NavFormulaire from '@/app/components/navFormulaire';
 import Stepper from '@/app/components/Stepper';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ;
+
 export default function InscriptionForm() {
   const router = useRouter();
-  const [isAccountCreated, setIsAccountCreated] = useState(false);
+  const searchParams = useSearchParams();
   
+  // ✅ Récupérer le token depuis l'URL
+  const token = searchParams.get('token');
+
+  const [isAccountCreated, setIsAccountCreated] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Données du formulaire
   const [photo, setPhoto] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [email, setEmail] = useState('');
   const [confirmEmail, setConfirmEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [pack, setPack] = useState<'basique' | 'premium'>('basique');
   const [cgvAccepted, setCgvAccepted] = useState(false);
+const [showPassword, setShowPassword] = useState(false);
+const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // Données de la demande
+  const [demandeData, setDemandeData] = useState<any>(null);
+
+  // ✅ Vérifier le token au chargement
+  useEffect(() => {
+    if (!token) {
+      setError('Lien invalide : token manquant ou expiré');
+      setLoading(false);
+      return;
+    }
+
+    fetch(`${API_URL}/demandes-adherents/verify-token/${token}`)
+      .then(async (res) => {
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || 'Token invalide');
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setDemandeData(data);
+        setEmail(data.email); // ✅ Pré-remplir l'email (readonly)
+        setConfirmEmail(data.email); // ✅ Confirmer automatiquement
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Erreur vérification token:', err);
+        setError(err.message || 'Impossible de vérifier le lien');
+        setLoading(false);
+      });
+  }, [token]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Vérifier la taille (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La photo ne doit pas dépasser 5MB');
+        return;
+      }
+
       setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -33,26 +82,68 @@ export default function InscriptionForm() {
   };
 
   const truncateFileName = (name: string) => {
-    if (name.length > 10) {
-      return name.substring(0, 10) + "...";
+    if (name.length > 20) {
+      return name.substring(0, 20) + "...";
     }
     return name;
   };
 
   const isFormValid =
     photo &&
-    email === confirmEmail &&
     email.includes('@') &&
     password.length >= 8 &&
     password === confirmPassword &&
     cgvAccepted;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isFormValid) {
-      console.log('Compte créé avec succès', { email, pack, photo });
-      // Ici appel API pour créer le compte
+    
+    if (!isFormValid) {
+      alert('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    if (!token) {
+      alert('Token manquant');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Créer FormData pour envoyer photo + données
+      const formData = new FormData();
+      
+      formData.append('token', token); // ✅ Envoyer le token
+      formData.append('motDePasse', password);
+      formData.append('typePack', pack === 'basique' ? 'basic' : 'premium');
+      
+      if (selectedFile) {
+        formData.append('photo', selectedFile);
+      }
+
+      // ✅ Appel API avec token
+      const response = await fetch(`${API_URL}/adherent/create-with-token`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erreur lors de la création du compte');
+      }
+
+      const result = await response.json();
+      console.log('✅ Compte créé avec succès', result);
+      
       setIsAccountCreated(true);
+    } catch (err: any) {
+      console.error('❌ Erreur création compte:', err);
+      setError(err.message || 'Une erreur est survenue');
+      alert(`Erreur: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,7 +151,58 @@ export default function InscriptionForm() {
     router.push('/');
   };
 
-  // Si le compte est créé, afficher la page de confirmation (Toutes les étapes complétées)
+  // ❌ Affichage erreur (token invalide/expiré)
+  if (error && !demandeData) {
+    return (
+      <>
+        <NavFormulaire />
+        <div className="min-h-screen bg-black py-12 px-4 pt-32">
+          <div className="max-w-3xl mx-auto">
+            <div className="bg-white rounded-xl shadow-lg p-8">
+              <div className="text-center">
+                <AlertCircle className="w-16 h-16 text-red-600 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Lien invalide ou expiré</h2>
+                <p className="text-gray-600 mb-6">{error}</p>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-yellow-800">
+                    💡 <strong>Que faire ?</strong>
+                  </p>
+                  <ul className="text-sm text-yellow-700 mt-2 space-y-1 text-left">
+                    <li>• Vérifiez que vous avez cliqué sur le bon lien dans l'email</li>
+                    <li>• Le lien est valide pendant 7 jours seulement</li>
+                    <li>• Contactez l'équipe si le problème persiste</li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => router.push('/')}
+                  className="px-8 py-3 bg-orange-600 text-white rounded-full hover:bg-orange-700 transition"
+                >
+                  Retour à l'accueil
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ⏳ Chargement
+  if (loading && !demandeData) {
+    return (
+      <>
+        <NavFormulaire />
+        <div className="min-h-screen bg-black py-12 px-4 pt-32 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+            <p className="text-white text-xl">Vérification du lien...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ✅ Si le compte est créé
   if (isAccountCreated) {
     return (
       <>
@@ -113,9 +255,9 @@ export default function InscriptionForm() {
                       <p>✓ Demande envoyée et validée</p>
                       <p>✓ Demande acceptée par l'équipe</p>
                       <p>✓ Compte créé et activé</p>
-                        <p className="mt-8 text-sm text-gray-500">
-                    ✓ Un email de confirmation a été envoyé à <strong>{email}</strong>
-                  </p>
+                      <p className="mt-8 text-sm text-gray-500">
+                        ✓ Un email de confirmation a été envoyé à <strong>{email}</strong>
+                      </p>
                     </div>
                   </div>
 
@@ -144,7 +286,7 @@ export default function InscriptionForm() {
                     <ul className="text-left text-gray-700 space-y-2">
                       <li className="flex items-start gap-2">
                         <span className="text-blue-600 font-bold">1.</span>
-<span>Veuillez vous connecter via la page de connexion</span>
+                        <span>Veuillez vous connecter via la page de connexion</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-blue-600 font-bold">2.</span>
@@ -166,7 +308,7 @@ export default function InscriptionForm() {
                       onClick={() => router.push('/')}
                       className="px-10 py-4 bg-gradient-to-r from-orange-600 to-orange-800 text-white rounded-full font-semibold hover:from-orange-700 hover:to-orange-900 transition-colors shadow-lg"
                     >
-                      Revenir à l’accueil
+                      Revenir à l'accueil
                     </button>
                     <button
                       onClick={() => router.push('/auth/login')}
@@ -175,8 +317,6 @@ export default function InscriptionForm() {
                       Se connecter
                     </button>
                   </div>
-
-                
                 </div>
               </div>
             </div>
@@ -186,7 +326,7 @@ export default function InscriptionForm() {
     );
   }
 
-  // Affichage du formulaire de création de compte (Étapes 1 et 2 déjà complétées)
+  // 📝 Affichage du formulaire de création de compte
   return (
     <>
       <NavFormulaire />
@@ -213,11 +353,17 @@ export default function InscriptionForm() {
                 Création de votre compte
               </h2>
               <p className="text-gray-600 mt-2">
-                Complétez les informations ci-dessous pour finaliser la création de votre compte et commencer à utiliser nos services.
+                Complétez les informations ci-dessous pour finaliser la création de votre compte.
               </p>
             </div>
 
-            <div className="space-y-8">
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <p className="text-red-800 text-sm">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-8">
               {/* 1. Photo d'identité */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -252,80 +398,100 @@ export default function InscriptionForm() {
                     <p className="mt-1 text-[11px] sm:text-xs text-gray-500 truncate">
                       {selectedFile ? truncateFileName(selectedFile.name) : "Aucun fichier sélectionné"}
                     </p>
+                    <p className="mt-1 text-[11px] text-gray-400">Max 5MB - JPG/PNG/WEBP</p>
                   </div>
                 </div>
               </div>
 
-              {/* 2. Email */}
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Adresse e-mail <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black"
-                    placeholder="jean.dupont@example.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Confirmer l'adresse e-mail <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={confirmEmail}
-                    onChange={(e) => setConfirmEmail(e.target.value)}
-                    className={`w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black ${
-                      confirmEmail && email !== confirmEmail
-                        ? 'border-red-500 focus:ring-red-500'
-                        : 'border-gray-300 focus:ring-orange-500'
-                    }`}
-                    placeholder="Confirmez votre e-mail"
-                  />
-                  {confirmEmail && email !== confirmEmail && (
-                    <p className="mt-1 text-xs text-red-600">Les adresses e-mail ne correspondent pas</p>
-                  )}
-                </div>
+              {/* 2. Email (readonly) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Adresse e-mail <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  readOnly
+                  className="w-full px-6 py-3 border border-gray-300 rounded-full bg-gray-100 cursor-not-allowed text-gray-700"
+                />
+                <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" />
+                  Email récupéré automatiquement depuis votre demande
+                </p>
               </div>
 
               {/* 3. Mot de passe */}
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Mot de passe <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Minimum 8 caractères</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Confirmer le mot de passe <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={`w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black ${
-                      confirmPassword && password !== confirmPassword
-                        ? 'border-red-500 focus:ring-red-500'
-                        : 'border-gray-300 focus:ring-orange-500'
-                    }`}
-                  />
-                  {confirmPassword && password !== confirmPassword && (
-                    <p className="mt-1 text-xs text-red-600">Les mots de passe ne correspondent pas</p>
-                  )}
-                </div>
-              </div>
+              {/* 3. Mot de passe */}
+<div className="grid md:grid-cols-2 gap-6">
+  {/* Mot de passe */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700">
+      Mot de passe <span className="text-red-600">*</span>
+    </label>
+    <div className="relative">
+      <input
+        type={showPassword ? "text" : "password"}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        autoComplete="new-password"
+        className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition placeholder-gray-600 text-black pr-12"
+        placeholder="Minimum 8 caractères"
+      />
+      <button
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition"
+        aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+      >
+        {showPassword ? (
+          <EyeOff className="w-5 h-5" />
+        ) : (
+          <Eye className="w-5 h-5" />
+        )}
+      </button>
+    </div>
+    <p className="mt-1 text-xs text-gray-500">Minimum 8 caractères</p>
+  </div>
 
-              {/* 4. Choix du pack */}
+  {/* Confirmation mot de passe */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700">
+      Confirmer le mot de passe <span className="text-red-600">*</span>
+    </label>
+    <div className="relative">
+      <input
+        type={showConfirmPassword ? "text" : "password"}
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        autoComplete="new-password"
+        className={`w-full px-6 py-3 border rounded-full focus:outline-none focus:ring-2 transition placeholder-gray-600 text-black pr-12 ${
+          confirmPassword && password !== confirmPassword
+            ? 'border-red-500 focus:ring-red-500'
+            : 'border-gray-300 focus:ring-orange-500'
+        }`}
+        placeholder="Confirmez votre mot de passe"
+      />
+      <button
+        type="button"
+        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition"
+        aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+      >
+        {showConfirmPassword ? (
+          <EyeOff className="w-5 h-5" />
+        ) : (
+          <Eye className="w-5 h-5" />
+        )}
+      </button>
+    </div>
+    {confirmPassword && password !== confirmPassword && (
+      <p className="mt-1 text-xs text-red-600">Les mots de passe ne correspondent pas</p>
+    )}
+  </div>
+</div>
+
+
+ {/* 4. Choix du pack */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-4">
                   Choix de l'adhésion <span className="text-red-600">*</span>
@@ -390,6 +556,7 @@ export default function InscriptionForm() {
                 </div>
               </div>
 
+
               {/* 5. CGV */}
               <div className="flex items-start gap-3">
                 <input
@@ -415,24 +582,24 @@ export default function InscriptionForm() {
                   type="button"
                   onClick={handleCancel}
                   className="px-4 sm:px-6 py-2 sm:py-3 border border-red-600 text-red-600 rounded-full hover:bg-red-50 transition"
+                  disabled={loading}
                 >
                   Annuler
                 </button>
 
                 <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={!isFormValid}
+                  type="submit"
+                  disabled={!isFormValid || loading}
                   className={`px-6 sm:px-10 py-2 sm:py-3 rounded-full font-medium text-white transition ${
-                    isFormValid
+                    isFormValid && !loading
                       ? 'bg-green-600 hover:bg-green-700'
                       : 'bg-gray-400 cursor-not-allowed'
                   }`}
                 >
-                  Créer mon compte
+                  {loading ? 'Création en cours...' : 'Créer mon compte'}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       </div>

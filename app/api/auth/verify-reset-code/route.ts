@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('📤 Vérification code pour:', email);
+    console.log('🔗 URL Backend:', NEST_API_URL); // ✅ Debug
 
     const response = await fetch(`${NEST_API_URL}/auth/verify-reset-code`, {
       method: 'POST',
@@ -25,9 +26,16 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({ email, code }),
     });
 
+    console.log('📡 Status:', response.status); // ✅ Debug
+    console.log('📡 Headers:', response.headers.get('content-type')); // ✅ Debug
+
     const contentType = response.headers.get('content-type');
+    
+    // ✅ Lire le corps de la réponse une seule fois
+    const text = await response.text();
+    console.log('📦 Réponse brute:', text.substring(0, 500)); // ✅ Debug
+
     if (!contentType || !contentType.includes('application/json')) {
-      const text = await response.text();
       console.error('❌ Réponse non-JSON:', text.substring(0, 200));
       return NextResponse.json(
         { message: 'Erreur serveur: réponse invalide du backend' },
@@ -35,7 +43,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const data = await response.json();
+    // ✅ Parser le JSON depuis le texte
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (parseError) {
+      console.error('❌ Erreur parsing JSON:', parseError);
+      console.error('❌ Texte reçu:', text);
+      return NextResponse.json(
+        { message: 'Erreur serveur: impossible de parser la réponse' },
+        { status: 502 }
+      );
+    }
 
     if (!response.ok) {
       return NextResponse.json(
@@ -46,10 +65,19 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data, { status: 200 });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Erreur verify-reset-code:', error);
+    
+    // ✅ Erreur de connexion réseau
+    if (error.cause?.code === 'ECONNREFUSED') {
+      return NextResponse.json(
+        { message: 'Impossible de contacter le serveur backend' },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
-      { message: 'Erreur serveur' },
+      { message: 'Erreur serveur: ' + error.message },
       { status: 500 }
     );
   }

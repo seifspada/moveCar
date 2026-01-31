@@ -23,64 +23,66 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+  try {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || "Erreur de connexion");
-      }
-
-      const token = data.access_token || data.accessToken;
-      if (token) {
-        localStorage.setItem("accessToken", token);
-      }
-
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-      }
-
-      const userRole = data.role;
-
-      if (!userRole || typeof userRole !== "string") {
-        throw new Error("Rôle utilisateur invalide ou manquant");
-      }
-
-      localStorage.setItem("role", userRole);
-
-      const roleRoutes: Record<string, string> = {
-        adherent: "/adherent/mission-page",
-        partenaire: "/partenaire/demande-mission",
-        admin: "/admin/overview",
-        manager: "/manager/home",
-      };
-
-      const redirectPath = roleRoutes[userRole];
-
-      if (!redirectPath) {
-        throw new Error(`Rôle non autorisé: ${userRole}`);
-      }
-
-      router.replace(redirectPath);
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Une erreur est survenue";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error(data.message || "Erreur de connexion");
     }
-  };
+
+    const token = data.access_token || data.accessToken;
+    if (token) {
+      localStorage.setItem("accessToken", token);
+    }
+
+    if (data.user) {
+      localStorage.setItem("user", JSON.stringify(data.user));
+    }
+
+    // ✅ Utiliser data.role directement (c'est déjà une string)
+    const userRole = data.role?.toLowerCase();
+
+    if (!userRole || typeof userRole !== "string") {
+      throw new Error("Rôle utilisateur invalide ou manquant");
+    }
+
+    localStorage.setItem("role", userRole);
+
+    const roleRoutes: Record<string, string> = {
+      adherent: "/adherent/mission-page",
+      partenaire: "/partenaire/demande-mission",
+      admin: "/admin/overview",
+      manager: "/manager/home",
+    };
+
+    const redirectPath = roleRoutes[userRole];
+
+    if (!redirectPath) {
+      throw new Error(`Rôle non autorisé: ${userRole}`);
+    }
+
+    router.replace(redirectPath);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Une erreur est survenue";
+    setError(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({

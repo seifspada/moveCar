@@ -193,7 +193,7 @@ export default function AdherentFormulaire() {
     if (files.casierJudiciaire) fd.append("casierJudiciaire", files.casierJudiciaire);
     if (files.carteGrisWgarage) fd.append("carteGrisWgarage", files.carteGrisWgarage);
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/demandes`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/demandes-adherents`, {
       method: "POST",
       body: fd,
     });
