@@ -1,3 +1,5 @@
+//fiche-partenaire-formulaire/page.tsx
+
 'use client';
 import { useState, useEffect } from 'react';
 import { UserPlus, CheckCircle2, Building2, Calendar, Phone, CalendarClock, ChevronLeft, ChevronRight, Loader2, X } from 'lucide-react';

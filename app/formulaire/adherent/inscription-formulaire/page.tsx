@@ -7,6 +7,7 @@ import CustomSelect from "@/app/components/customSelect";
 import NavFormulaire from "@/app/components/navFormulaire";
 import Stepper from "@/app/components/Stepper";
 import { CityAutocomplete, SelectedCity } from "@/components/mission-components/CityAutocomplete";
+import { AdherentAPI } from "@/app/api/adherent/inscription-formulaire/route";
 
 type FormDataType = {
   nom: string;
@@ -113,7 +114,7 @@ export default function AdherentFormulaire() {
     { name: "nom", label: "Nom", type: "text", placeholder: "DUPONT" },
     { name: "prenom", label: "Prénom", type: "text", placeholder: "Jean" },
     { name: "dateNaissance", label: "Date de naissance", type: "date", placeholder: "JJ/MM/AAAA" },
-    { name: "telephone", label: "Téléphone", type: "tel", placeholder: "06 12 34 56 78" },
+    { name: "telephone", label: "Téléphone", type: "tel", placeholder: "+3361234567 ou 0612345678" },
     { name: "adresse", label: "Adresse complète", type: "text", placeholder: "12 rue des Lilas, 75001 Paris" },
   ];
 
@@ -174,37 +175,37 @@ export default function AdherentFormulaire() {
     return arr;
   }, [files]);
 
-  async function submitDemande() {
-    const fd = new FormData();
+async function submitDemande() {
+  const fd = new FormData();
 
-    // champs texte
-    (Object.keys(formData) as (keyof FormDataType)[]).forEach((k) => {
-      fd.append(k, String(formData[k] ?? ""));
-    });
+  (Object.keys(formData) as (keyof FormDataType)[]).forEach((k) => {
+    fd.append(k, String(formData[k] ?? ""));
+  });
 
-    // IMPORTANT: pour plusieurs fichiers -> append plusieurs fois la même clé [web:42]
-    files.carteIdentite.forEach((f) => fd.append("carteIdentite", f));
-    files.permisRectoVerso.forEach((f) => fd.append("permisRectoVerso", f));
+  files.carteIdentite.forEach((f) => fd.append("carteIdentite", f));
+  files.permisRectoVerso.forEach((f) => fd.append("permisRectoVerso", f));
 
-    if (files.kbis) fd.append("kbis", files.kbis);
-    if (files.rib) fd.append("rib", files.rib);
-    if (files.assuranceRcPro) fd.append("assuranceRcPro", files.assuranceRcPro);
-    if (files.assuranceRcCirculation) fd.append("assuranceRcCirculation", files.assuranceRcCirculation);
-    if (files.casierJudiciaire) fd.append("casierJudiciaire", files.casierJudiciaire);
-    if (files.carteGrisWgarage) fd.append("carteGrisWgarage", files.carteGrisWgarage);
+  const singleFileEntries: [keyof FilesState, string][] = [
+    ["kbis", "kbis"],
+    ["rib", "rib"],
+    ["assuranceRcPro", "assuranceRcPro"],
+    ["assuranceRcCirculation", "assuranceRcCirculation"],
+    ["casierJudiciaire", "casierJudiciaire"],
+    ["carteGrisWgarage", "carteGrisWgarage"],
+  ];
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/demandes-adherents`, {
-      method: "POST",
-      body: fd,
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.message ?? `Erreur API (${res.status})`);
+  singleFileEntries.forEach(([stateKey, fieldName]) => {
+    const file = files[stateKey];
+    if (file instanceof File) {
+      fd.append(fieldName, file);
     }
+  });
 
-    return res.json();
-  }
+  // appel via la route d’API
+  return AdherentAPI.createDemande(fd);
+}
+
+
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

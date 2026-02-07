@@ -1,9 +1,7 @@
 import CustomSelect from "@/app/components/customSelect";
-import { CityAutocomplete } from "../mission-components/CityAutocomplete";
 import ToggleSwitch from "@/app/components/ToggleSwitch";
-import { useState } from "react";
+import { CityAutocomplete } from "../mission-components/CityAutocomplete";
 
-// Types pour les props
 interface AddressSectionProps {
   type: 'depart' | 'arrivee';
   stepNumber: number;
@@ -29,9 +27,13 @@ interface AddressSectionProps {
   notify: boolean;
   onNotifyChange: (value: boolean) => void;
   notifyLabel: string;
+  // ✅ Ajouter ces props
+  nomContact: string;
+  telephoneContact: string;
+  onNomContactChange: (value: string) => void;
+  onTelephoneContactChange: (value: string) => void;
 }
 
-// ✨ COMPOSANT RÉUTILISABLE POUR DÉPART/ARRIVÉE
 export default function AddressSection({
   type,
   stepNumber,
@@ -44,15 +46,19 @@ export default function AddressSection({
   onSelectCity,
   notify,
   onNotifyChange,
-  notifyLabel
+  notifyLabel,
+  // ✅ Destructurer les nouvelles props
+  nomContact,
+  telephoneContact,
+  onNomContactChange,
+  onTelephoneContactChange
 }: AddressSectionProps) {
   const borderColor = type === 'depart' ? 'border-orange-200' : 'border-blue-200';
   const bgGradient = type === 'depart' ? 'from-orange-50' : 'from-blue-50';
   const titleColor = type === 'depart' ? 'text-orange-700' : 'text-blue-700';
   const badgeColor = type === 'depart' ? 'bg-orange-500' : 'bg-blue-500';
   const focusRing = type === 'depart' ? 'focus:ring-orange-500' : 'focus:ring-blue-500';
-const [notifyNom, setNotifyNom] = useState('');
-const [notifyTelephone, setNotifyTelephone] = useState('');
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     onFormDataChange(prev => ({
@@ -61,7 +67,6 @@ const [notifyTelephone, setNotifyTelephone] = useState('');
     }));
   };
 
-  // Fonction séparée pour CustomSelect
   const handleSelectChange = (name: string, value: string) => {
     onFormDataChange(prev => ({
       ...prev,
@@ -83,9 +88,7 @@ const [notifyTelephone, setNotifyTelephone] = useState('');
       </h2>
       
       <div className="space-y-4">
-        {/* Adresse et Ville */}
         <div className="grid grid-cols-2 gap-4">
-          {/* Adresse complète */}
           <div className="w-full">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {type === 'depart' ? 'Adresse de départ' : "Adresse d'arrivée"}
@@ -93,7 +96,7 @@ const [notifyTelephone, setNotifyTelephone] = useState('');
             </label>
             <input
               type="text"
-              value={formData[addressKey] || ''} // ← Ajoutez || '' pour éviter les valeurs undefined
+              value={formData[addressKey] || ''}
               onChange={(e) =>
                 onFormDataChange(prev => ({
                   ...prev,
@@ -101,60 +104,61 @@ const [notifyTelephone, setNotifyTelephone] = useState('');
                 }))
               }
               placeholder={type === 'depart' ? 'Adresse de départ' : "Adresse d'arrivée"}
-className={`w-full px-4 py-3 border border-gray-300 bg-white rounded-full ${focusRing} focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors`}
-
+              className={`w-full px-4 py-3 border border-gray-300 bg-white rounded-full ${focusRing} focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors`}
             />
           </div>
 
-          {/* City Autocomplete */}
           <div className="w-full">
             <CityAutocomplete
               value={inputValue}
               onValueChange={onInputValueChange}
               selectedCity={selectedCity}
-               theme="light"
-
+              theme="light"
               onSelectCity={onSelectCity}
               placeholder={type === 'depart' ? 'Ville de départ' : "Ville d'arrivée"}
             />
           </div>
         </div>
 
-        {/* Type de lieu et Nom du lieu */}
         <div className="grid grid-cols-2 gap-4">
-          <CustomSelect
-            options={[
-              { label: "Agence", value: "agence" },
-              { label: "Concession", value: "concession" },
-              { label: "Particulier", value: "particulier" },
-              { label: "Parc auto", value: "parc_auto" }
+        <CustomSelect
+  options={[
+    { label: "Agence", value: "AGENCE" },
+    { label: "Concession", value: "CONCESSION" },
+    { label: "Particulier", value: "PARTICULIER" },
+    { label: "Parc auto", value: "PARC_AUTO" },
+    { label: "Entreprise", value: "ENTREPRISE" },
+    { label: "Hôtel", value: "HOTEL" },
+    { label: "Domicile", value: "DOMICILE" },
+    { label: "Gare", value: "GARE" },
+    { label: "Aéroport", value: "AEROPORT" },
+    { label: "Autre", value: "AUTRE" }
+  ]}
+  value={formData[typeLieuKey] || ''}
+  onChange={(value) => handleSelectChange(typeLieuKey, String(value))}
+  placeholder="Type de lieu"
+/>
 
-
-            ]}
-            value={formData[typeLieuKey] || ''}
-            onChange={(value) => handleSelectChange(typeLieuKey, String(value))}
-            placeholder="Type de lieu"
-          />
           <input 
             type="text" 
             name={nomLieuKey}
-            value={formData[nomLieuKey] || ''} // ← Ajoutez || '' pour éviter les valeurs undefined
+            value={formData[nomLieuKey] || ''}
             onChange={handleInputChange}
             placeholder={`Nom du lieu (ex: ${type === 'depart' ? 'Agence XYZ' : 'Concession ACME'})`}
-className={`w-full px-4 py-3 border border-gray-300 bg-white rounded-full ${focusRing} focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors`}
+            className={`w-full px-4 py-3 border border-gray-300 bg-white rounded-full ${focusRing} focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors`}
           />
         </div>
 
-       {/* Toggle de notification */}
-<ToggleSwitch 
-  label={notifyLabel} 
-  checked={notify} 
-  onChange={onNotifyChange}
-  nomValue={notifyNom}
-  telephoneValue={notifyTelephone}
-  onNomChange={setNotifyNom}
-  onTelephoneChange={setNotifyTelephone}
-/>
+        {/* ✅ Passer les valeurs au ToggleSwitch */}
+        <ToggleSwitch 
+        label={notifyLabel} 
+        checked={notify} 
+        onChange={onNotifyChange}
+        nomValue={nomContact}
+        telephoneValue={telephoneContact}
+        onNomChange={onNomContactChange}
+        onTelephoneChange={onTelephoneContactChange}
+      />
       </div>
     </div>
   );

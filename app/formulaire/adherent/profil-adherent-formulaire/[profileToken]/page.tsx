@@ -1,64 +1,66 @@
 "use client";
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { CheckCircle, User, Mail, CreditCard, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import NavFormulaire from '@/app/components/navFormulaire';
-import Stepper from '@/app/components/Stepper';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ;
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import {
+  CheckCircle,
+  User,
+  Mail,
+  CreditCard,
+  AlertCircle,
+  Eye,
+  EyeOff,
+} from "lucide-react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
+import NavFormulaire from "@/app/components/navFormulaire";
+import Stepper from "@/app/components/Stepper";
+import { AdherentProfilAPI } from "@/app/api/adherent/profile-adherent-formulaire/route";
+type RouteParams = {
+  profileToken: string;
+};
 
 export default function InscriptionForm() {
   const router = useRouter();
+  const params = useParams<RouteParams>();
   const searchParams = useSearchParams();
-  
-  // ✅ Récupérer le token depuis l'URL
-  const token = searchParams.get('token');
+
+  const token = params.profileToken;          // segment dynamique
+  const codeFromUrl = searchParams.get("code") || ""; // si tu en as besoin
 
   const [isAccountCreated, setIsAccountCreated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Données du formulaire
+
   const [photo, setPhoto] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [email, setEmail] = useState('');
-  const [confirmEmail, setConfirmEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [pack, setPack] = useState<'basique' | 'premium'>('basique');
+  const [email, setEmail] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pack, setPack] = useState<"basique" | "premium">("basique");
   const [cgvAccepted, setCgvAccepted] = useState(false);
-const [showPassword, setShowPassword] = useState(false);
-const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Données de la demande
   const [demandeData, setDemandeData] = useState<any>(null);
 
-  // ✅ Vérifier le token au chargement
   useEffect(() => {
     if (!token) {
-      setError('Lien invalide : token manquant ou expiré');
+      setError("Lien invalide : token manquant ou expiré");
       setLoading(false);
       return;
     }
 
-    fetch(`${API_URL}/demandes-adherents/verify-token/${token}`)
-      .then(async (res) => {
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.message || 'Token invalide');
-        }
-        return res.json();
-      })
+    AdherentProfilAPI.verifyToken(token)
       .then((data) => {
         setDemandeData(data);
-        setEmail(data.email); // ✅ Pré-remplir l'email (readonly)
-        setConfirmEmail(data.email); // ✅ Confirmer automatiquement
+        setEmail(data.email);
+        setConfirmEmail(data.email);
         setLoading(false);
       })
       .catch((err) => {
-        console.error('Erreur vérification token:', err);
-        setError(err.message || 'Impossible de vérifier le lien');
+        console.error("Erreur vérification token:", err);
+        setError(err.message || "Impossible de vérifier le lien");
         setLoading(false);
       });
   }, [token]);
@@ -66,90 +68,72 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Vérifier la taille (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert('La photo ne doit pas dépasser 5MB');
+        alert("La photo ne doit pas dépasser 5MB");
         return;
       }
 
       setSelectedFile(file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhoto(reader.result as string);
-      };
+      reader.onloadend = () => setPhoto(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
-  const truncateFileName = (name: string) => {
-    if (name.length > 20) {
-      return name.substring(0, 20) + "...";
-    }
-    return name;
-  };
+  const truncateFileName = (name: string) =>
+    name.length > 20 ? name.substring(0, 20) + "..." : name;
 
   const isFormValid =
     photo &&
-    email.includes('@') &&
+    email.includes("@") &&
     password.length >= 8 &&
     password === confirmPassword &&
     cgvAccepted;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!isFormValid) {
-      alert('Veuillez remplir tous les champs obligatoires');
-      return;
+// ✅ NOUVEAU
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!isFormValid) {
+    alert("Veuillez remplir tous les champs obligatoires");
+    return;
+  }
+
+  if (!token) {
+    alert("Token manquant");
+    return;
+  }
+
+  setLoading(true);
+  setError(null);
+
+  try {
+    const formData = new FormData();
+    formData.append("motDePasse", password);
+    formData.append("typePack", pack === "basique" ? "basic" : "premium");
+    if (selectedFile) {
+      formData.append("photo", selectedFile);
     }
 
-    if (!token) {
-      alert('Token manquant');
-      return;
-    }
+    // ✅ Passer le token en paramètre séparé
+    const result = await AdherentProfilAPI.createWithToken(token, formData);
+    console.log("✅ Compte créé avec succès", result);
+    setIsAccountCreated(true);
+  } catch (err: any) {
+    console.error("❌ Erreur création compte:", err);
+    setError(err.message || "Une erreur est survenue");
+    alert(`Erreur: ${err.message}`);
+  } finally {
+    setLoading(false);
+  }
+};
 
-    setLoading(true);
-    setError(null);
 
-    try {
-      // Créer FormData pour envoyer photo + données
-      const formData = new FormData();
-      
-      formData.append('token', token); // ✅ Envoyer le token
-      formData.append('motDePasse', password);
-      formData.append('typePack', pack === 'basique' ? 'basic' : 'premium');
-      
-      if (selectedFile) {
-        formData.append('photo', selectedFile);
-      }
+  const handleCancel = () => router.push("/");
 
-      // ✅ Appel API avec token
-      const response = await fetch(`${API_URL}/adherent/create-with-token`, {
-        method: 'POST',
-        body: formData,
-      });
+ 
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de la création du compte');
-      }
 
-      const result = await response.json();
-      console.log('✅ Compte créé avec succès', result);
-      
-      setIsAccountCreated(true);
-    } catch (err: any) {
-      console.error('❌ Erreur création compte:', err);
-      setError(err.message || 'Une erreur est survenue');
-      alert(`Erreur: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    router.push('/');
-  };
 
   // ❌ Affichage erreur (token invalide/expiré)
   if (error && !demandeData) {

@@ -1,4 +1,4 @@
-// src/lib/api.ts
+//api/partenaire/fiche-partenaire/route.ts
 
 import { CreneauxDisponiblesResponse, DatesIndisponiblesResponse, DemandePartenaireData, DemandePartenaireResponse } from "@/app/type/partenaire";
 

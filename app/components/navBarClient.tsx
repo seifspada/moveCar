@@ -24,47 +24,25 @@ export default function NavBarClient() {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const hideNavbar = pathname.startsWith('/adherent') || pathname.startsWith('/partenaire')|| pathname.startsWith('/formulaire');
+  const hideNavbar = pathname.startsWith('/adherent') || pathname.startsWith('/partenaire') || pathname.startsWith('/formulaire');
 
-  // ✅ Récupérer les données utilisateur depuis l'API
+  // ✅ Récupérer les données utilisateur depuis localStorage uniquement
   useEffect(() => {
-    const fetchUserData = async () => {
-      const token = localStorage.getItem('accessToken');
-      
-      if (!token) {
-        setIsConnected(false);
-        return;
-      }
-
+    const token = localStorage.getItem('accessToken');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
       try {
-        // ✅ Appel API pour récupérer les données à jour
-        const response = await fetch('http://localhost:3000/auth/me', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Token invalide ou expiré');
-        }
-
-        const userData = await response.json();
-        
-        // ✅ Mettre à jour l'état ET le localStorage
-        setUser(userData);
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
         setIsConnected(true);
-        localStorage.setItem('user', JSON.stringify(userData));
-
       } catch (error) {
-        console.error('Erreur récupération user:', error);
-        // ✅ Token invalide → déconnexion
+        console.error('Erreur parsing user:', error);
         handleLogout();
       }
-    };
-
-    fetchUserData();
+    } else {
+      setIsConnected(false);
+    }
   }, []);
 
   // Fermer dropdown au clic extérieur
@@ -83,6 +61,8 @@ export default function NavBarClient() {
     localStorage.removeItem('role');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('token'); // ✅ Ajouter aussi token
+    localStorage.removeItem('currentUser'); // ✅ Nettoyer userContext aussi
     setIsConnected(false);
     setUser(null);
     setShowDropdown(false);
@@ -102,8 +82,6 @@ export default function NavBarClient() {
 
   return (
     <nav className="fixed inset-x-0 top-0 z-50 bg-slate-800 border-b border-orange-500/30 backdrop-blur-sm animate-slide-blur -lg:py-4">
-      {/* ... styles ... */}
-
       <div className="flex h-20 md:h-50 items-center justify-between px-4 md:px-8 lg:px-12 xl:px-16 relative">
         
         {/* Logo */}
@@ -246,7 +224,49 @@ export default function NavBarClient() {
         </button>
       </div>
 
-      {/* Mobile Menu - reste identique */}
+      {/* Mobile Menu */}
+      {isOpen && (
+        <div className="md:hidden bg-slate-900 border-t border-orange-500/30">
+          <div className="px-4 py-4 space-y-3">
+            <Link href="/" className="block py-2 text-gray-100 hover:text-orange-500 transition-colors">
+              Accueil
+            </Link>
+            <Link href="/about" className="block py-2 text-gray-100 hover:text-orange-500 transition-colors">
+              À propos
+            </Link>
+            <Link href="/services" className="block py-2 text-gray-100 hover:text-orange-500 transition-colors">
+              Services
+            </Link>
+            <Link href="/contact" className="block py-2 text-gray-100 hover:text-orange-500 transition-colors">
+              Contact
+            </Link>
+            
+            <hr className="border-gray-700" />
+            
+            {isConnected && user ? (
+              <>
+                <div className="py-2">
+                  <p className="text-sm font-medium text-white">{user.name}</p>
+                  <p className="text-xs text-gray-400">{user.email}</p>
+                </div>
+                <Link href="/profile" className="block py-2 text-gray-100 hover:text-orange-500 transition-colors">
+                  Mon profil
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left py-2 text-red-400 hover:text-red-300 transition-colors"
+                >
+                  Déconnexion
+                </button>
+              </>
+            ) : (
+              <Link href="/auth/login" className="block py-2 text-gray-100 hover:text-orange-500 transition-colors">
+                Connexion
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

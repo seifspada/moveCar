@@ -1,8 +1,15 @@
+// app/formulaire/partenaire/inscription-formulaire/[profileToken]page.tsx
 "use client";
-import { useState, useEffect } from 'react';
-import { Eye, EyeOff, CheckCircle2, AlertCircle, UserPlus } from 'lucide-react';
-import NavFormulaire from '@/app/components/navFormulaire';
-import { CityAutocomplete, SelectedCity } from '@/components/mission-components/CityAutocomplete';
+
+import { useState, useEffect } from "react";
+import { useSearchParams, useParams } from "next/navigation";
+import { Eye, EyeOff, CheckCircle2, UserPlus } from "lucide-react";
+import NavFormulaire from "@/app/components/navFormulaire";
+import {
+  CityAutocomplete,
+  SelectedCity,
+} from "@/components/mission-components/CityAutocomplete";
+import { PartenaireProfilAPI } from "@/app/api/partenaire/inscription-formulaire/route";
 
 type FormData = {
   codePartenaire: string;
@@ -19,130 +26,178 @@ type FormData = {
   confirmMotDePasse: string;
 };
 
-export default function FormulairePartenaire() {
+export default function InscriptionFormulairePage() {
+  const params = useParams<{ profileToken: string }>();
+  const profileToken = params?.profileToken || "";
+  const searchParams = useSearchParams();
+  const codeFromUrl = searchParams.get("code") || "";
+
   const [formData, setFormData] = useState<FormData>({
-    codePartenaire: '',
-    entiteGroupe: '',
-    entiteAgence: '',
-    nom: '',
-    prenom: '',
-    adresseAgence: '',
-    ville: '',
-    telephone: '',
-    email: '',
-    confirmEmail: '',
-    motDePasse: '',
-    confirmMotDePasse: ''
+    codePartenaire: "",
+    entiteGroupe: "",
+    entiteAgence: "",
+    nom: "",
+    prenom: "",
+    adresseAgence: "",
+    ville: "",
+    telephone: "",
+    email: "",
+    confirmEmail: "",
+    motDePasse: "",
+    confirmMotDePasse: "",
   });
 
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
-  const [showModal, setShowModal] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
-  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
-  
-  // Nouveau state pour gérer le readOnly
   const [isReadOnly, setIsReadOnly] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false); // ✅ Ajouté
 
-  // Désactiver readOnly après le chargement
+  // Init code partenaire
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsReadOnly(false);
-    }, 100);
-    
+    setFormData((prev) => ({
+      ...prev,
+      codePartenaire: codeFromUrl,
+    }));
+    const timer = setTimeout(() => setIsReadOnly(false), 100);
     return () => clearTimeout(timer);
-  }, []);
+  }, [codeFromUrl]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    if (name === "codePartenaire") return;
     setFormData({ ...formData, [name]: value });
   };
 
   const handleCitySelect = (city: SelectedCity | null) => {
     setSelectedCity(city);
-    setFormData({ ...formData, ville: city?.name || '' });
+    setFormData({ ...formData, ville: city?.name || "" });
   };
 
   const validateForm = (): string[] => {
     const missing: string[] = [];
 
     const fields = [
-      { value: formData.codePartenaire, label: 'Code unique partenaire' },
-      { value: formData.entiteGroupe, label: 'Entité Groupe' },
-      { value: formData.entiteAgence, label: 'Entité Agence' },
-      { value: formData.nom, label: 'Nom' },
-      { value: formData.prenom, label: 'Prénom' },
-      { value: formData.adresseAgence, label: 'Adresse agence' },
-      { value: formData.ville, label: 'Ville' },
-      { value: formData.email, label: 'Adresse mail' },
-      { value: formData.confirmEmail, label: 'Confirmation adresse mail' },
-      { value: formData.motDePasse, label: 'Mot de passe' },
-      { value: formData.confirmMotDePasse, label: 'Confirmation mot de passe' },
+      { value: formData.codePartenaire, label: "Code unique partenaire" },
+      { value: formData.entiteGroupe, label: "Entité Groupe" },
+      { value: formData.entiteAgence, label: "Entité Agence" },
+      { value: formData.nom, label: "Nom" },
+      { value: formData.prenom, label: "Prénom" },
+      { value: formData.adresseAgence, label: "Adresse agence" },
+      { value: formData.ville, label: "Ville" },
+      { value: formData.email, label: "Adresse mail" },
+      { value: formData.confirmEmail, label: "Confirmation adresse mail" },
+      { value: formData.motDePasse, label: "Mot de passe" },
+      { value: formData.confirmMotDePasse, label: "Confirmation mot de passe" },
     ];
 
-    let i = 0;
-    while (i < fields.length) {
-      const field = fields[i];
-      if (!field.value.trim()) {
-        missing.push(field.label);
-      }
-      i++;
+    for (const field of fields) {
+      if (!field.value.trim()) missing.push(field.label);
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.email && !emailRegex.test(formData.email)) {
-      missing.push('Format email invalide');
+      missing.push("Format email invalide");
     }
 
     if (formData.email !== formData.confirmEmail && formData.confirmEmail) {
-      missing.push('Les emails ne correspondent pas');
+      missing.push("Les emails ne correspondent pas");
     }
 
     if (formData.motDePasse && formData.motDePasse.length < 8) {
-      missing.push('Mot de passe minimum 8 caractères');
+      missing.push("Mot de passe minimum 8 caractères");
     }
 
-    if (formData.motDePasse !== formData.confirmMotDePasse && formData.confirmMotDePasse) {
-      missing.push('Les mots de passe ne correspondent pas');
+    if (
+      formData.motDePasse !== formData.confirmMotDePasse &&
+      formData.confirmMotDePasse
+    ) {
+      missing.push("Les mots de passe ne correspondent pas");
     }
 
     return missing;
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const missing = validateForm();
     setMissingFields(missing);
-    setShowModal(true);
+    setApiError(null);
 
-    if (missing.length === 0) {
-      console.log('Formulaire partenaire complet soumis', formData);
+    if (missing.length > 0) {
+      setShowModal(true);
+      return;
+    }
+
+    setLoading(true); // ✅ Début chargement
+
+    try {
+      // ✅ Créer FormData avec tous les champs
+      const formDataToSend = new FormData();
+      formDataToSend.append("nom", `${formData.nom} ${formData.prenom}`);
+      formDataToSend.append("entite", formData.entiteAgence || formData.entiteGroupe);
+      formDataToSend.append("telephone", formData.telephone);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("motDePasse", formData.motDePasse);
+      
+      if (formData.adresseAgence) {
+        formDataToSend.append("adresseAgence", formData.adresseAgence);
+      }
+      if (formData.ville) {
+        formDataToSend.append("ville", formData.ville);
+      }
+
+      console.log('📤 Envoi des données partenaire:');
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(`  ${key}:`, key === 'motDePasse' ? '***' : value);
+      }
+
+      // ✅ Appel API aligné avec adhérent
+      const result = await PartenaireProfilAPI.createProfilPartenaire({
+        profileToken,
+        codePartenaire: formData.codePartenaire,
+        formData: formDataToSend,
+      });
+
+      console.log('✅ Profil partenaire créé:', result);
+
       setIsSubmitted(true);
+      setShowModal(true);
+    } catch (error: any) {
+      console.error('❌ Erreur création profil partenaire:', error);
+      setApiError(error.message || "Erreur lors de la création du profil");
+      setMissingFields([error.message || "Erreur API"]);
+      setShowModal(true);
+    } finally {
+      setLoading(false); // ✅ Fin chargement
     }
   };
 
   const handleCancel = () => {
     setFormData({
-      codePartenaire: '',
-      entiteGroupe: '',
-      entiteAgence: '',
-      nom: '',
-      prenom: '',
-      adresseAgence: '',
-      ville: '',
-      telephone: '',
-      email: '',
-      confirmEmail: '',
-      motDePasse: '',
-      confirmMotDePasse: ''
+      codePartenaire: codeFromUrl,
+      entiteGroupe: "",
+      entiteAgence: "",
+      nom: "",
+      prenom: "",
+      adresseAgence: "",
+      ville: "",
+      telephone: "",
+      email: "",
+      confirmEmail: "",
+      motDePasse: "",
+      confirmMotDePasse: "",
     });
-    setInputValue('');
+    setInputValue("");
     setSelectedCity(null);
+    setApiError(null);
   };
-
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-100 py-12 px-4">
@@ -160,52 +215,80 @@ export default function FormulairePartenaire() {
                 <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle2 className="w-12 h-12 text-green-600" />
                 </div>
-                
+
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  Votre demande d'adhésion partenaire a été envoyée !
+                  Votre demande d&apos;adhésion partenaire a été envoyée !
                 </h3>
-                
+
                 <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                  Nous avons bien reçu votre demande d'inscription en tant que partenaire. Notre équipe va examiner votre dossier 
-                  et vous recevrez une réponse par email à l'adresse <strong>{formData.email}</strong> dans les plus brefs délais.
+                  Nous avons bien reçu votre demande d&apos;inscription en tant
+                  que partenaire. Notre équipe va examiner votre dossier et vous
+                  recevrez une réponse par email à l&apos;adresse{" "}
+                  <strong>{formData.email}</strong> dans les plus brefs délais.
                 </p>
 
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-8 max-w-2xl mx-auto">
-                  <h4 className="font-semibold text-orange-900 mb-3">Prochaines étapes :</h4>
+                  <h4 className="font-semibold text-orange-900 mb-3">
+                    Prochaines étapes :
+                  </h4>
                   <ul className="text-left text-gray-700 space-y-2">
                     <li className="flex items-start gap-2">
                       <span className="text-orange-600 font-bold">1.</span>
-                      <span>Vérification de votre code partenaire et des informations (24-48h)</span>
+                      <span>
+                        Vérification de votre code partenaire et des informations
+                        (24-48h)
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-orange-600 font-bold">2.</span>
-                      <span>Validation de votre entité par l'Entité Group</span>
+                      <span>Validation de votre entité par l&apos;Entité Group</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-orange-600 font-bold">3.</span>
-                      <span>Création de votre compte partenaire et accès à la plateforme</span>
+                      <span>
+                        Création de votre compte partenaire et accès à la
+                        plateforme
+                      </span>
                     </li>
                   </ul>
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-6 mb-8 max-w-2xl mx-auto">
-                  <h4 className="font-semibold text-gray-900 mb-3">Récapitulatif de votre demande :</h4>
+                  <h4 className="font-semibold text-gray-900 mb-3">
+                    Récapitulatif de votre demande :
+                  </h4>
                   <div className="text-left text-sm text-gray-600 space-y-2">
-                    <p><strong>Code partenaire :</strong> {formData.codePartenaire}</p>
-                    <p><strong>Entité Groupe :</strong> {formData.entiteGroupe}</p>
-                    <p><strong>Entité Agence :</strong> {formData.entiteAgence}</p>
-                    <p><strong>Nom :</strong> {formData.nom} {formData.prenom}</p>
-                    <p><strong>Email :</strong> {formData.email}</p>
-                    <p><strong>Ville :</strong> {formData.ville}</p>
-                    <p><strong>Date de soumission :</strong> {new Date().toLocaleDateString('fr-FR')}</p>
+                    <p>
+                      <strong>Code partenaire :</strong>{" "}
+                      {formData.codePartenaire}
+                    </p>
+                    <p>
+                      <strong>Entité Groupe :</strong> {formData.entiteGroupe}
+                    </p>
+                    <p>
+                      <strong>Entité Agence :</strong> {formData.entiteAgence}
+                    </p>
+                    <p>
+                      <strong>Nom :</strong> {formData.nom} {formData.prenom}
+                    </p>
+                    <p>
+                      <strong>Email :</strong> {formData.email}
+                    </p>
+                    <p>
+                      <strong>Ville :</strong> {formData.ville}
+                    </p>
+                    <p>
+                      <strong>Date de soumission :</strong>{" "}
+                      {new Date().toLocaleDateString("fr-FR")}
+                    </p>
                   </div>
                 </div>
 
                 <button
-                  onClick={() => window.location.href = '/'}
+                  onClick={() => (window.location.href = "/")}
                   className="px-10 py-4 bg-gradient-to-r from-orange-600 to-orange-800 text-white rounded-full font-semibold hover:from-orange-700 hover:to-orange-900 transition-colors"
                 >
-                  Retour à l'accueil
+                  Retour à l&apos;accueil
                 </button>
               </div>
             </div>
@@ -223,26 +306,29 @@ export default function FormulairePartenaire() {
           <div className="bg-gradient-to-r from-orange-800 to-orange-600 text-white p-6">
             <h2 className="text-2xl font-semibold flex items-center gap-3">
               <UserPlus className="w-8 h-8" />
-              Formulaire d'adhésion - Donneur d'ordre partenaire
+              Formulaire d&apos;adhésion - Donneur d&apos;ordre partenaire
             </h2>
             <div className="mt-3 px-4 py-2 bg-black rounded-lg inline-block">
-              <p className="text-sm">Code unique partagé par Entité Group</p>
+              <p className="text-sm">
+                Code unique partagé par Entité Group
+              </p>
             </div>
           </div>
 
           <div className="p-8">
-            <form autoComplete="off">
+            <form autoComplete="off" onSubmit={onSubmit}>
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Code unique partenaire <span className="text-orange-500">*</span>
+                    Code unique partenaire{" "}
+                    <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="text"
                     name="codePartenaire"
                     value={formData.codePartenaire}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
+                    readOnly
+                    className="w-full px-4 py-3 border border-gray-300 rounded-full bg-gray-100 text-gray-700 cursor-not-allowed"
                   />
                 </div>
 
@@ -304,7 +390,8 @@ export default function FormulairePartenaire() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Adresse agence <span className="text-orange-500">*</span>
+                    Adresse agence{" "}
+                    <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -341,7 +428,8 @@ export default function FormulairePartenaire() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Adresse mail <span className="text-orange-500">*</span>
+                    Adresse mail{" "}
+                    <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -349,7 +437,7 @@ export default function FormulairePartenaire() {
                     value={formData.email}
                     onChange={handleInputChange}
                     readOnly={isReadOnly}
-                    onFocus={(e) => e.target.removeAttribute('readonly')}
+                    onFocus={(e) => e.target.removeAttribute("readonly")}
                     autoComplete="off"
                     className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
                   />
@@ -357,7 +445,8 @@ export default function FormulairePartenaire() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Confirmation adresse mail <span className="text-orange-500">*</span>
+                    Confirmation adresse mail{" "}
+                    <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -365,7 +454,7 @@ export default function FormulairePartenaire() {
                     value={formData.confirmEmail}
                     onChange={handleInputChange}
                     readOnly={isReadOnly}
-                    onFocus={(e) => e.target.removeAttribute('readonly')}
+                    onFocus={(e) => e.target.removeAttribute("readonly")}
                     autoComplete="off"
                     className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
                   />
@@ -373,7 +462,8 @@ export default function FormulairePartenaire() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mot de passe <span className="text-orange-500">*</span>
+                    Mot de passe{" "}
+                    <span className="text-orange-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -382,7 +472,7 @@ export default function FormulairePartenaire() {
                       value={formData.motDePasse}
                       onChange={handleInputChange}
                       readOnly={isReadOnly}
-                      onFocus={(e) => e.target.removeAttribute('readonly')}
+                      onFocus={(e) => e.target.removeAttribute("readonly")}
                       autoComplete="new-password"
                       className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
                     />
@@ -391,14 +481,19 @@ export default function FormulairePartenaire() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                     >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Confirmation mot de passe <span className="text-orange-500">*</span>
+                    Confirmation mot de passe{" "}
+                    <span className="text-orange-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -407,16 +502,22 @@ export default function FormulairePartenaire() {
                       value={formData.confirmMotDePasse}
                       onChange={handleInputChange}
                       readOnly={isReadOnly}
-                      onFocus={(e) => e.target.removeAttribute('readonly')}
+                      onFocus={(e) => e.target.removeAttribute("readonly")}
                       autoComplete="new-password"
                       className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all text-black"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                     >
-                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -430,8 +531,7 @@ export default function FormulairePartenaire() {
                     Annuler
                   </button>
                   <button
-                    type="button"
-                    onClick={onSubmit}
+                    type="submit"
                     className="flex-1 bg-orange-600 text-white font-semibold py-3.5 px-6 rounded-full hover:bg-green-600 transition-all duration-200 shadow-lg hover:shadow-xl"
                   >
                     Envoyer le formulaire
@@ -443,7 +543,8 @@ export default function FormulairePartenaire() {
         </div>
 
         <p className="text-center text-gray-600 mt-6 text-sm">
-          En soumettant ce formulaire, vous acceptez nos conditions d'utilisation
+          En soumettant ce formulaire, vous acceptez nos conditions
+          d&apos;utilisation
         </p>
       </div>
 
@@ -451,13 +552,15 @@ export default function FormulairePartenaire() {
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              {missingFields.length === 0 ? '✓ Formulaire validé' : '⚠ Champs manquants'}
+              {missingFields.length === 0
+                ? "✓ Formulaire validé"
+                : "⚠ Champs manquants / erreur"}
             </h3>
 
             {missingFields.length === 0 ? (
               <div className="bg-green-50 p-6 rounded-full text-center border border-green-200">
                 <p className="text-green-600 text-lg font-semibold mb-2">
-                  Votre inscription a été soumise avec succès!
+                  Votre inscription a été soumise avec succès !
                 </p>
                 <p className="text-green-700 text-sm">
                   Nous avons envoyé la réponse de votre demande par e-mail.
@@ -465,7 +568,12 @@ export default function FormulairePartenaire() {
               </div>
             ) : (
               <>
-                <p className="text-gray-700 mb-4">Veuillez remplir les champs suivants:</p>
+                <p className="text-gray-700 mb-4">
+                  {missingFields[0].startsWith("Erreur") ||
+                  missingFields[0].startsWith("Impossible")
+                    ? "Une erreur est survenue :"
+                    : "Veuillez remplir / corriger les éléments suivants :"}
+                </p>
                 <ul className="list-disc list-inside text-red-600 mb-6 space-y-1">
                   {missingFields.map((field, idx) => (
                     <li key={idx}>{field}</li>
