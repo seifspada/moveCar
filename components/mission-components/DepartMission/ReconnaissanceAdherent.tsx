@@ -5,7 +5,7 @@ import { CheckCircle, User, CreditCard, Shield, RotateCcw, Camera } from 'lucide
 import { CameraMode } from './CameraMode';
 import ValidationButtons from './ValidationButtom';
 import ToggleCondition from './ToggleCondition';
-import { Mission } from '@/app/type/mission';
+import { Mission } from '@/app/types/mission';
 
 interface PhotoData {
   dataUrl: string;

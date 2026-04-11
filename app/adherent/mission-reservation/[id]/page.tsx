@@ -1,27 +1,24 @@
 // app/adherent/mission-reservation/[id]/page.tsx
 'use client';
 
-import { use, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mission, missionsData } from '@/app/data/missions';
 import MissionDetails from '@/components/mission-components/MissionDetails';
-import ProfileHeader from '@/components/mission-components/ProfileHeader';
-import SidebarAdherent from '@/app/components/sideBarAdherent';
-import DynamicMissionsMap from '@/components/mission-components/DynamicMissionsMap';
+import ProfileHeader from '@/components/mission-components/ProfileHeaderAdherent';
+import SidebarAdherent from '@/components/mission-components/SideBarAdherent';
 import ReservationModal, { ReservationData } from '@/components/mission-components/ReservationModal';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { useMissionDetails } from '@/app/hooks/useMissionDetails';
+import { toast } from 'sonner'; // ✅ AJOUT
 
 export default function MissionReservationPage({ 
   params 
 }: { 
-  params: Promise<{ id: string }> 
+  params: { id: string } 
 }) {
   const router = useRouter();
   
-  const resolvedParams = use(params);
-  const missionId = Number(resolvedParams.id);
-
-  const mission = missionsData.find((m): m is Mission => m.id === missionId);
+  const { mission, loading, error } = useMissionDetails();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
@@ -39,24 +36,53 @@ export default function MissionReservationPage({
   const handleConfirmReservation = (reservationData: ReservationData) => {
     console.log('Réservation confirmée:', reservationData);
     
-    // Ici vous pouvez envoyer les données au backend
-    // Par exemple: await fetch('/api/reservations', { method: 'POST', body: JSON.stringify(reservationData) })
+    // ✅ AJOUT : Toast de succès
+    toast.success('Demande de réservation envoyée !', {
+      description: 'Vous recevrez une notification dès validation',
+      duration: 5000,
+    });
     
-    // Afficher un message de succès
-    setShowSuccessMessage(true);
-    
-    // Rediriger après 3 secondes
     setTimeout(() => {
-      router.push('/adherent/mission-page');
-    }, 3000);
+      setShowSuccessMessage(false);
+    }, 3000); 
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center text-white">
+          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-orange-500" />
+          <p>Chargement de la mission...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black text-white p-8 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
+          <h1 className="text-2xl font-bold mb-2">Erreur de chargement</h1>
+          <p className="text-gray-400 mb-4">{error.message}</p>
+          <button
+            onClick={() => router.push('/adherent/mission-page')}
+            className="px-6 py-2 bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Retour aux missions
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!mission) {
     return (
       <div className="min-h-screen bg-black text-white p-8 flex items-center justify-center">
         <div className="text-center">
+          <AlertCircle className="w-16 h-16 mx-auto mb-4 text-orange-500" />
           <h1 className="text-2xl font-bold mb-2">Mission introuvable</h1>
-          <p className="text-gray-400 mb-4">La mission demandée n'existe pas.</p>
+          <p className="text-gray-400 mb-4">La mission demandée n'existe pas ou a été supprimée.</p>
           <button
             onClick={() => router.push('/adherent/mission-page')}
             className="px-6 py-2 bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
@@ -70,37 +96,10 @@ export default function MissionReservationPage({
 
   return (
     <div className="min-h-screen bg-black">
-      <SidebarAdherent
-        isMobileMenuOpen={isMobileMenuOpen}
-        onMobileMenuToggle={toggleMobileMenu}
-        isDesktopMenuOpen={isDesktopMenuOpen}
-        onDesktopMenuToggle={toggleDesktopMenu}
-      />
+     
 
-      <ProfileHeader
-        isMobileMenuOpen={isMobileMenuOpen}
-        isDesktopMenuOpen={isDesktopMenuOpen}
-        toggleMobileMenu={toggleMobileMenu}
-        toggleDesktopMenu={toggleDesktopMenu}
-      />
-
-      {/* Success Message */}
-      {showSuccessMessage && (
-        <div className="fixed top-24 right-4 z-[9999] animate-slide-in">
-          <div className="bg-green-500 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3">
-            <CheckCircle className="w-6 h-6" />
-            <div>
-              <p className="font-bold">Réservation confirmée !</p>
-              <p className="text-sm">Vous allez être redirigé...</p>
-            </div>
-          </div>
-        </div>
-      )}
-
+    
       <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 mt-20">
-        {/* Map Section */}
-        
-        {/* Mission Details */}
         <MissionDetails
           mission={mission}
           onBack={() => router.back()}
@@ -108,7 +107,6 @@ export default function MissionReservationPage({
         />
       </div>
 
-      {/* Reservation Modal */}
       <ReservationModal
         mission={mission}
         isOpen={isReservationModalOpen}
@@ -116,22 +114,6 @@ export default function MissionReservationPage({
         onConfirm={handleConfirmReservation}
         estimatedDuration={estimatedDuration}
       />
-
-      <style jsx global>{`
-        @keyframes slide-in {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 }

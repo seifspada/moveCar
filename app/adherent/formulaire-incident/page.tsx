@@ -2,9 +2,9 @@
 
 import { useState, useCallback } from "react";
 import { Camera, AlertTriangle, X } from "lucide-react";
-import ProfileHeader from "@/components/mission-components/ProfileHeader";
+import ProfileHeader from "@/components/mission-components/ProfileHeaderAdherent";
 import GPSLocationButton from "@/app/components/GPSLocationButton";
-import SidebarAdherent from "@/app/components/sideBarAdherent";
+import SidebarAdherent from "@/components/mission-components/SideBarAdherent";
 import { useRoleProtection } from "@/app/hooks/userRoleProtection";
 
 // Types
@@ -183,20 +183,7 @@ export default function FormulaireIncident() {
   // ✅ Contenu protégé - affiché uniquement si autorisé
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black px-3 py-4 sm:px-6 sm:py-6 md:px-8 md:py-6 lg:px-10 lg:py-8">
-      <SidebarAdherent
-        isMobileMenuOpen={isMobileMenuOpen}
-        onMobileMenuToggle={toggleMobileMenu}
-        isDesktopMenuOpen={isDesktopMenuOpen}
-        onDesktopMenuToggle={toggleDesktopMenu}
-      />
-
-      {/* Profile Header */}
-      <ProfileHeader
-        isMobileMenuOpen={isMobileMenuOpen}
-        isDesktopMenuOpen={isDesktopMenuOpen}
-        toggleMobileMenu={toggleMobileMenu}
-        toggleDesktopMenu={toggleDesktopMenu}
-      />        
+       
       
       <div className="max-w-4xl mx-auto pt-4 sm:pt-6 md:pt-8 lg:pt-12">
         {/* En-tête */}

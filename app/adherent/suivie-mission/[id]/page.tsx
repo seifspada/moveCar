@@ -2,8 +2,8 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import SidebarAdherent from '@/app/components/sideBarAdherent';
-import ProfileHeader from '@/components/mission-components/ProfileHeader';
+import SidebarAdherent from '@/components/mission-components/SideBarAdherent';
+import ProfileHeader from '@/components/mission-components/ProfileHeaderAdherent';
 import { missionsData } from '@/app/data/missions';
 import { departsEnCours, DepartMission, departHelpers } from '@/app/data/departMission';
 import RouteTracker from '@/components/mission-components/MissionTruck/RouteTracker';

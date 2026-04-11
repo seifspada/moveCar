@@ -43,16 +43,17 @@ const handleSubmit = async (e: React.FormEvent) => {
       throw new Error(data.message || "Erreur de connexion");
     }
 
+    // ✅ CORRECTION : Utiliser "token" au lieu de "accessToken"
     const token = data.access_token || data.accessToken;
     if (token) {
-      localStorage.setItem("accessToken", token);
+      localStorage.setItem("token", token);  // ✅ Changé ici
     }
 
     if (data.user) {
       localStorage.setItem("user", JSON.stringify(data.user));
     }
 
-    // ✅ Utiliser data.role directement (c'est déjà une string)
+    // ✅ Utiliser data.role directement
     const userRole = data.role?.toLowerCase();
 
     if (!userRole || typeof userRole !== "string") {
@@ -63,9 +64,9 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     const roleRoutes: Record<string, string> = {
       adherent: "/adherent/mission-page",
-      partenaire: "/partenaire/demande-mission",
-      admin: "/admin/overview",
-      manager: "/manager/home",
+      partenaire: "/partenaire/acceuil",
+      admin: "/admin/demande-liste",
+      agent: "/agent/acceuil",
     };
 
     const redirectPath = roleRoutes[userRole];
@@ -74,7 +75,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       throw new Error(`Rôle non autorisé: ${userRole}`);
     }
 
-    router.replace(redirectPath);
+    // ✅ IMPORTANT : Utiliser window.location.href pour recharger complètement
+    window.location.href = redirectPath;  // ✅ Changé ici aussi
+    
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : "Une erreur est survenue";
     setError(errorMessage);
@@ -82,6 +85,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setLoading(false);
   }
 };
+
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

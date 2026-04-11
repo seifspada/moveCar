@@ -1,6 +1,6 @@
 //api/partenaire/fiche-partenaire/route.ts
 
-import { CreneauxDisponiblesResponse, DatesIndisponiblesResponse, DemandePartenaireData, DemandePartenaireResponse } from "@/app/type/partenaire";
+import { CreneauxDisponiblesResponse, DatesIndisponiblesResponse, DemandePartenaireData, DemandePartenaireResponse } from "@/app/types/partenaire";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 

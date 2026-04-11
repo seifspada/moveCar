@@ -1,106 +1,48 @@
-import React, { useState, useEffect } from "react";
-import { Mission } from "@/app/type/mission";
+// components/mission-components/MissionDetails.tsx
+'use client';
+
+import React from "react";
+import { MissionDetail } from "@/app/types/mission";
 import Image from "next/image";
-import { AlertCircle, ArrowLeft, ArrowRight, Clock, MapPin } from "lucide-react";
-import { Car, ChevronDown, Fuel } from "lucide-react";
-import {  missionsData, vehicleIcons, VehicleType, VehiculeCarburant, vehiculeCarburantIcons } from "@/app/data/missions";
-import { useParams } from "next/navigation";
+import { AlertCircle, ArrowLeft, ArrowRight, MapPin, ChevronDown } from "lucide-react";
+import { getCarburantConfig, getVehicleConfig } from "@/app/config/mission-icons.config";
+import CountdownTimer from "./CountdownTimer";
+import { CountdownTimerCompact } from "./CountdownTimerCompact";
 import DynamicMissionsMap from "./DynamicMissionsMap";
-import router from "next/router";
 
 export default function MissionDetails({
-  
-  mission: missionProp,
+  mission,
   onBack,
   onReserve,
 }: {
-  mission?: Mission;
+  mission: MissionDetail;
   onBack: () => void;
   onReserve: () => void;
 }) {
-    const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
-
-  const params = useParams<{ id: string }>();
-  const missionId = params?.id ? parseInt(params.id, 10) : null;
-
-  const mission =
-    missionProp ||
-    (missionId !== null ? missionsData.find((m) => m.id === missionId) : null);
-
-  if (!mission) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center px-4">
-        <div className="text-center text-white">
-          <AlertCircle className="w-16 h-16 mx-auto mb-4 text-orange-500" />
-          <p className="text-2xl font-semibold">Mission non trouvée</p>
-          <p className="text-gray-400 mt-2">
-            L'identifiant fourni est invalide ou la mission n'existe pas.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const [timeRemaining, setTimeRemaining] = useState({
-    hours: 23,
-    minutes: 45,
-    seconds: 30,
-  });
-
-  const fuelInfo =
-    vehiculeCarburantIcons[mission.typeCarburant as VehiculeCarburant] ||
-    vehiculeCarburantIcons.Essence;
-
-  const vehicleConfig =
-    vehicleIcons[mission.vehicleType as VehicleType] || vehicleIcons.berline;
-
-      const handleReserve = () => {
-    setIsReservationModalOpen(true);
-  };
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        let { hours, minutes, seconds } = prev;
-
-        if (seconds > 0) {
-          seconds--;
-        } else if (minutes > 0) {
-          minutes--;
-          seconds = 59;
-        } else if (hours > 0) {
-          hours--;
-          minutes = 59;
-          seconds = 59;
-        }
-
-        return { hours, minutes, seconds };
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
+  // ✅ Utiliser vos helpers pour récupérer les configs
+  const vehicleConfig = getVehicleConfig(mission.vehicule?.typeVehicule);
+  const carburantInfo = getCarburantConfig(mission.vehicule?.typeCarburant);
 
   const conditions = [
     {
       label: "Dépassement de km",
-      valeur: `${mission.tarifDepassementKm || 0.5} €/km`,
+      valeur: `0.5 €/km`,
     },
     {
       label: "Retard sans avertissement",
-      valeur: `${mission.tarifRetardHeure || 25} €/h`,
+      valeur: `25 €/h`,
     },
     {
       label: "Carburant",
-      valeur: mission.tarifCarburant || "Prix selon convention signée",
+      valeur: "Prix selon convention signée",
     },
     {
       label: "Restitution autre endroit",
-      valeur: `${mission.tarifRestitutionAutreEndroit || 1.2} €/km`,
+      valeur: `1.2 €/km`,
     },
     {
       label: "Annulation",
-      valeur: mission.conditionsAnnulation || "Selon convention signée",
+      valeur: "Selon convention signée",
     },
   ];
 
@@ -108,10 +50,18 @@ export default function MissionDetails({
     <div className="min-h-screen bg-black py-8 px-4">
       <div className="max-w-5xl mx-auto bg-white shadow-2xl rounded-lg border border-orange-500 overflow-hidden">
 
-        {/* En-tête */}
-        <div className=" block lg:hidden bg-black text-white px-8 py-6">
-          <h1 className="text-2xl font-bold">Mission de Transport</h1>
-          <p className="text-gray-300 mt-1">Détails de la réservation</p>
+        {/* En-tête avec timer compact */}
+        <div className="block lg:hidden bg-black text-white px-8 py-6">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h1 className="text-2xl font-bold">Mission de Transport</h1>
+              <p className="text-gray-300 mt-1">Détails de la réservation</p>
+            </div>
+            {/* ✅ Timer compact pour mobile */}
+            {mission.disponibilite?.dateDepartMax && (
+              <CountdownTimerCompact dateDepartMax={mission.disponibilite.dateDepartMax} />
+            )}
+          </div>
         </div>
 
         <div className="p-8 space-y-10">
@@ -123,13 +73,15 @@ export default function MissionDetails({
               Informations générales
             </h2>
             <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-orange-500">
-              <span className="text-gray-900 font-semibold text-lg">{mission.entite || "Non spécifié"}</span>
+              <span className="text-gray-900 font-semibold text-lg">
+                {mission.partenaire?.entiteGroupe || "Non spécifié"}
+              </span>
             </div>
           </section>
 
           <div className="border-t border-gray-200"></div>
 
-          {/* Trajet - Villes seulement */}
+          {/* Trajet */}
           <section>
             <h2 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
               <span className="w-1 h-6 bg-orange-500 mr-3"></span>
@@ -144,10 +96,8 @@ export default function MissionDetails({
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-800 mb-1">Départ</h3>
-                    <p className="text-xl font-bold text-gray-900">{mission.villeDepart}</p>
-                    {mission.adresseDepartComplete && (
-                      <p className="text-sm text-gray-600 mt-1">{mission.adresseDepartComplete}</p>
-                    )}
+                    <p className="text-xl font-bold text-gray-900">{mission.adresseDepart.villeNom}</p>
+                    <p className="text-sm text-gray-600 mt-1">{mission.adresseDepart.adresseComplete}</p>
                   </div>
                 </div>
               </div>
@@ -163,40 +113,36 @@ export default function MissionDetails({
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-800 mb-1">Arrivée</h3>
-                    <p className="text-xl font-bold text-gray-900">{mission.villeArrivee}</p>
-                    {mission.adresseArriveeComplete && (
-                      <p className="text-sm text-gray-600 mt-1">{mission.adresseArriveeComplete}</p>
-                    )}
+                    <p className="text-xl font-bold text-gray-900">{mission.adresseArrivee.villeNom}</p>
+                    <p className="text-sm text-gray-600 mt-1">{mission.adresseArrivee.adresseComplete}</p>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Carte interactive */}
-        {/* Carte interactive */}
+          <div className="border-t border-gray-200"></div>
+
+          <div className="border-t border-gray-200"></div>
+
+{/* ✅ Carte interactive */}
 <section>
   <h2 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
     <span className="w-1 h-6 bg-orange-500 mr-3"></span>
     Itinéraire de la mission
   </h2>
 
-  <div className="w-full h-[500px] rounded-xl overflow-hidden shadow-2xl border border-gray-300">
-    {mission ? (
-  <DynamicMissionsMap
-            mission={mission}
-            missionsData={missionsData}
-            onBack={() => router.back()}
-            onReserve={handleReserve}
-          />    ) : (
-      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-        <p className="text-gray-500">Impossible de charger la carte</p>
-      </div>
-    )}
-  </div>
+  <DynamicMissionsMap 
+    mission={mission}
+    onDurationCalculated={(duration) => {
+      console.log('Durée calculée:', duration, 'minutes');
+      // Vous pouvez stocker cette durée dans un state si nécessaire
+    }}
+  />
 </section>
 
-          <div className="border-t border-gray-200"></div>
+<div className="border-t border-gray-200"></div>
+
 
           {/* Tarif */}
           <section>
@@ -205,126 +151,166 @@ export default function MissionDetails({
               Tarif
             </h2>
 
-            <div className="bg-orange-50 p-6 rounded-lg border-2 border-orange-500">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-700 font-medium text-lg">Montant total</span>
-                <span className="text-3xl font-bold text-orange-600">{mission.montant.toFixed(2)} €</span>
-              </div>
-              <p className="text-sm text-gray-600 text-right italic">
-                {mission.peagesInclus ? 'Péages inclus' : `Péages : ${mission.fraisPeage}`}
-                {mission.carburantInclus ? ' • Carburant inclus' : ''}
-              </p>
-            </div>
+            {mission.calculs && (
+              <>
+                <div className="bg-orange-50 p-6 rounded-lg border-2 border-orange-500">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-gray-700 font-medium text-lg">Montant total</span>
+                    <span className="text-3xl font-bold text-orange-600">
+                      {mission.calculs.montantTotal.toFixed(2)} €
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 text-right italic">
+                    Péages : {mission.calculs.fraisPeage.toFixed(2)} €
+                  </p>
+                </div>
 
-            <div className="mt-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <h3 className="font-semibold text-gray-800 mb-2">Prestations supplémentaires</h3>
-              <p className="text-sm text-gray-600 mb-3 italic">Remboursées par l'entité sur présentation de facture</p>
-              <ul className="space-y-1 text-gray-700">
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
-                  Nettoyage du véhicule int./ext.
-                </li>
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
-                  Carburant
-                </li>
-              </ul>
-            </div>
+                <div className="mt-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <h3 className="font-semibold text-gray-800 mb-2">Prestations supplémentaires</h3>
+                  <p className="text-sm text-gray-600 mb-3 italic">Remboursées par l'entité sur présentation de facture</p>
+                  <ul className="space-y-1 text-gray-700">
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                      Nettoyage du véhicule int./ext.
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                      Carburant
+                    </li>
+                  </ul>
+                </div>
+              </>
+            )}
           </section>
 
           <div className="border-t border-gray-200"></div>
 
           {/* Kilométrage */}
-          <section>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <span className="w-1 h-6 bg-orange-500 mr-3"></span>
-              Kilométrage
-            </h2>
+          {mission.calculs && (
+            <section>
+              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <span className="w-1 h-6 bg-orange-500 mr-3"></span>
+                Kilométrage
+              </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 text-center">
-                <p className="text-sm text-gray-600 mb-1">Nombre de KM</p>
-                <p className="text-3xl font-bold text-gray-900">{mission.nbKm} km</p>
-              </div>
-              <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 text-center">
-                <p className="text-sm text-gray-600 mb-1">KM total autorisé</p>
-                <p className="text-3xl font-bold text-gray-900">{mission.kmTotalAutorise || mission.nbKm} km</p>
-              </div>
-            </div>
-          </section>
+                <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 text-center">
+                  <p className="text-sm text-gray-600 mb-1">Distance totale</p>
+                  <p className="text-3xl font-bold text-gray-900">{mission.calculs.distanceKm} km</p>
+                </div>
+               
+            </section>
+          )}
 
           <div className="border-t border-gray-200"></div>
 
-          {/* Disponibilité */}
-          <section>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <span className="w-1 h-6 bg-orange-500 mr-3"></span>
-              Disponibilité véhicule
-            </h2>
+          {/* ✅ Disponibilité avec CountdownTimer */}
+          {mission.disponibilite && (
+            <section>
+              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <span className="w-1 h-6 bg-orange-500 mr-3"></span>
+                Disponibilité véhicule
+              </h2>
 
-            <div className="bg-red-50 border-2 border-red-500 p-6 rounded-lg mb-6 text-center">
-              <div className="flex items-center justify-center mb-3">
-                <Clock className="text-red-600 mr-2" size={28} />
-                <span className="text-lg font-medium text-red-800">Temps restant pour réservation</span>
-              </div>
-              <div className="text-5xl font-bold text-red-600 font-mono">
-                {String(timeRemaining.hours).padStart(2, '0')}:
-                {String(timeRemaining.minutes).padStart(2, '0')}:
-                {String(timeRemaining.seconds).padStart(2, '0')}
-              </div>
-            </div>
+              {/* ✅ Compte à rebours dynamique */}
+              {mission.disponibilite.dateDepartMax && (
+                <CountdownTimer 
+                  dateDepartMax={mission.disponibilite.dateDepartMax} 
+                  className="mb-6"
+                />
+              )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="text-sm text-gray-600 mb-1">Date de départ Min</p>
-                <p className="font-semibold text-gray-900">{mission.dateDebutMin || mission.dateDisposition}</p>
+              {/* Dates de disponibilité */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <p className="text-sm text-gray-600 mb-1">Date de début</p>
+                  <p className="font-semibold text-gray-900">
+                    {new Date(mission.disponibilite.dateDebut).toLocaleDateString('fr-FR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <p className="text-sm text-gray-600 mb-1">Date de fin</p>
+                  <p className="font-semibold text-gray-900">
+                    {new Date(mission.disponibilite.dateFin).toLocaleDateString('fr-FR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="text-sm text-gray-600 mb-1">Date de départ Max</p>
-                <p className="font-semibold text-gray-900">{mission.dateDebutMax || mission.dateDisposition}</p>
-              </div>
-            </div>
-          </section>
+            </section>
+          )}
 
           <div className="border-t border-gray-200"></div>
 
           {/* Véhicule */}
-          <section>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <span className="w-1 h-6 bg-orange-500 mr-3"></span>
-              Détails véhicule
-            </h2>
+          {/* Véhicule */}
+<section>
+  <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+    <span className="w-1 h-6 bg-orange-500 mr-3"></span>
+    Détails véhicule
+  </h2>
 
-            <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-6">
-                  <div className="bg-orange-500 p-4 rounded-full">
-                    <Image
-                      src={vehicleConfig.image}
-                      alt={vehicleConfig.label}
-                      width={80}
-                      height={80}
-                      className="object-contain"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold text-gray-900">{vehicleConfig.label}</p>
-                    <p className="text-gray-600">{mission.typeBoite || "Automatique"}</p>
-                  </div>
-                </div>
+  <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+    <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex items-center space-x-6">
+        {/* ✅ Cercle avec icône véhicule seulement */}
+        <div className="relative">
+          <div className="bg-orange-500 p-4 rounded-full w-24 h-24 flex items-center justify-center">
+            <Image
+              src={vehicleConfig.icon}
+              alt={vehicleConfig.label}
+              width={60}
+              height={60}
+              className="object-contain"
+            />
+          </div>
+        </div>
 
-                <div className="bg-white px-5 py-3 rounded-lg border border-gray-300 shadow">
-                  <Image
-                    src={fuelInfo.image}
-                    alt={fuelInfo.label}
-                    width={60}
-                    height={60}
-                    className="object-contain"
-                  />
-                </div>
-              </div>
-            </div>
-          </section>
+        <div>
+          <p className="text-lg font-semibold text-gray-900">{mission.vehicule.marqueModele}</p>
+          <p className="text-gray-600 text-sm mt-1">
+            {vehicleConfig.label} • {mission.vehicule.boiteVitesse || "Automatique"}
+          </p>
+          
+          
+        </div>
+      </div>
+
+      {/* ✅ Carré avec icône carburant + exemples */}
+      <div className="bg-white px-4 py-3 rounded-lg border border-gray-300 shadow min-w-[180px]">
+        {/* Image carburant centrée en haut */}
+        <div className="flex justify-center mb-3">
+          <div className={`${carburantInfo.bgColor} p-3 rounded-lg`}>
+            <Image
+              src={carburantInfo.image}
+              alt={carburantInfo.label}
+              width={40}
+              height={40}
+              className="object-contain"
+            />
+          </div>
+        </div>
+        
+        {/* Texte carburant */}
+        <p className="text-xs text-gray-500 mb-1 text-center">Carburant</p>
+         
+        {/* Séparateur */}
+        
+        {/* Exemples */}
+      </div>
+    </div>
+  </div>
+</section>
+
 
           <div className="border-t border-gray-200"></div>
 

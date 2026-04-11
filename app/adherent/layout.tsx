@@ -3,6 +3,7 @@
 
 import { ReactNode } from "react";
 import { useRoleProtection } from "../hooks/userRoleProtection";
+import AdherentLayoutWrapper from "@/components/mission-components/AdherentLayoutWrapper";
 
 export default function AdherentLayout({ children }: { children: ReactNode }) {
   const { isAuthorized, isLoading } = useRoleProtection({
@@ -24,5 +25,10 @@ export default function AdherentLayout({ children }: { children: ReactNode }) {
     return null;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <AdherentLayoutWrapper />
+      {children}
+    </>
+  );
 }

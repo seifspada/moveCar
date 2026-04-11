@@ -1,18 +1,22 @@
-
-import { useState, useEffect } from 'react';
-import { X, Calendar, Clock, MapPin, AlertCircle, CheckCircle, Navigation } from 'lucide-react';
-import { Mission, vehicleIcons, VehicleType } from '@/app/data/missions';
+// components/mission-components/ReservationModal.tsx
+import { X, Calendar, AlertCircle, CheckCircle, Navigation } from 'lucide-react';
+import { useCreateReservation } from '@/app/hooks/useCreateReservation';
+import { getVehicleConfig } from '@/app/config/mission-icons.config';
+import type { MissionDetail } from '@/app/types/mission';
+import { useState, useEffect, useMemo } from 'react';
+import { ReservationErrorCode } from '@/app/types/reservation';
+import { toast } from 'sonner';
 
 interface ReservationModalProps {
-  mission: Mission;
+  mission: MissionDetail;
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (reservationData: ReservationData) => void;
-  estimatedDuration?: number; // en minutes depuis DynamicMissionsMap
+  onConfirm?: (reservationData: ReservationData) => void;
+  estimatedDuration?: number;
 }
 
 export interface ReservationData {
-  missionId: number;
+  missionId: string;
   dateDepart: string;
   heureDepart: string;
   dateArrivee: string;
@@ -31,26 +35,75 @@ export default function ReservationModal({
   const [arrivalDateTime, setArrivalDateTime] = useState({ date: '', time: '' });
   const [errors, setErrors] = useState<{ date?: string; time?: string }>({});
 
-  // Parser les dates min/max depuis mission
+  const { createReservation, loading, error } = useCreateReservation();
+
+  // ✅ Parser les dates ISO ou format legacy (fonction pure)
   const parseDateTime = (dateStr: string) => {
+    if (!dateStr) return { date: '', time: '00:00' };
+    
+    if (dateStr.includes('T')) {
+      const isoDate = new Date(dateStr);
+      
+      const year = isoDate.getFullYear();
+      const month = String(isoDate.getMonth() + 1).padStart(2, '0');
+      const day = String(isoDate.getDate()).padStart(2, '0');
+      const date = `${year}-${month}-${day}`;
+      
+      const hours = String(isoDate.getHours()).padStart(2, '0');
+      const minutes = String(isoDate.getMinutes()).padStart(2, '0');
+      const time = `${hours}:${minutes}`;
+      
+      return { date, time };
+    }
+    
     const [datePart, timePart] = dateStr.split(' - ');
+    if (!datePart) return { date: '', time: '00:00' };
+    
     const [day, month, year] = datePart.split('/');
-    return {
-      date: `${year}-${month}-${day}`,
-      time: timePart || '00:00'
-    };
+    const date = `${year}-${month}-${day}`;
+    const time = timePart || '00:00';
+    
+    return { date, time };
   };
 
-  const dateMin = parseDateTime(mission.dateDebutMin);
-  const dateMax = parseDateTime(mission.dateDebutMax);
+  const dateMin = useMemo(() => {
+    const result = parseDateTime(mission.disponibilite?.dateDebut || '');
+    console.log('📅 dateMin calculé:', result);
+    return result;
+  }, [mission.disponibilite?.dateDebut]);
 
-  // Calculer l'heure d'arrivée estimée
+  const dateMax = useMemo(() => {
+    const result = parseDateTime(
+      mission.disponibilite?.dateDepartMax || mission.disponibilite?.dateFin || ''
+    );
+    console.log('📅 dateMax calculé:', result);
+    return result;
+  }, [mission.disponibilite?.dateDepartMax, mission.disponibilite?.dateFin]);
+
+  const formatISOToReadable = useMemo(() => {
+    return (isoStr: string) => {
+      if (!isoStr) return '';
+      
+      if (isoStr.includes('T')) {
+        const date = new Date(isoStr);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        
+        return `${day}/${month}/${year} à ${hours}:${minutes}`;
+      }
+      
+      return isoStr;
+    };
+  }, []);
+
   useEffect(() => {
     if (selectedDate && selectedTime) {
       const departDateTime = new Date(`${selectedDate}T${selectedTime}`);
       
-      // Ajouter la durée estimée (en minutes)
-      const durationMinutes = estimatedDuration || Math.round((mission.nbKm / 80) * 60);
+      const durationMinutes = estimatedDuration || Math.round(((mission.calculs?.distanceKm || 0) / 80) * 60);
       departDateTime.setMinutes(departDateTime.getMinutes() + durationMinutes);
 
       const arrivalDate = departDateTime.toISOString().split('T')[0];
@@ -58,16 +111,15 @@ export default function ReservationModal({
 
       setArrivalDateTime({ date: arrivalDate, time: arrivalTime });
     }
-  }, [selectedDate, selectedTime, estimatedDuration, mission.nbKm]);
+  }, [selectedDate, selectedTime, estimatedDuration, mission.calculs?.distanceKm]);
 
-  // Validation
   const validateSelection = () => {
     const newErrors: { date?: string; time?: string } = {};
 
     if (!selectedDate) {
       newErrors.date = 'Veuillez sélectionner une date';
     } else if (selectedDate < dateMin.date || selectedDate > dateMax.date) {
-      newErrors.date = `La date doit être entre le ${mission.dateDebutMin.split(' - ')[0]} et le ${mission.dateDebutMax.split(' - ')[0]}`;
+      newErrors.date = `La date doit être entre le ${formatISOToReadable(mission.disponibilite?.dateDebut || '')} et le ${formatISOToReadable(mission.disponibilite?.dateDepartMax || mission.disponibilite?.dateFin || '')}`;
     }
 
     if (!selectedTime) {
@@ -82,18 +134,144 @@ export default function ReservationModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleConfirm = () => {
-    if (validateSelection()) {
-      onConfirm({
-        missionId: mission.id,
-        dateDepart: selectedDate,
-        heureDepart: selectedTime,
-        dateArrivee: arrivalDateTime.date,
-        heureArrivee: arrivalDateTime.time
+  // ✅ MODIFIÉ : Confirmer la réservation avec gestion des codes d'erreur
+// components/mission-components/ReservationModal.tsx
+
+// ✅ MODIFIÉ : Confirmer la réservation avec logs détaillés
+// components/mission-components/ReservationModal.tsx
+
+const handleConfirm = async () => {
+  if (!validateSelection()) {
+    toast.error('Veuillez sélectionner une date et une heure valides');
+    return;
+  }
+
+  const payload = {
+    missionId: mission.id,
+    dateDepart: selectedDate,
+    heureDepart: selectedTime,
+  };
+  
+  // ✅ TYPER correctement toastId
+  const toastId = toast.loading('Création de la réservation...') as string | number;
+  
+  try {
+    const response = await createReservation(payload);
+
+    console.log('📥 Réponse complète:', response);
+    console.log('📥 response.success:', response.success);
+    console.log('📥 response.code:', response.code);
+    console.log('📥 Type de response.code:', typeof response.code);
+    console.log('📥 response.message:', response.message);
+
+    if (response.success && response.reservation) {
+      toast.success(
+        `Réservation créée !\n\nNuméro: ${response.reservation.numeroReservation}\nStatut: ${response.reservation.statut}`,
+        { id: toastId, duration: 5000 }
+      );
+
+      if (onConfirm) {
+        onConfirm({
+          missionId: mission.id,
+          dateDepart: selectedDate,
+          heureDepart: selectedTime,
+          dateArrivee: arrivalDateTime.date,
+          heureArrivee: arrivalDateTime.time
+        });
+      }
+
+      onClose();
+    } else {
+      console.log('⚠️ Échec, appel handleReservationError avec:', response.code);
+      handleReservationError(response.code, response.message, toastId);
+    }
+  } catch (err: any) {
+    console.error('❌ Erreur catch:', err);
+    toast.error(
+      err.message || 'Erreur lors de la création',
+      { id: toastId, duration: 5000 }
+    );
+  }
+};
+
+// ✅ MODIFIER la signature pour accepter string | number
+const handleReservationError = (code?: string, message?: string, toastId?: string | number) => {
+  console.log('🔧 handleReservationError appelé');
+  console.log('🔧 code reçu:', code);
+  console.log('🔧 type de code:', typeof code);
+  console.log('🔧 message reçu:', message);
+  console.log('🔧 ReservationErrorCode.RESERVATION_ALREADY_EXISTS:', ReservationErrorCode.RESERVATION_ALREADY_EXISTS);
+  console.log('🔧 Égalité stricte:', code === ReservationErrorCode.RESERVATION_ALREADY_EXISTS);
+  console.log('🔧 Égalité non stricte:', code == ReservationErrorCode.RESERVATION_ALREADY_EXISTS);
+
+  // ✅ Fermer le toast de loading d'abord
+  if (toastId) {
+    toast.dismiss(toastId);
+  }
+
+  switch (code) {
+    case ReservationErrorCode.RESERVATION_ALREADY_EXISTS:
+      console.log('✅ Case RESERVATION_ALREADY_EXISTS atteint');
+      toast.info('📋 Demande déjà envoyée', {
+        description: 'Vous avez déjà une réservation en attente pour cette mission',
+        duration: 6000,
       });
       onClose();
-    }
-  };
+      break;
+
+    case ReservationErrorCode.MISSION_NOT_AVAILABLE:
+      console.log('✅ Case MISSION_NOT_AVAILABLE atteint');
+      toast.error('Mission indisponible', {
+        description: 'Cette mission n\'est plus disponible',
+        duration: 5000,
+      });
+      onClose();
+      break;
+
+    case ReservationErrorCode.ADHERENT_NOT_AUTHORIZED:
+      console.log('✅ Case ADHERENT_NOT_AUTHORIZED atteint');
+      toast.error('Compte non autorisé', {
+        description: 'Votre compte doit être actif pour réserver',
+        duration: 5000,
+      });
+      break;
+
+    case ReservationErrorCode.INVALID_DEPARTURE_DATE:
+      console.log('✅ Case INVALID_DEPARTURE_DATE atteint');
+      toast.error('Date invalide', {
+        description: message || 'La date de départ n\'est pas valide',
+        duration: 5000,
+      });
+      break;
+
+    case ReservationErrorCode.MISSION_NOT_FOUND:
+      console.log('✅ Case MISSION_NOT_FOUND atteint');
+      toast.error('Mission introuvable', {
+        description: 'Cette mission n\'existe plus',
+        duration: 5000,
+      });
+      onClose();
+      break;
+
+    case ReservationErrorCode.GRAPHQL_ERROR:
+      console.log('✅ Case GRAPHQL_ERROR atteint');
+      toast.error('Erreur de connexion', {
+        description: 'Impossible de contacter le serveur',
+        duration: 5000,
+      });
+      break;
+
+    default:
+      console.log('⚠️ Case DEFAULT atteint, code inconnu:', code);
+      toast.error(message || 'La réservation n\'a pas pu être créée', {
+        duration: 5000,
+      });
+  }
+};
+
+
+// ✅ MODIFIÉ : Fonction avec logs détaillés
+
 
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split('-');
@@ -101,17 +279,16 @@ export default function ReservationModal({
   };
 
   if (!isOpen) return null;
- const vehicleConfig =
-    vehicleIcons[mission.vehicleType as VehicleType] || vehicleIcons.berline;
+
+  const vehicleConfigData = getVehicleConfig(mission.vehicule?.typeVehicule);
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      {/* Overlay */}
       <div 
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal */}
       <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-orange-500/30">
         {/* Header */}
         <div className="sticky top-0 bg-slate-900/95 backdrop-blur-sm border-b border-orange-500/30 p-6 flex items-center justify-between">
@@ -126,7 +303,8 @@ export default function ReservationModal({
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
+            disabled={loading}
+            className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full disabled:opacity-50"
           >
             <X className="w-6 h-6" />
           </button>
@@ -135,15 +313,15 @@ export default function ReservationModal({
         {/* Content */}
         <div className="p-6 space-y-6">
           {/* Mission Info */}
-          <div className="bg-slate-800/50 rounded-full p-4 border border-orange-500/20">
-            <div className="flex items-center gap-3 mb-3">
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-orange-500/20">
+            <div className="flex items-center gap-3">
               <Navigation className="w-5 h-5 text-orange-500" />
               <div className="flex-1">
                 <div className="text-white font-semibold">
-                  {mission.villeDepart} → {mission.villeArrivee}
+                  {mission.adresseDepart?.villeNom} → {mission.adresseArrivee?.villeNom}
                 </div>
                 <div className="text-sm text-gray-400">
-                  {mission.nbKm} km • {vehicleConfig.label}
+                  {mission.calculs?.distanceKm} km • {vehicleConfigData.label}
                 </div>
               </div>
             </div>
@@ -160,7 +338,8 @@ export default function ReservationModal({
               onChange={(e) => setSelectedDate(e.target.value)}
               min={dateMin.date}
               max={dateMax.date}
-              className={`w-full bg-slate-800 text-white border rounded-full px-4 py-3 focus:outline-none focus:ring-2 transition-all ${
+              disabled={loading}
+              className={`w-full bg-slate-800 text-white border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 ${
                 errors.date 
                   ? 'border-red-500 focus:ring-red-500' 
                   : 'border-orange-500/30 focus:ring-orange-500'
@@ -173,7 +352,7 @@ export default function ReservationModal({
               </div>
             )}
             <p className="text-xs text-gray-400 mt-2">
-              Période autorisée : {mission.dateDebutMin.split(' - ')[0]} au {mission.dateDebutMax.split(' - ')[0]}
+              Période autorisée : {formatISOToReadable(mission.disponibilite?.dateDebut || '')} au {formatISOToReadable(mission.disponibilite?.dateDepartMax || mission.disponibilite?.dateFin || '')}
             </p>
           </div>
 
@@ -186,7 +365,8 @@ export default function ReservationModal({
               type="time"
               value={selectedTime}
               onChange={(e) => setSelectedTime(e.target.value)}
-              className={`w-full bg-slate-800 text-white border rounded-full px-4 py-3 focus:outline-none focus:ring-2 transition-all ${
+              disabled={loading}
+              className={`w-full bg-slate-800 text-white border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 ${
                 errors.time 
                   ? 'border-red-500 focus:ring-red-500' 
                   : 'border-orange-500/30 focus:ring-orange-500'
@@ -205,7 +385,7 @@ export default function ReservationModal({
 
           {/* Estimated Arrival */}
           {selectedDate && selectedTime && (
-            <div className="bg-green-500/10 border border-green-500/30 rounded-full p-4">
+            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
                 <div className="flex-1">
@@ -227,15 +407,28 @@ export default function ReservationModal({
                     </div>
                   </div>
                   <p className="text-xs text-gray-400 mt-2">
-                    Durée estimée : {Math.round((estimatedDuration || (mission.nbKm / 80) * 60))} minutes
+                    Durée estimée : {Math.round((estimatedDuration || ((mission.calculs?.distanceKm || 0) / 80) * 60))} minutes
                   </p>
                 </div>
               </div>
             </div>
           )}
 
+          {/* Backend Error */}
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
+                <div className="text-sm text-red-300">
+                  <p className="font-semibold text-red-400 mb-1">Erreur</p>
+                  <p>{error.message}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Info Alert */}
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-full p-4">
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-blue-400 mt-0.5" />
               <div className="text-sm text-gray-300">
@@ -250,16 +443,17 @@ export default function ReservationModal({
         <div className="sticky bottom-0 bg-slate-900/95 backdrop-blur-sm border-t border-orange-500/30 p-6 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3 bg-slate-700 text-white rounded-full font-semibold hover:bg-slate-600 transition-all"
+            disabled={loading}
+            className="flex-1 px-6 py-3 bg-slate-700 text-white rounded-lg font-semibold hover:bg-slate-600 transition-all disabled:opacity-50"
           >
             Annuler
           </button>
           <button
             onClick={handleConfirm}
-            disabled={!selectedDate || !selectedTime}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full font-semibold hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-orange-500/25"
+            disabled={!selectedDate || !selectedTime || loading}
+            className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-orange-500/25"
           >
-            Confirmer la réservation
+            {loading ? 'Création en cours...' : 'Confirmer la réservation'}
           </button>
         </div>
       </div>

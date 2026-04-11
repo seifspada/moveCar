@@ -4,7 +4,16 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-type UserRole = 'adherent' | 'partenaire' | 'admin' | 'manager';
+const DEBUG_MODE = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
+
+const log = (...args: any[]) => {
+  if (DEBUG_MODE) {
+    console.log(...args);
+  }
+};
+
+// ✅ Ajout de 'admin' et 'agent'
+type UserRole = 'adherent' | 'partenaire' | 'admin' | 'agent';
 
 interface UseRoleProtectionOptions {
   allowedRoles: UserRole[];
@@ -21,31 +30,31 @@ export function useRoleProtection(options: UseRoleProtectionOptions) {
     const checkAuth = () => {
       const role = localStorage.getItem('role') as UserRole | null;
 
-      console.log('🔐 Protection - Rôle actuel:', role);
-      console.log('🔐 Rôles autorisés:', options.allowedRoles);
+      log('🔐 Protection - Rôle actuel:', role);
+      log('🔐 Rôles autorisés:', options.allowedRoles);
 
       if (!role) {
-        console.log('❌ Pas de rôle - Redirection vers /login');
+        log('❌ Pas de rôle - Redirection vers /login');
         router.push(options.redirectTo || '/auth/login');
         return;
       }
 
       if (!options.allowedRoles.includes(role)) {
-        console.log('❌ Rôle non autorisé:', role);
-        
-        // Rediriger vers la page appropriée selon le rôle
+        log('❌ Rôle non autorisé:', role);
+
+        // ✅ Ajout des redirections pour admin et agent
         const roleRedirects: Record<UserRole, string> = {
           adherent: '/adherent/mission-page',
-          partenaire: '/partenaire/dashboard',
+          partenaire: '/partenaire/acceuil',
           admin: '/admin/overview',
-          manager: '/manager/home',
+          agent: '/agent/acceuil',
         };
-        
-        router.push(roleRedirects[role] || '/auth2');
+
+        router.push(roleRedirects[role] || '/auth/login');
         return;
       }
 
-      console.log('✅ Accès autorisé');
+      log('✅ Accès autorisé');
       setCurrentRole(role);
       setIsAuthorized(true);
       setIsLoading(false);

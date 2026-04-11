@@ -1,9 +1,9 @@
 "use client";
 
 import { use, useState } from "react";
-import SidebarAdherent from "@/app/components/sideBarAdherent";
+import SidebarAdherent from "@/components/mission-components/SideBarAdherent";
 import { missionsData } from "@/app/data/missions";
-import ProfileHeader from "@/components/mission-components/ProfileHeader";
+import ProfileHeader from "@/components/mission-components/ProfileHeaderAdherent";
 import { notFound } from "next/navigation";
 import StepperStartMission from "@/app/components/StepperStartMission";
 import MissionStartValidation from "@/components/mission-components/DepartMission/MissionStartValidation";
@@ -88,21 +88,7 @@ export default function MissionDeparturePage({
   // ✅ Contenu protégé - affiché uniquement si autorisé
   return (
     <div className="min-h-screen">
-      {/* Sidebar Component */}
-      <SidebarAdherent
-        isMobileMenuOpen={isMobileMenuOpen}
-        onMobileMenuToggle={toggleMobileMenu}
-        isDesktopMenuOpen={isDesktopMenuOpen}
-        onDesktopMenuToggle={toggleDesktopMenu}
-      />
-
-      {/* Profile Header */}
-      <ProfileHeader
-        isMobileMenuOpen={isMobileMenuOpen}
-        isDesktopMenuOpen={isDesktopMenuOpen}
-        toggleMobileMenu={toggleMobileMenu}
-        toggleDesktopMenu={toggleDesktopMenu}
-      />
+  
 
       <div className="bg-black">
         <StepperStartMission currentStep={stepNumber} />

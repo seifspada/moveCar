@@ -1,28 +1,36 @@
-// app/components/MissionCard.tsx
+// app/components/mission/MissionCard.tsx
 'use client';
 
-import { Mission, vehicleIcons, VehicleType, vehiculeCarburantIcons, VehiculeCarburant } from "@/app/data/missions";
+import { MissionDetails } from "@/app/types/mission";
+import { getCarburantConfig, getVehicleConfig } from "@/app/config/mission-icons.config";
+import { formatPrice, toNumber, formatDateRange } from "@/app/utils/format";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function MissionCard({ mission }: { mission: Mission }) {
+interface MissionCardProps {
+  mission: MissionDetails;
+  missionId?: string;
+}
+
+export default function MissionCard({ mission, missionId }: MissionCardProps) {
   const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(false);
 
-  const vehicleConfig = vehicleIcons[mission.vehicleType as VehicleType] || vehicleIcons.berline;
-  
-  function getFuelInfo(type: string): { image: string; label: string } {
-    if (type in vehiculeCarburantIcons) {
-      return vehiculeCarburantIcons[type as VehiculeCarburant];
-    }
-    return vehiculeCarburantIcons.Essence;
+  if (!mission) {
+    return (
+      <div className="bg-red-900/20 border-2 border-red-500 rounded-lg p-6">
+        <p className="text-red-400">Erreur : données de mission invalides</p>
+      </div>
+    );
   }
 
-  const fuelInfo = getFuelInfo(mission.typeCarburant);
+  // ✅ Récupérer les configs
+  const vehicleConfig = getVehicleConfig(mission.typeVehicule);
+  const carburantInfo = getCarburantConfig(mission.typeCarburant);
 
   const handleCardClick = () => {
-    router.push(`/adherent/mission-reservation/${mission.id}`);
+    router.push(`/adherent/mission-reservation/${missionId || 'default'}`);
   };
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
@@ -35,7 +43,6 @@ export default function MissionCard({ mission }: { mission: Mission }) {
       onClick={handleCardClick}
       className="bg-zinc-900 rounded-full md:rounded-full lg:rounded-full shadow-lg border-2 border-zinc-800 hover:border-orange-500 transition-all duration-300 overflow-hidden cursor-pointer group"
     >
-      {/* LAYOUT HORIZONTAL - Mobile et Desktop */}
       <div className="flex flex-row items-stretch h-full">
         {/* Section gauche : Icône du véhicule + Icône carburant */}
         <div className="relative w-16 sm:w-20 md:w-22 lg:w-34 
@@ -47,31 +54,34 @@ export default function MissionCard({ mission }: { mission: Mission }) {
                   bg-white rounded-full flex items-center justify-center 
                   p-1.5 sm:p-2.5 md:p-3.5 lg:p-4.5 shadow-lg">
 
-            {/* Icône fuel */}
+            {/* ✅ Icône carburant (Image PNG) */}
             <div className="absolute top-1 left-[45%] -translate-x-0 md:top-1 md:left-[40%] md:translate-x-0">
               <Image
-                src={fuelInfo.image}
-                alt={fuelInfo.label}
+                src={carburantInfo.image}
+                alt={carburantInfo.label}
                 width={20}
                 height={20}
-                className="object-contain w-2 h-2 md:w-5 md:h-5"
+                className="w-3 h-3 md:w-5 md:h-5 object-contain"
               />
             </div>
 
-            {/* Icône véhicule */}
-            <Image
-              src={vehicleConfig.image}
-              alt={vehicleConfig.label}
-              width={60}
-              height={60}
-              className="object-contain w-8 h-8 sm:w-11 sm:h-11 md:w-13 md:h-13 lg:w-16 lg:h-16"
-            />
+            {/* ✅ Icône véhicule (Image PNG) */}
+<Image
+  src={vehicleConfig.icon}
+  alt={vehicleConfig.label}
+  width={64}
+  height={64}
+  className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 object-contain"
+  style={{ width: 'auto', height: 'auto' }} // ✅ AJOUTER cette ligne
+  unoptimized
+/>
+
+
           </div>
         </div>
 
         {/* Section centrale et droite : Informations */}
         <div className="flex-1 flex flex-col justify-between p-1.5 sm:p-3 md:p-4 lg:p-6 min-w-0">
-          {/* Structure en grille pour 2 lignes */}
           <div className="grid grid-cols-[1fr_auto_1fr_auto_auto_auto] gap-x-1 sm:gap-x-3 md:gap-x-4 lg:gap-x-6 gap-y-1.5 sm:gap-y-3 md:gap-y-4 lg:gap-y-6">
             
             {/* ========== LIGNE 1 ========== */}
@@ -86,7 +96,9 @@ export default function MissionCard({ mission }: { mission: Mission }) {
               </div>
               <div className="min-w-0">
                 <p className="text-gray-400 text-[6px] sm:text-[8px] md:text-[9px] lg:text-xs leading-tight">Départ</p>
-                <p className="text-white font-bold text-[8px] sm:text-[10px] md:text-xs lg:text-base leading-tight truncate">{mission.villeDepart}</p>
+                <p className="text-white font-bold text-[8px] sm:text-[10px] md:text-xs lg:text-base leading-tight truncate">
+                  {mission.villeDepart || 'N/A'}
+                </p>
               </div>
             </div>
 
@@ -107,7 +119,9 @@ export default function MissionCard({ mission }: { mission: Mission }) {
               </div>
               <div className="min-w-0">
                 <p className="text-gray-400 text-[6px] sm:text-[8px] md:text-[9px] lg:text-xs leading-tight">Arrivée</p>
-                <p className="text-white font-bold text-[8px] sm:text-[10px] md:text-xs lg:text-base leading-tight truncate">{mission.villeArrivee}</p>
+                <p className="text-white font-bold text-[8px] sm:text-[10px] md:text-xs lg:text-base leading-tight truncate">
+                  {mission.villeArrivee || 'N/A'}
+                </p>
               </div>
             </div>
 
@@ -121,7 +135,9 @@ export default function MissionCard({ mission }: { mission: Mission }) {
                   </svg>
                   <p className="text-gray-400 text-[7px] sm:text-[8px] md:text-xs leading-tight">Km</p>
                 </div>
-                <p className="text-white font-semibold text-[8px] sm:text-[9px] md:text-sm leading-tight">{mission.nbKm}</p>
+                <p className="text-white font-semibold text-[8px] sm:text-[9px] md:text-sm leading-tight">
+                  {toNumber(mission.distanceKm)}
+                </p>
               </div>
             </div>
 
@@ -151,19 +167,22 @@ export default function MissionCard({ mission }: { mission: Mission }) {
               </button>
             </div>
 
-            {/* Montant avec background image */}
+            {/* Montant */}
             <div className="flex items-center flex-shrink-0">
               <div className="relative rounded-md sm:rounded-lg overflow-hidden px-1.5 py-1 sm:px-3 sm:py-2 md:px-4 md:py-2.5 lg:px-5 lg:py-3">
                 <Image
                   src="/images/bg-montant.png"
                   alt="Background"
                   fill
+                  loading="eager"
+                  sizes="(max-width: 640px) 100px, (max-width: 768px) 120px, 150px"
                   className="object-cover opacity-20"
+                  priority
                 />
                 <div className="relative flex flex-col items-center justify-center">
                   <p className="text-[6px] sm:text-[8px] md:text-[9px] text-gray-300 mb-0.5">Total</p>
                   <p className="text-[9px] sm:text-sm md:text-base lg:text-lg font-bold text-orange-500">
-                    {mission.montant.toFixed(2)}€
+                    {formatPrice(mission.montantTotal)}€
                   </p>
                 </div>
               </div>
@@ -177,11 +196,13 @@ export default function MissionCard({ mission }: { mission: Mission }) {
                 <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 lg:gap-2 mb-0.5">
                   <p className="text-gray-400 text-[7px] sm:text-[6px] md:text-[10px] lg:text-xs leading-tight">Type</p>
                 </div>
-                <p className="text-white font-semibold text-[8px] sm:text-[8px] md:text-xs lg:text-base leading-tight whitespace-nowrap">{mission.vehicleType}</p>
+                <p className="text-white font-semibold text-[8px] sm:text-[8px] md:text-xs lg:text-base leading-tight whitespace-nowrap">
+                  {vehicleConfig.label}
+                </p>
               </div>
             </div>
 
-            {/* Date - alignée sous la flèche */}
+            {/* Date */}
             <div className="flex items-center justify-center">
               <div className="bg-zinc-800 rounded-md sm:rounded-lg px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-3 md:py-1.5 lg:px-4 lg:py-2">
                 <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 lg:gap-2 mb-0.5">
@@ -190,14 +211,15 @@ export default function MissionCard({ mission }: { mission: Mission }) {
                   </svg>
                   <p className="text-gray-400 text-[7px] sm:text-[6px] md:text-[10px] lg:text-xs leading-tight">Date</p>
                 </div>
-                <p className="text-white font-semibold text-[8px] sm:text-[8px] md:text-xs lg:text-base leading-tight whitespace-nowrap">{mission.dateDisposition}</p>
+                <p className="text-white font-semibold text-[8px] sm:text-[8px] md:text-xs lg:text-base leading-tight whitespace-nowrap">
+                  {formatDateRange(mission.dateDebut, mission.dateDepartMax)}
+                </p>
               </div>
             </div>
             
-            {/* Cellule vide pour aligner avec l'arrivée */}
             <div></div>
 
-            {/* Péage - aligné sous Km */}
+            {/* Péage */}
             <div className="flex items-center flex-shrink-0">
               <div className="bg-zinc-800 rounded-md px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-2 md:py-1">
                 <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1 mb-0.5 md:mb-1">
@@ -207,11 +229,12 @@ export default function MissionCard({ mission }: { mission: Mission }) {
                   </svg>
                   <p className="text-gray-400 text-[7px] sm:text-[8px] md:text-xs leading-tight">Péage</p>
                 </div>
-                <p className="text-white font-semibold text-[8px] sm:text-[9px] md:text-sm leading-tight">{mission.fraisPeage}</p>
+                <p className="text-white font-semibold text-[8px] sm:text-[9px] md:text-sm leading-tight">
+                  {formatPrice(mission.fraisPeage)}€
+                </p>
               </div>
             </div>
 
-            {/* Cellules vides pour maintenir l'alignement */}
             <div className="col-span-2"></div>
           </div>
         </div>

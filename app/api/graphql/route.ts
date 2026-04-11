@@ -1,63 +1,104 @@
 // app/api/graphql/route.ts
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-const BACKEND_GRAPHQL_URL = `${API_URL}/graphql`;
+// ✅ Utiliser vos variables d'environnement
+const BACKEND_GRAPHQL_URL = process.env.BACKEND_GRAPHQL_URL || "http://localhost:3000/graphql";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   console.log("🟢 /api/graphql route appelée");
+  console.log("🌐 Backend GraphQL URL:", BACKEND_GRAPHQL_URL);
   
   try {
     const body = await req.json();
-    console.log("📝 Query reçue");
+    console.log("📝 Query:", body.query?.substring(0, 100));
     
-    // Récupérer le token depuis les cookies
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+    // ✅ Récupérer le token depuis Authorization header
+    const authHeader = req.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
     
-    console.log("🍪 Token présent:", token ? "OUI" : "NON");
+    console.log("🔑 Token présent:", !!token);
+    if (token) {
+      console.log("🔑 Token (20 premiers chars):", token.substring(0, 20) + "...");
+    }
 
-    // Construire l'Authorization header
-    const authorization = token 
-      ? (token.startsWith("Bearer ") ? token : `Bearer ${token}`)
-      : undefined;
+    if (!token) {
+      console.warn("⚠️ Pas de token dans Authorization header");
+      return NextResponse.json(
+        { errors: [{ message: "Non autorisé", extensions: { code: "UNAUTHENTICATED" } }] },
+        { status: 401 }
+      );
+    }
 
-    console.log("📤 Envoi vers backend:", BACKEND_GRAPHQL_URL);
+    console.log("📤 Envoi vers backend GraphQL...");
 
-    // Appeler le backend NestJS GraphQL
+    // ✅ Appeler le backend NestJS GraphQL
     const backendResponse = await fetch(BACKEND_GRAPHQL_URL, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json", // ✅ Majuscule pour Content-Type
-        ...(authorization ? { Authorization: authorization } : {}), // ✅ Majuscule pour Authorization
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify(body),
       cache: "no-store",
     });
 
     console.log("📥 Backend status:", backendResponse.status);
+    console.log("📥 Backend statusText:", backendResponse.statusText);
     
-    // ✅ Vérifier si la réponse est ok avant de parser
-    if (!backendResponse.ok) {
-      const errorText = await backendResponse.text();
-      console.error("❌ Erreur backend:", errorText);
+    // ✅ Lire le body (même en cas d'erreur)
+    const responseText = await backendResponse.text();
+    console.log("📦 Backend response (raw):", responseText.substring(0, 200));
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("❌ Erreur parsing JSON:", parseError);
+      return NextResponse.json(
+        { errors: [{ message: "Le backend n'a pas retourné du JSON valide", extensions: { code: "PARSE_ERROR" } }] },
+        { status: 500 }
+      );
     }
     
-    const data = await backendResponse.json().catch(() => ({ 
-      errors: [{ message: "Erreur de parsing JSON" }] 
-    }));
+    // ✅ Log les erreurs GraphQL pour debug
+    if (data.errors) {
+      console.error("❌ Erreurs GraphQL du backend:");
+      data.errors.forEach((error: any, index: number) => {
+        console.error(`\n--- Erreur GraphQL ${index + 1} ---`);
+        console.error("Message:", error.message);
+        console.error("Extensions:", JSON.stringify(error.extensions, null, 2));
+        console.error("Path:", error.path);
+        console.error("Locations:", error.locations);
+      });
+    } else if (data.data) {
+      console.log("✅ Data reçue avec succès:", Object.keys(data.data));
+    }
     
-    console.log("📥 Backend data:", JSON.stringify(data).substring(0, 200));
-    
-    // ✅ Retourner avec le status du backend
     return NextResponse.json(data, { status: backendResponse.status });
     
   } catch (e: any) {
-    console.error("❌ Erreur /api/graphql:", e.message);
+    console.error("❌ Exception /api/graphql:", e.message);
     console.error("❌ Stack:", e.stack);
+    
+    // ✅ Vérifier si c'est une erreur réseau
+    if (e.message?.includes('fetch failed') || 
+        e.message?.includes('ECONNREFUSED') || 
+        e.cause?.code === 'ECONNREFUSED') {
+      console.error("🔴 Backend GraphQL inaccessible! Vérifiez que NestJS est démarré sur le port 3000");
+      return NextResponse.json(
+        { errors: [{ 
+          message: "Backend GraphQL inaccessible. Vérifiez que le serveur NestJS est démarré sur http://localhost:3000", 
+          extensions: { code: "NETWORK_ERROR" } 
+        }] }, 
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
-      { errors: [{ message: e.message }] }, 
+      { errors: [{ 
+        message: e.message || "Erreur interne du proxy GraphQL", 
+        extensions: { code: "INTERNAL_ERROR" } 
+      }] }, 
       { status: 500 }
     );
   }
@@ -66,7 +107,11 @@ export async function POST(req: Request) {
 // Export GET pour éviter "Method not allowed"
 export async function GET() {
   return NextResponse.json(
-    { message: "Use POST /api/graphql" }, 
-    { status: 405 }
+    { 
+      message: "GraphQL endpoint. Use POST method.", 
+      backendUrl: BACKEND_GRAPHQL_URL,
+      status: "ready"
+    }, 
+    { status: 200 }
   );
 }

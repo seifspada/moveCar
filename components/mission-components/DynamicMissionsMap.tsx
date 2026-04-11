@@ -1,6 +1,7 @@
+// components/mission-components/DynamicMissionsMap.tsx
 import { useState, useEffect, useRef } from 'react';
 import { Navigation, AlertCircle, RefreshCw } from 'lucide-react';
-import { Mission as MissionType } from '@/app/data/missions';
+import { MissionDetail } from '@/app/types/mission';
 
 interface RouteStats {
   distance: string | number;
@@ -17,32 +18,21 @@ interface RouteData {
 }
 
 interface DynamicMissionsMapProps {
-  mission?: MissionType;
-  missionId?: number;
-  missionsData?: MissionType[];
-  onBack?: () => void;
-  onReserve?: () => void;
-  onDurationCalculated?: (duration: number) => void; // ✅ Nouveau paramètre
+  mission: MissionDetail; // ✅ Type mis à jour
+  onDurationCalculated?: (duration: number) => void;
 }
 
 export default function DynamicMissionsMap({ 
-  mission: missionProp, 
-  missionId, 
-  missionsData: missionsDataProp, 
-  onBack, 
-  onReserve,
-  onDurationCalculated // ✅ Ajout du paramètre manquant
+  mission,
+  onDurationCalculated
 }: DynamicMissionsMapProps) {
 
-  const mission = missionProp || (missionId && missionsDataProp ? missionsDataProp.find(m => m.id === missionId) : null);
-  
   if (!mission) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-slate-50 rounded-lg p-8">
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-3" />
           <p className="text-slate-600 font-semibold">Mission non trouvée</p>
-          <p className="text-slate-500 text-sm mt-1">Veuillez fournir une mission valide</p>
         </div>
       </div>
     );
@@ -58,7 +48,22 @@ export default function DynamicMissionsMap({
   const [routeStats, setRouteStats] = useState<RouteStats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Geocoding function - utilise uniquement les noms de villes
+  // ✅ Utiliser les coordonnées GPS si disponibles, sinon geocoder
+  const getCoordinates = async (
+    ville: string, 
+    latitude?: number, 
+    longitude?: number
+  ): Promise<Coordinates | null> => {
+    // Si on a déjà les coordonnées GPS
+    if (latitude && longitude) {
+      return [latitude, longitude];
+    }
+    
+    // Sinon, geocoder la ville
+    return geocodeCity(ville);
+  };
+
+  // Geocoding function
   const geocodeCity = async (cityName: string): Promise<Coordinates | null> => {
     if (geocodeCache.current[cityName]) {
       return geocodeCache.current[cityName];
@@ -153,7 +158,6 @@ export default function DynamicMissionsMap({
         const route = data.routes[0];
         const durationMinutes = Math.round(route.duration / 60);
         
-        // ✅ Transmettre la durée au parent
         if (onDurationCalculated) {
           onDurationCalculated(durationMinutes);
         }
@@ -183,7 +187,6 @@ export default function DynamicMissionsMap({
     const L = (window as any).L;
     const map = mapInstanceRef.current;
 
-    // Clear existing layers
     routeLayersRef.current.forEach(layer => map.removeLayer(layer));
     routeLayersRef.current = [];
 
@@ -191,14 +194,23 @@ export default function DynamicMissionsMap({
       setLoading(true);
       setError(null);
 
-      const startCoords = await geocodeCity(mission.villeDepart);
+      // ✅ Utiliser les coordonnées GPS de la base de données
+      const startCoords = await getCoordinates(
+        mission.adresseDepart.villeNom,
+        mission.adresseDepart.latitude,
+        mission.adresseDepart.longitude
+      );
       
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const endCoords = await geocodeCity(mission.villeArrivee);
+      const endCoords = await getCoordinates(
+        mission.adresseArrivee.villeNom,
+        mission.adresseArrivee.latitude,
+        mission.adresseArrivee.longitude
+      );
 
       if (!startCoords || !endCoords) {
-        setError(`Impossible de localiser ${!startCoords ? mission.villeDepart : mission.villeArrivee}`);
+        setError(`Impossible de localiser ${!startCoords ? mission.adresseDepart.villeNom : mission.adresseArrivee.villeNom}`);
         setLoading(false);
         return;
       }
@@ -206,28 +218,29 @@ export default function DynamicMissionsMap({
       const routeData = await fetchRoute(startCoords, endCoords);
       
       setRouteStats({
-        distance: routeData.distance || mission.nbKm,
+        distance: routeData.distance || mission.calculs?.distanceKm || 0,
         duration: routeData.duration
       });
 
       const layers: any[] = [];
-      const color = '#3b82f6';
+      const color = '#f97316'; // Orange
 
       // Start marker
       const startIcon = L.divIcon({
         className: 'custom-marker',
-        html: `<div style="background-color: ${color}; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); font-size: 14px;">D</div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        html: `<div style="background-color: ${color}; color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); font-size: 16px;">D</div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
       });
 
       const startMarker = L.marker(startCoords, { icon: startIcon })
         .bindPopup(`
-          <div style="font-family: system-ui; min-width: 220px;">
-            <b style="color: ${color}; font-size: 15px;">🚀 Départ</b><br>
+          <div style="font-family: system-ui; min-width: 240px;">
+            <b style="color: ${color}; font-size: 16px;">🚀 Départ</b><br>
             <div style="margin-top: 8px;">
-              <div style="font-weight: 600; color: #1e293b;">${mission.villeDepart}</div>
-              ${mission.adresseDepartComplete ? `<div style="color: #94a3b8; font-size: 12px; margin-top: 2px;">${mission.adresseDepartComplete}</div>` : ''}
+              <div style="font-weight: 600; color: #1e293b; font-size: 14px;">${mission.adresseDepart.villeNom}</div>
+              <div style="color: #64748b; font-size: 12px; margin-top: 4px;">${mission.adresseDepart.adresseComplete}</div>
+              ${mission.adresseDepart.nomLieu ? `<div style="color: #94a3b8; font-size: 11px; margin-top: 2px;">📍 ${mission.adresseDepart.nomLieu}</div>` : ''}
             </div>
           </div>
         `)
@@ -236,18 +249,19 @@ export default function DynamicMissionsMap({
       // End marker
       const endIcon = L.divIcon({
         className: 'custom-marker',
-        html: `<div style="background-color: ${color}; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); font-size: 14px;">A</div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        html: `<div style="background-color: #10b981; color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); font-size: 16px;">A</div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
       });
 
       const endMarker = L.marker(endCoords, { icon: endIcon })
         .bindPopup(`
-          <div style="font-family: system-ui; min-width: 220px;">
-            <b style="color: ${color}; font-size: 15px;">🎯 Arrivée</b><br>
+          <div style="font-family: system-ui; min-width: 240px;">
+            <b style="color: #10b981; font-size: 16px;">🎯 Arrivée</b><br>
             <div style="margin-top: 8px;">
-              <div style="font-weight: 600; color: #1e293b;">${mission.villeArrivee}</div>
-              ${mission.adresseArriveeComplete ? `<div style="color: #94a3b8; font-size: 12px; margin-top: 2px;">${mission.adresseArriveeComplete}</div>` : ''}
+              <div style="font-weight: 600; color: #1e293b; font-size: 14px;">${mission.adresseArrivee.villeNom}</div>
+              <div style="color: #64748b; font-size: 12px; margin-top: 4px;">${mission.adresseArrivee.adresseComplete}</div>
+              ${mission.adresseArrivee.nomLieu ? `<div style="color: #94a3b8; font-size: 11px; margin-top: 2px;">📍 ${mission.adresseArrivee.nomLieu}</div>` : ''}
             </div>
           </div>
         `)
@@ -257,17 +271,17 @@ export default function DynamicMissionsMap({
       const polyline = L.polyline(routeData.coordinates, {
         color: color,
         weight: 5,
-        opacity: 0.7,
+        opacity: 0.8,
         lineJoin: 'round',
         lineCap: 'round',
         dashArray: routeData.isDirect ? '10, 10' : undefined
       }).bindPopup(`
         <div style="font-family: system-ui;">
-          <b style="color: ${color}; font-size: 14px;">📍 ${mission.villeDepart} → ${mission.villeArrivee}</b><br>
+          <b style="color: ${color}; font-size: 14px;">📍 ${mission.adresseDepart.villeNom} → ${mission.adresseArrivee.villeNom}</b><br>
           <div style="margin-top: 8px; color: #64748b; font-size: 13px;">
-            ${routeData.distance ? `🛣️ Distance: <b>${routeData.distance} km</b><br>` : ''}
-            ${routeData.duration ? `⏱️ Durée: <b>${routeData.duration} min</b><br>` : ''}
-            ${routeData.isDirect ? '⚠️ Trajet direct (estimation)<br>' : '✅ Itinéraire routier réel<br>'}
+            ${routeData.distance ? `🛣️ Distance: <b style="color: #0f172a;">${routeData.distance} km</b><br>` : ''}
+            ${routeData.duration ? `⏱️ Durée estimée: <b style="color: #0f172a;">${Math.floor(routeData.duration / 60)}h ${routeData.duration % 60}min</b><br>` : ''}
+            ${routeData.isDirect ? '⚠️ Trajet direct (estimation)' : '✅ Itinéraire routier réel'}
           </div>
         </div>
       `).addTo(map);
@@ -275,15 +289,14 @@ export default function DynamicMissionsMap({
       layers.push(startMarker, endMarker, polyline);
       routeLayersRef.current = layers;
 
-      // Fit map to bounds
       const bounds = L.latLngBounds([startCoords, endCoords]);
-      map.fitBounds(bounds, { padding: [50, 50] });
+      map.fitBounds(bounds, { padding: [60, 60] });
 
       setLoading(false);
     };
 
     loadRoute();
-  }, [isMapLoaded, mission, onDurationCalculated]); // ✅ Ajout de la dépendance
+  }, [isMapLoaded, mission, onDurationCalculated]);
 
   return (
     <div className="w-full h-full">
@@ -300,38 +313,40 @@ export default function DynamicMissionsMap({
       )}
 
       {routeStats && (
-        <div className="mb-4 bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Navigation className="w-5 h-5 text-orange-600" />
-              <div>
-                <div className="text-sm font-semibold text-slate-800">
-                  {mission.villeDepart} → {mission.villeArrivee}
-                </div>
-                <div className="text-xs text-slate-600 mt-1">
-                  Distance: <span className="font-semibold text-orange-600">{routeStats.distance} km</span>
-                  {routeStats.duration && (
-                    <> • Durée: <span className="font-semibold">{routeStats.duration} min</span></>
-                  )}
-                </div>
+        <div className="mb-4 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <Navigation className="w-6 h-6 text-orange-600" />
+            <div className="flex-1">
+              <div className="text-sm font-bold text-gray-900">
+                {mission.adresseDepart.villeNom} → {mission.adresseArrivee.villeNom}
+              </div>
+              <div className="text-xs text-gray-700 mt-1 flex items-center gap-3">
+                <span>
+                  📏 Distance: <span className="font-semibold text-orange-700">{routeStats.distance} km</span>
+                </span>
+                {routeStats.duration && (
+                  <span>
+                    ⏱️ Durée: <span className="font-semibold text-orange-700">{Math.floor(routeStats.duration / 60)}h {routeStats.duration % 60}min</span>
+                  </span>
+                )}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div className="bg-white rounded-xl shadow-2xl overflow-hidden border-2 border-orange-200">
         <div 
           ref={mapRef} 
           className="w-full h-[500px] bg-slate-100 relative"
         >
           {loading && (
-            <div className="absolute inset-0 bg-white/90 flex items-center justify-center z-[1000]">
+            <div className="absolute inset-0 bg-white/95 flex items-center justify-center z-[1000]">
               <div className="text-center">
-                <RefreshCw className="w-8 h-8 text-orange-600 animate-spin mx-auto mb-3" />
-                <p className="text-slate-600 font-semibold">Chargement du trajet...</p>
-                <p className="text-slate-500 text-sm mt-1">
-                  Calcul de l'itinéraire en cours
+                <RefreshCw className="w-10 h-10 text-orange-600 animate-spin mx-auto mb-4" />
+                <p className="text-gray-800 font-semibold text-lg">Chargement de l'itinéraire...</p>
+                <p className="text-gray-600 text-sm mt-2">
+                  Calcul du trajet en cours
                 </p>
               </div>
             </div>

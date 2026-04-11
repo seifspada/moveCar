@@ -163,7 +163,7 @@ export function CityAutocomplete({
   };
 
   return (
-    <div className={`block ${className}`}>
+    <div className={`block z-[9999] ${className}`}>
       {label && (
         <label className={`block text-sm font-medium mb-2 ${themeClasses.label}`}>
           {label}
@@ -189,7 +189,7 @@ export function CityAutocomplete({
         createPortal(
           <div 
             ref={suggestionsRef}
-            className={`fixed z-50 w-full mt-1 border rounded-lg max-h-60 overflow-y-auto ${themeClasses.dropdown}`}
+            className={`fixed z-[3000] w-full mt-1 border rounded-lg max-h-60 overflow-y-auto ${themeClasses.dropdown}`}
             style={{
               top: `${dropdownPosition.top}px`,
               left: `${dropdownPosition.left}px`,

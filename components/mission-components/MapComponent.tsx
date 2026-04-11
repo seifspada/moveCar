@@ -6,7 +6,6 @@ import { Icon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
 
-// Fix des icônes Leaflet en Next.js
 const customIcon = new Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -17,7 +16,6 @@ const customIcon = new Icon({
   shadowSize: [41, 41],
 });
 
-// Icône verte pour le point d'arrivée
 const arrivalIcon = new Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
@@ -28,10 +26,10 @@ const arrivalIcon = new Icon({
 });
 
 interface MapPoint {
-  position: [number, number]; // [lat, lon]
-  radius: number; // en mètres
-  color?: string; // couleur du cercle
-  label?: string; // optionnel: "départ" ou "arrivée"
+  position: [number, number];
+  radius: number;
+  color?: string;
+  label?: string;
 }
 
 interface MapComponentProps {
@@ -41,16 +39,14 @@ interface MapComponentProps {
   points?: any[];
 }
 
-// Composant pour gérer le changement de centre avec animation
 function MapViewController({ center, zoom }: { center?: [number, number]; zoom?: number }) {
   const map = useMap();
 
   useEffect(() => {
     if (center) {
-      // Utilise flyTo pour une transition fluide
-      map.flyTo(center, zoom || 13, {
-        duration: 1.5, // Durée de l'animation en secondes
-        easeLinearity: 0.25
+      map.flyTo(center, zoom ?? map.getZoom(), {
+        duration: 0.8,
+        easeLinearity: 0.25,
       });
     }
   }, [center, zoom, map]);
@@ -58,16 +54,15 @@ function MapViewController({ center, zoom }: { center?: [number, number]; zoom?:
   return null;
 }
 
-// Composant pour ajuster automatiquement la vue de la carte
 function MapBoundsAdjuster({ points }: { points: MapPoint[] }) {
   const map = useMap();
 
   useEffect(() => {
     if (points.length > 1) {
-      const bounds = points.map(p => p.position);
-      map.fitBounds(bounds, { 
+      const bounds = points.map((p) => p.position);
+      map.fitBounds(bounds, {
         padding: [50, 50],
-        duration: 1.5 // Animation fluide
+        duration: 0.8,
       });
     }
   }, [map, points]);
@@ -77,7 +72,6 @@ function MapBoundsAdjuster({ points }: { points: MapPoint[] }) {
 
 export default function MapComponent({ center, radius, points, zoom }: MapComponentProps) {
   useEffect(() => {
-    // Nécessaire pour que les icônes s'affichent correctement
     if (typeof window !== "undefined") {
       import("leaflet").then((L) => {
         delete (L as any).Icon.Default.prototype._getIconUrl;
@@ -90,21 +84,25 @@ export default function MapComponent({ center, radius, points, zoom }: MapCompon
     }
   }, []);
 
-  // Convertir l'ancien format en nouveau format pour la rétrocompatibilité
-  const mapPoints: MapPoint[] = points || (center && radius ? [{
-    position: center,
-    radius: radius,
-    color: "#f97316"
-  }] : []);
+  const mapPoints: MapPoint[] =
+    points ||
+    (center && radius
+      ? [
+          {
+            position: center,
+            radius: radius,
+            color: "#f97316",
+          },
+        ]
+      : []);
 
-  // Calculer le centre initial de la carte
-  const initialCenter: [number, number] = center || [46.603354, 1.888334]; // Centre de la France par défaut
-  const initialZoom = zoom || (center ? 11 : 6);
+  const initialCenter: [number, number] = center || [46.603354, 1.888334];
+  const initialZoom = zoom ?? 5;
 
   return (
-    <MapContainer 
-      center={initialCenter} 
-      zoom={initialZoom} 
+    <MapContainer
+      center={initialCenter}
+      zoom={initialZoom}
       style={{ height: "100%", width: "100%" }}
       scrollWheelZoom={true}
     >
@@ -112,28 +110,27 @@ export default function MapComponent({ center, radius, points, zoom }: MapCompon
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      
-      {/* Contrôleur pour animer le changement de centre */}
+
       <MapViewController center={center} zoom={zoom} />
-      
-      {/* Ajuster la vue si plusieurs points */}
+
       {mapPoints.length > 1 && <MapBoundsAdjuster points={mapPoints} />}
-      
-      {/* Afficher tous les points */}
+
       {mapPoints.map((point, index) => {
         const color = point.color || "#f97316";
         const icon = point.label === "arrivée" ? arrivalIcon : customIcon;
-        
+
         return (
-          <div key={index}>
+          <div key={`${point.position[0]}-${point.position[1]}-${point.radius}-${index}`}>
             <Marker position={point.position} icon={icon} />
             <Circle
+              key={`circle-${point.position[0]}-${point.position[1]}-${point.radius}`}
               center={point.position}
               radius={point.radius}
-              pathOptions={{ 
-                color: color, 
-                fillColor: color, 
-                fillOpacity: 0.2 
+              pathOptions={{
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.15,
+                weight: 1.5,
               }}
             />
           </div>

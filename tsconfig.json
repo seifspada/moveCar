@@ -30,6 +30,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "lib/graphql/mutations/reservation.mutations.ts", "components/agent-component/mission-list-component"  ],
   "exclude": ["node_modules"]
 }

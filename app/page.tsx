@@ -4,7 +4,7 @@ import Link from "next/link";
 export default function Page() {
   return (
     <div
-  className="min-h-screen pt-12 sm:pt-14 md:pt-16"
+  className="min-h-screen pt-16 sm:pt-14 md:pt-16"
       style={{ backgroundColor: "#283b5aff" }}
     >
       <style>{`
@@ -63,7 +63,7 @@ export default function Page() {
         }
       `}</style>
       
-<div className="min-h-screen bg-black sm:mt-20  md:mt-20 lg:mt-20">
+<div className="min-h-screen bg-black sm:mt-20  md:mt-20 lg:mt-15">
         <div className="flex items-center justify-center px-6 md:px-10 py-6">
           {/* Cadre contenant texte et carte */}
           <div className="bg-black backdrop-blur-md rounded-lg border-2 border-orange-500 p-4 md:p-6 max-w-5xl w-full md:mt-15 mt-10 lg:mt-10">

@@ -4,115 +4,261 @@
 import { X, MapPin, Bell } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { CityAutocomplete, type SelectedCity } from "./CityAutocomplete";
+import { toast } from "sonner";
+import { CityAutocomplete, SelectedCity } from "./CityAutocomplete";
+
+// ✅ AJOUTER LE MODE DEBUG
+const DEBUG_MODE = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
+
+const log = (...args: any[]) => {
+  if (DEBUG_MODE) {
+    console.log(...args);
+  }
+};
 
 interface SearchPositionProps {
   isOpen: boolean;
   onClose: () => void;
-  onSearch: (data: { city: SelectedCity | null; radius: number; alert: boolean }) => void;
+  onSearch: (data: { 
+    city: SelectedCity; 
+    radius: number;
+  }) => void;
+  userId: number;
 }
 
-// Dynamic import du composant Map pour éviter les problèmes SSR
-const MapComponent = dynamic(() => import("./MapComponent").then(mod => mod.default), { 
+const MapComponent = dynamic(() => import("./MapComponent").then(mod => mod.default), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-full bg-zinc-800">
       <div className="text-gray-400">Chargement de la carte...</div>
     </div>
-  )
+  ),
 });
 
-export function SearchPosition({ isOpen, onClose, onSearch }: SearchPositionProps) {
+// ✅ Type pour les états sauvegardés
+interface SavedPositionState {
+  inputValue: string;
+  selectedCity: SelectedCity | null;
+  radius: number;
+}
+
+const STORAGE_KEY = 'search-position-state';
+
+export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPositionProps) {
   const [inputValue, setInputValue] = useState("");
   const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
-  const [radius, setRadius] = useState(50);
+  const [radius, setRadius] = useState(10);
   const [alertActive, setAlertActive] = useState(false);
-  
+  const [isCreatingAlert, setIsCreatingAlert] = useState(false);
+
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const handleSearch = useCallback(() => {
-    if (!selectedCity) return;
-    onSearch({ city: selectedCity, radius, alert: alertActive });
-    onClose();
-  }, [selectedCity, radius, alertActive, onSearch, onClose]);
-
-  // Close modal on Escape key
+  // ✅ Charger les états sauvegardés au montage
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
+    if (typeof window === 'undefined') return;
+
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    if (savedState) {
+      try {
+        const parsed: SavedPositionState = JSON.parse(savedState);
+        setInputValue(parsed.inputValue || "");
+        setSelectedCity(parsed.selectedCity);
+        setRadius(parsed.radius || 10);
+        
+        // ✅ REMPLACER console.log par log (ligne 59)
+        log('✅ États restaurés (position):', parsed);
+      } catch (error) {
+        console.error('❌ Erreur lors de la restauration:', error); // ✅ Garder console.error
       }
+    }
+  }, []);
+
+  // ✅ Sauvegarder les états à chaque changement
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const stateToSave: SavedPositionState = {
+      inputValue,
+      selectedCity,
+      radius,
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+  }, [inputValue, selectedCity, radius]);
 
-  // Reset quand le modal ferme
-  useEffect(() => {
-    if (!isOpen) {
-      setInputValue("");
-      setSelectedCity(null);
-      setRadius(50);
-      setAlertActive(false);
+  const getZoomFromRadius = useCallback((radiusKm: number): number => {
+    if (radiusKm <= 20) return 10;
+    if (radiusKm <= 50) return 9;
+    if (radiusKm <= 100) return 8;
+    if (radiusKm <= 150) return 7;
+    return 6;
+  }, []);
+
+  const createAlert = useCallback(async () => {
+    if (!selectedCity || !alertActive) return;
+    
+    setIsCreatingAlert(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        toast.error("Vous devez être connecté pour créer une alerte");
+        return;
+      }
+
+      const payload = {
+        type: "GEOGRAPHIQUE",
+        villeNom: selectedCity.name,
+        latitude: selectedCity.lat,
+        longitude: selectedCity.lon,
+        rayon: radius,
+      };
+
+      // ✅ REMPLACER console.log par log
+      log('📤 Création alerte:', payload);
+
+      const response = await fetch("/api/mission/alertes-missions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erreur lors de la création de l'alerte");
+      }
+
+      toast.success(`🔔 Alerte créée pour ${selectedCity.name} (${radius} km)`);
+    } catch (error: any) {
+      console.error("❌ Erreur création alerte:", error); // ✅ Garder console.error
+      toast.error(error.message || "Erreur lors de la création de l'alerte");
+      throw error;
+    } finally {
+      setIsCreatingAlert(false);
     }
-  }, [isOpen]);
+  }, [selectedCity, radius, alertActive]);
+
+  const handleSearch = useCallback(async () => {
+    if (!selectedCity) {
+      toast.warning("Veuillez sélectionner une ville");
+      return;
+    }
+
+    try {
+      // 1. Créer l'alerte si activée
+      if (alertActive) {
+        await createAlert();
+      }
+
+      // 2. Transmettre les données au parent (mission-page)
+      onSearch({ 
+        city: selectedCity, 
+        radius,
+      });
+
+      onClose();
+    } catch (error) {
+      console.error("❌ Erreur:", error); // ✅ Garder console.error
+    }
+  }, [selectedCity, radius, alertActive, createAlert, onSearch, onClose]);
+
+  // ✅ Fonction pour effacer les filtres
+  const handleClearFilters = () => {
+    setInputValue("");
+    setSelectedCity(null);
+    setRadius(10);
+    setAlertActive(false);
+    
+    localStorage.removeItem(STORAGE_KEY);
+    toast.success('Filtres effacés');
+  };
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) onClose();
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
+  const zoom = selectedCity ? getZoomFromRadius(radius) : 5;
+
   return (
-    <div 
-      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+    <div
+      className="fixed inset-0 bg-black/80 flex items-center justify-center z-[3000] p-3"
       onClick={onClose}
     >
-      <div 
+      <div
         ref={modalRef}
-        className="bg-zinc-900 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative"
+        className="bg-zinc-900 rounded-xl w-full max-w-2xl max-h-[90vh] p-6 relative overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <MapPin className="w-6 h-6 text-orange-500" />
-            <h2 className="text-xl font-bold text-white">
-              Missions autour de moi
-            </h2>
+            <h2 className="text-xl font-bold text-white">Missions autour de moi</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* ✅ Bouton Effacer */}
+            {selectedCity && (
+              <button
+                onClick={handleClearFilters}
+                className="px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                Effacer
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-white transition-colors"
+              aria-label="Fermer"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
-        {/* Contenu */}
         <div className="space-y-6">
-          {/* Ville avec autocomplete - Composant réutilisable */}
           <CityAutocomplete
             value={inputValue}
             onValueChange={setInputValue}
             selectedCity={selectedCity}
             onSelectCity={setSelectedCity}
-            theme="dark" // ou ne pas spécifier (dark par défaut)
-
+            theme="dark"
             placeholder="Entrez votre ville (min. 2 caractères)"
             label="Ville"
           />
 
-          {/* Map - Affiche la France par défaut, puis la ville sélectionnée */}
-          <div className="h-96 rounded-lg overflow-hidden border border-zinc-700">
-            <MapComponent 
-              center={selectedCity ? [selectedCity.lat, selectedCity.lon] : [46.603354, 1.888334]}
-              radius={selectedCity ? radius * 1000 : undefined}
-              zoom={selectedCity ? undefined : 6}
-            />
+          <div className="h-80 rounded-lg overflow-hidden border border-zinc-700">
+            {isOpen && (
+              <MapComponent
+                center={selectedCity ? [selectedCity.lat, selectedCity.lon] : [46.603354, 1.888334]}
+                radius={selectedCity ? radius * 1000 : undefined}
+                zoom={zoom}
+                points={selectedCity ? [{
+                  position: [selectedCity.lat, selectedCity.lon] as [number, number],
+                  radius: radius * 1000,
+                  color: "#f97316",
+                  label: selectedCity.name
+                }] : undefined}
+              />
+            )}
           </div>
 
-          {/* Rayon */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Rayon de recherche : {radius} km
+              Rayon de recherche :{" "}
+              <span className="text-orange-500 font-bold">{radius} km</span>
             </label>
             <input
               type="range"
@@ -129,28 +275,34 @@ export function SearchPosition({ isOpen, onClose, onSearch }: SearchPositionProp
             </div>
           </div>
 
-          {/* Alerte */}
-          <div className="flex items-center justify-between p-4 bg-zinc-800 rounded-lg">
-            <div className="flex items-center gap-3">
-              <Bell className="w-5 h-5 text-yellow-500" />
-              <span className="text-white font-medium">Activer l'alerte</span>
-            </div>
-            <button
-              onClick={() => setAlertActive(!alertActive)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${
-                alertActive ? "bg-orange-500" : "bg-zinc-600"
-              }`}
-            >
-              <div
-                className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                  alertActive ? "translate-x-6" : "translate-x-0.5"
+          {selectedCity && (
+            <div className="flex items-center justify-between p-4 bg-zinc-800 rounded-lg border border-orange-500/20">
+              <div className="flex items-center gap-3">
+                <Bell className="w-5 h-5 text-yellow-500" />
+                <div>
+                  <span className="text-white font-medium block">Activer l'alerte</span>
+                  <span className="text-xs text-gray-400">
+                    Recevoir un email pour chaque nouvelle mission près de {selectedCity.name}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setAlertActive(!alertActive)}
+                className={`relative w-12 h-6 rounded-full transition-colors ${
+                  alertActive ? "bg-orange-500" : "bg-zinc-600"
                 }`}
-              />
-            </button>
-          </div>
+                aria-label={alertActive ? "Désactiver l'alerte" : "Activer l'alerte"}
+              >
+                <div
+                  className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                    alertActive ? "translate-x-6" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Buttons */}
         <div className="flex gap-3 mt-8">
           <button
             onClick={onClose}
@@ -160,10 +312,17 @@ export function SearchPosition({ isOpen, onClose, onSearch }: SearchPositionProp
           </button>
           <button
             onClick={handleSearch}
-            disabled={!selectedCity}
+            disabled={!selectedCity || isCreatingAlert}
             className="flex-1 px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-zinc-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
           >
-            Rechercher
+            {isCreatingAlert ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="animate-spin">⏳</span>
+                Création...
+              </span>
+            ) : (
+              "Rechercher"
+            )}
           </button>
         </div>
       </div>

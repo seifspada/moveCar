@@ -2,14 +2,32 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { AdherentNavbarData } from '../types/adherent';
+import { PartenaireNavbarData } from '../types/partenaire';
 
-// ✅ Type léger spécifique au context
+// ✅ AJOUTER LE MODE DEBUG
+const DEBUG_MODE = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
+
+const log = (...args: any[]) => {
+  if (DEBUG_MODE) {
+    console.log(...args);
+  }
+};
+
+// ✅ Type unifié pour adhérent ET partenaire
 export interface CurrentUser {
-  nom: string;
-  prenom: string;
+  // Commun
   email: string;
+  role: 'adherent' | 'partenaire' | null;
+  
+  // Spécifique adhérent
+  nom?: string;
+  prenom?: string;
   photoPersonnelle?: string | null;
-  pack: "basique" | "premium";
+  pack?: "basique" | "premium";
+  
+  // Spécifique partenaire
+  entite?: string;
 }
 
 interface UserContextType {
@@ -23,82 +41,271 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasChecked, setHasChecked] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      console.log("🟢 UserContext: Début chargement...");
-      
-      try {
-        console.log("📡 Fetch /api/adherent/me...");
-        const res = await fetch("/api/adherent/me", {
-          cache: "no-store",
-          credentials: "include"
+  // ✅ Fonction de chargement réutilisable
+  const loadUserData = async () => {
+    log("🟢 UserContext: Chargement des données...");
+    
+    try {
+      if (typeof window === 'undefined') {
+        setIsLoading(false);
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      const role = localStorage.getItem('role') as 'adherent' | 'partenaire' | null;
+
+      log("🔑 Token présent:", !!token);
+      if (token) {
+        log("🔑 Token (20 premiers chars):", token.substring(0, 20) + "...");
+      }
+      log("👤 Role:", role);
+
+      if (!token || !role) {
+        log("⚠️ Pas de token ou role");
+        setIsLoading(false);
+        return;
+      }
+
+      let user: CurrentUser | null = null;
+
+      // ✅ ADHÉRENT : GraphQL
+      if (role === 'adherent') {
+        log("📡 Fetch GraphQL adherentMe...");
+        log("🌐 URL:", "/api/graphql");
+        
+        const res = await fetch("/api/graphql", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            query: `
+              query AdherentMe {
+                adherentMe {
+                  nom
+                  prenom
+                  email
+                  photo
+                  typePack
+                }
+              }
+            `
+          }),
+          cache: "no-store"
         });
 
-        console.log("📥 Status:", res.status);
+        log("📥 Status adherent:", res.status);
+        log("📥 Status text:", res.statusText);
 
         if (res.ok) {
-          const profil = await res.json();
-          console.log("✅ Profil reçu:", profil);
+          const result: { data?: AdherentNavbarData; errors?: any[] } = await res.json();
+          log("✅ Result adherent (stringified):", JSON.stringify(result, null, 2));
           
-          // ✅ Mapper "basic" → "basique" pour le frontend
-          let packValue: "basique" | "premium" = "basique";
-          if (profil.typePack === "premium") {
-            packValue = "premium";
-          } else if (profil.typePack === "basic" || profil.typePack === "basique") {
-            packValue = "basique";
+          if (result.data?.adherentMe) {
+            const profil = result.data.adherentMe;
+            
+            let packValue: "basique" | "premium" = "basique";
+            if (profil.typePack === "premium") packValue = "premium";
+            
+            user = {
+              role: 'adherent',
+              nom: profil.nom,
+              prenom: profil.prenom,
+              email: profil.email,
+              photoPersonnelle: profil.photo,
+              pack: packValue,
+            };
+            log("✅ User adhérent créé:", user);
+          } else if (result.errors) {
+            console.error("❌ Erreurs GraphQL:"); // ✅ Garder console.error
+            result.errors.forEach((error: any, index: number) => {
+              console.error(`\n--- Erreur GraphQL ${index + 1} ---`);
+              console.error("Message:", error.message);
+              console.error("Extensions:", error.extensions);
+              console.error("Path:", error.path);
+              console.error("Locations:", error.locations);
+            });
+            
+            const authError = result.errors.find(
+              (err: any) => 
+                err.extensions?.code === 'UNAUTHENTICATED' || 
+                err.message?.toLowerCase().includes('unauthorized') ||
+                err.message?.toLowerCase().includes('non autorisé')
+            );
+            
+            if (authError) {
+              console.warn("⚠️ Erreur d'authentification, nettoyage..."); // ✅ Garder console.warn
+              localStorage.clear();
+            }
           }
-          
-          const user: CurrentUser = {
-            nom: profil.nom,
-            prenom: profil.prenom,
-            email: profil.email,
-            photoPersonnelle: profil.photo,
-            pack: packValue, // ✅ Utiliser la valeur mappée
-          };
-          
-          console.log("✅ User construit:", user);
-          setCurrentUser(user);
-          localStorage.setItem('currentUser', JSON.stringify(user));
+        } else if (res.status === 401) {
+          console.warn("⚠️ Token adherent invalide (401), nettoyage...");
+          localStorage.clear();
         } else {
           const errorText = await res.text();
-          console.error("❌ Erreur:", res.status, errorText);
-          
-          // Fallback localStorage
-          const savedUser = localStorage.getItem('currentUser');
-          if (savedUser) {
-            console.log("📦 Chargement localStorage");
-            setCurrentUser(JSON.parse(savedUser));
-          } else {
-            console.warn("⚠️ Pas de user en localStorage");
-          }
+          console.error("❌ Erreur HTTP adherent:", res.status, errorText);
         }
-      } catch (error) {
-        console.error("❌ Exception fetch:", error);
+      } 
+      
+      // ✅ PARTENAIRE : GraphQL
+      else if (role === 'partenaire') {
+        log("📡 Fetch GraphQL partenaireNavbar...");
+        log("🌐 URL:", "/api/graphql");
         
-        // Fallback localStorage en cas d'erreur réseau
+        const res = await fetch("/api/graphql", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            query: `
+              query PartenaireNavbar {
+                partenaireNavbar {
+                  entite
+                  email
+                }
+              }
+            `
+          }),
+          cache: "no-store"
+        });
+
+        log("📥 Status partenaire:", res.status);
+        log("📥 Status text:", res.statusText);
+
+        if (res.ok) {
+          const result: { data?: PartenaireNavbarData; errors?: any[] } = await res.json();
+          log("✅ Result partenaire (stringified):", JSON.stringify(result, null, 2));
+          
+          if (result.data?.partenaireNavbar) {
+            const profil = result.data.partenaireNavbar;
+            
+            user = {
+              role: 'partenaire',
+              entite: profil.entite,
+              email: profil.email,
+            };
+            log("✅ User partenaire créé:", user);
+          } else if (result.errors) {
+            console.error("❌ Erreurs GraphQL:");
+            result.errors.forEach((error: any, index: number) => {
+              console.error(`\n--- Erreur GraphQL ${index + 1} ---`);
+              console.error("Message:", error.message);
+              console.error("Extensions:", error.extensions);
+              console.error("Path:", error.path);
+              console.error("Locations:", error.locations);
+            });
+            
+            const authError = result.errors.find(
+              (err: any) => 
+                err.extensions?.code === 'UNAUTHENTICATED' || 
+                err.message?.toLowerCase().includes('unauthorized') ||
+                err.message?.toLowerCase().includes('non autorisé')
+            );
+            
+            if (authError) {
+              console.warn("⚠️ Erreur d'authentification, nettoyage...");
+              localStorage.clear();
+            }
+          }
+        } else if (res.status === 401) {
+          console.warn("⚠️ Token partenaire invalide (401), nettoyage...");
+          localStorage.clear();
+        } else {
+          const errorText = await res.text();
+          console.error("❌ Erreur HTTP partenaire:", res.status, errorText);
+        }
+      }
+
+      if (user) {
+        log("✅ User final:", user);
+        setCurrentUser(user);
+        localStorage.setItem('currentUser', JSON.stringify(user));
+      } else {
+        log("⚠️ Aucun user créé");
+        
         const savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
-          console.log("📦 Fallback localStorage");
-          setCurrentUser(JSON.parse(savedUser));
+          log("📦 Fallback localStorage");
+          try {
+            const parsed = JSON.parse(savedUser);
+            log("📦 User from localStorage:", parsed);
+            setCurrentUser(parsed);
+          } catch (e) {
+            console.error("❌ Erreur parse localStorage:", e);
+            localStorage.removeItem('currentUser');
+          }
         }
-      } finally {
-        console.log("🏁 setIsLoading(false)");
-        setIsLoading(false);
       }
-    })();
+
+    } catch (error: any) {
+      console.error("❌ Exception dans loadUserData:");
+      console.error("Message:", error.message);
+      console.error("Stack:", error.stack);
+      
+      if (error.message?.includes('fetch failed') || 
+          error.message?.includes('Failed to fetch') ||
+          error.cause?.code === 'ECONNREFUSED') {
+        console.error("🔴 Erreur réseau: Impossible de contacter /api/graphql");
+        console.error("🔴 Vérifiez que Next.js est bien démarré");
+      }
+      
+      const savedUser = localStorage.getItem('currentUser');
+      if (savedUser) {
+        log("📦 Fallback localStorage (erreur réseau)");
+        try {
+          const parsed = JSON.parse(savedUser);
+          log("📦 User from localStorage:", parsed);
+          setCurrentUser(parsed);
+        } catch (e) {
+          console.error("❌ Erreur parse localStorage:", e);
+          localStorage.removeItem('currentUser');
+        }
+      }
+    } finally {
+      log("🏁 setIsLoading(false)");
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (hasChecked) return;
+    log("🔵 useEffect: Premier chargement");
+    loadUserData();
+    setHasChecked(true);
+  }, [hasChecked]);
+
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'token' || e.key === 'role') {
+        log("🔄 Changement localStorage détecté, rechargement...");
+        loadUserData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const updateCurrentUser = (user: CurrentUser | null) => {
+    log("🔄 updateCurrentUser appelé avec:", user);
     setCurrentUser(user);
     if (user) {
       localStorage.setItem('currentUser', JSON.stringify(user));
     } else {
+      log("🧹 Nettoyage complet du localStorage");
       localStorage.removeItem('currentUser');
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
     }
   };
 
-  // ✅ Loader pendant le chargement initial
   if (isLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-slate-900 z-[9999]">

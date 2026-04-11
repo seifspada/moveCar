@@ -1,22 +1,36 @@
-// app/components/MissionList.tsx
-import { Mission } from "@/app/data/missions";
+// app/components/mission/MissionList.tsx
+import { MissionDetails } from "@/app/types/mission";
 import MissionCard from "./MissionCard";
 
 type Props = {
-  missions: Mission[];
+  missions: MissionDetails[];
+  loading?: boolean;
 };
 
-export default function MissionList({ missions }: Props) {
+export default function MissionList({ missions, loading = false }: Props) {
+  // Ton code actuel reste identique
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-zinc-900 rounded-lg p-6 animate-pulse border-2 border-zinc-800">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-zinc-800 rounded-full"></div>
+              <div className="flex-1 space-y-3">
+                <div className="h-6 bg-zinc-800 rounded w-3/4"></div>
+                <div className="h-4 bg-zinc-800 rounded w-1/2"></div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   if (missions.length === 0) {
     return (
       <div className="text-center py-16">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-zinc-800 rounded-full mb-4">
-          <svg className="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
         <p className="text-gray-400 text-xl font-medium">Aucune mission trouvée</p>
-        <p className="text-gray-500 text-sm mt-2">Essayez de modifier vos critères de recherche</p>
       </div>
     );
   }
@@ -24,7 +38,11 @@ export default function MissionList({ missions }: Props) {
   return (
     <div className="space-y-4">
       {missions.map((mission) => (
-        <MissionCard key={mission.id} mission={mission} />
+        <MissionCard 
+          key={mission.id}  // ✅ utilise l'ID réel
+          mission={mission} 
+          missionId={mission.id} 
+        />
       ))}
     </div>
   );
