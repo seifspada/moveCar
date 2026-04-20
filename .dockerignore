@@ -1,0 +1,6 @@
+Add-Content .dockerignore "node_modules
+.next
+.git
+.env*.local
+*.log
+README.md"
