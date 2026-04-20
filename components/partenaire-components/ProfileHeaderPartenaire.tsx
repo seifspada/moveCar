@@ -14,7 +14,7 @@ interface ProfileHeaderProps {
   isDesktopMenuOpen: boolean;
   toggleMobileMenu: () => void;
   toggleDesktopMenu: () => void;
-  logoUrl?: string; // optionnel : logo statique si besoin
+  logoUrl?: string;
 }
 
 export default function ProfileHeader({
@@ -25,14 +25,16 @@ export default function ProfileHeader({
   logoUrl
 }: ProfileHeaderProps) {
   const pathname = usePathname();
-  const showNavbar = pathname.startsWith('/partenaire'); // ✅
+  const showNavbar = pathname.startsWith('/partenaire');
   const [isClient, setIsClient] = useState(false);
+
+  // ✅ API_URL pour construire l'URL complète de la photo
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // ✅ Récupérer les données du partenaire via GraphQL
   const { data, loading } = useQuery<PartenaireNavbarData>(
     GET_PARTENAIRE_NAVBAR,
     {
@@ -41,7 +43,6 @@ export default function ProfileHeader({
     }
   );
 
-  // Fonction pour obtenir les initiales
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -51,14 +52,24 @@ export default function ProfileHeader({
       .slice(0, 2);
   };
 
-  // ✅ Données par défaut pendant le chargement
+  // ✅ Construire l'URL complète de la photo (comme adherent)
+  const rawPhoto = data?.partenaireNavbar?.photo ?? null;
+  const photoUrl = rawPhoto
+    ? rawPhoto.startsWith('http')
+      ? rawPhoto
+      : `${API_URL}${rawPhoto}`  // → http://localhost:3001/uploads/partenaires/...
+    : null;
+
   const partner = {
     nom: data?.partenaireNavbar?.entite || 'Chargement...',
     email: data?.partenaireNavbar?.email || '',
-    isOnline: true
+    photo: photoUrl, // ✅ URL complète
+    isOnline: true,
   };
-    if (!showNavbar) return null; // ✅ Après tous les hooks
- if (loading || !data) {
+
+  if (!showNavbar) return null;
+
+  if (loading || !data) {
     return (
       <header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-[2000]">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-5 md:py-6 lg:py-7">
@@ -79,10 +90,9 @@ export default function ProfileHeader({
     );
   }
 
-
   return (
     <>
-      {/* Overlay avec animation fade fluide */}
+      {/* Overlay */}
       <div
         className={`fixed inset-0 bg-black z-30 transition-opacity duration-700 ease-out pointer-events-none ${
           isMobileMenuOpen || isDesktopMenuOpen ? 'opacity-70 pointer-events-auto' : 'opacity-0'
@@ -93,13 +103,14 @@ export default function ProfileHeader({
         }}
       />
 
-      {/* Header responsive */}
+      {/* Header */}
       <header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-[2000]">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-5">
           <div className="flex items-center justify-between gap-3 sm:gap-4">
 
-            {/* ✅ Section GAUCHE: Bouton Menu + Logo */}
+            {/* Section GAUCHE: Bouton Menu + Logo */}
             <div className="flex items-center gap-3 sm:gap-4">
+
               {/* Bouton hamburger MOBILE */}
               <button
                 onClick={toggleMobileMenu}
@@ -132,7 +143,7 @@ export default function ProfileHeader({
                 </div>
               </button>
 
-              {/* ✅ Logo responsive */}
+              {/* Logo */}
               <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-full border-3 sm:border-4 border-orange-500 overflow-hidden shadow-lg">
                 <Image
                   src={logoUrl || "/images/logo.jpg"}
@@ -150,10 +161,9 @@ export default function ProfileHeader({
               </div>
             </div>
 
-            {/* ✅ Section DROITE: Profil utilisateur - avec skeleton pendant chargement */}
+            {/* Section DROITE: Profil utilisateur */}
             <div className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6">
               {loading ? (
-                // Skeleton pendant le chargement
                 <>
                   <div className="text-right">
                     <div className="h-5 w-32 bg-slate-700 rounded animate-pulse mb-1"></div>
@@ -172,15 +182,30 @@ export default function ProfileHeader({
                       {partner.email}
                     </p>
                   </div>
-                  
-                  {/* Avatar avec initiales */}
+
+                  {/* ✅ Avatar : photo réelle ou initiales en fallback */}
                   <div className="relative flex-shrink-0">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full border-3 sm:border-4 border-orange-500 flex items-center justify-center shadow-lg">
-                      <span className="text-white font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">
-                        {getInitials(partner.nom)}
-                      </span>
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-full border-3 sm:border-4 border-orange-500 overflow-hidden shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                      {partner.photo ? (
+                        <Image
+                          src={partner.photo}
+                          alt={partner.nom}
+                          width={80}
+                          height={80}
+                          className="w-full h-full object-cover"
+                          unoptimized           // ✅ Bypass next/image optimizer
+                          onError={(e) => {
+                            console.error('❌ Erreur chargement photo partenaire:', partner.photo);
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <span className="text-white font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">
+                          {getInitials(partner.nom)}
+                        </span>
+                      )}
                     </div>
-                    
+
                     {/* Indicateur en ligne */}
                     {partner.isOnline && (
                       <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 border-2 border-slate-800 rounded-full"></div>

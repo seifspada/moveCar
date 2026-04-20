@@ -2,7 +2,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { DemandeAdherent } from '../types/adherent';
 
-const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+// ✅ Pointe vers la route Next.js, pas directement NestJS
+const NEXT_API = '/api/adherent/demande-adherent';
 
 function getToken() {
   return typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -31,13 +32,14 @@ export function useDemandeAdherent(id: string | string[] | undefined) {
     setError(null);
 
     try {
-      const res = await fetch(`${BACKEND}/demandes-adherents/${demandeId}`, {
+      // ✅ Passe par la route Next.js API
+      const res = await fetch(`${NEXT_API}/${demandeId}`, {
         headers: authHeaders(),
       });
 
       const raw = await res.text();
-      console.log('🔵 backend status:', res.status);
-      console.log('🔵 backend response:', raw);
+      console.log('🔵 [fetchDemande] status:', res.status);
+      console.log('🔵 [fetchDemande] response:', raw);
 
       if (!res.ok) throw new Error(`Erreur ${res.status}: ${raw}`);
 
@@ -54,7 +56,6 @@ export function useDemandeAdherent(id: string | string[] | undefined) {
     fetchDemande();
   }, [fetchDemande]);
 
-  // ✅ CORRIGÉ — body JSON vide envoyé obligatoirement
   const confirmer = useCallback(async () => {
     if (!demandeId) return;
 
@@ -62,14 +63,15 @@ export function useDemandeAdherent(id: string | string[] | undefined) {
       setActionLoading('confirmer');
       setActionError(null);
 
-      const res = await fetch(`${BACKEND}/demandes-adherents/${demandeId}/accepter`, {
+      // ✅ PATCH vers Next.js avec { action: 'confirmer' }
+      const res = await fetch(`${NEXT_API}/${demandeId}`, {
         method: 'PATCH',
         headers: authHeaders(),
-        body: JSON.stringify({}), // ✅ body vide mais JSON valide
+        body: JSON.stringify({ action: 'confirmer' }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || `Erreur ${res.status}`);
+      if (!res.ok) throw new Error(data.error || data.message || `Erreur ${res.status}`);
 
       setDemande((prev) => (prev ? { ...prev, statut: 'ACCEPTEE' } : prev));
       await fetchDemande();
@@ -80,7 +82,6 @@ export function useDemandeAdherent(id: string | string[] | undefined) {
     }
   }, [demandeId, fetchDemande]);
 
-  // ✅ CORRIGÉ — accepte un motif optionnel + body JSON envoyé
   const refuser = useCallback(async (motif?: string) => {
     if (!demandeId) return;
 
@@ -88,14 +89,15 @@ export function useDemandeAdherent(id: string | string[] | undefined) {
       setActionLoading('refuser');
       setActionError(null);
 
-      const res = await fetch(`${BACKEND}/demandes-adherents/${demandeId}/refuser`, {
+      // ✅ PATCH vers Next.js avec { action: 'refuser', motif? }
+      const res = await fetch(`${NEXT_API}/${demandeId}`, {
         method: 'PATCH',
         headers: authHeaders(),
-        body: JSON.stringify(motif ? { motif } : {}), // ✅ inclut le motif si fourni
+        body: JSON.stringify({ action: 'refuser', ...(motif ? { motif } : {}) }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || `Erreur ${res.status}`);
+      if (!res.ok) throw new Error(data.error || data.message || `Erreur ${res.status}`);
 
       setDemande((prev) => (prev ? { ...prev, statut: 'REFUSEE' } : prev));
       await fetchDemande();

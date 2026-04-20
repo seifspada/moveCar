@@ -3,9 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import SidebarAdherent from "@/components/mission-components/SideBarAdherent";
 import MissionList from "@/components/mission-components/MissionList";
-import ProfileHeader from "@/components/mission-components/ProfileHeaderAdherent";
 import SearchBar from "@/components/mission-components/RrechercheBar";
 import Pagination from "@/components/mission-components/Pagination";
 import { SearchFilter } from "@/components/mission-components/SearchFilter";
@@ -13,8 +11,9 @@ import { Filter, X, MapPin, Route } from "lucide-react";
 import { 
   useSearchMissions, 
   useSearchMissionsByPosition,
-  useSearchMissionsByTrajet // ✅ Ajout du 3ème hook
+  useSearchMissionsByTrajet
 } from "@/app/hooks/userSearchMissions";
+import { useMissions } from "@/app/hooks/useMissions";
 import { MissionDetails } from "@/app/types/mission";
 
 export default function MissionsPage() {
@@ -29,19 +28,26 @@ export default function MissionsPage() {
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
   const [userId, setUserId] = useState<number>(1);
 
-  // ✅ Type de recherche active
-  const [searchMode, setSearchMode] = useState<'text' | 'position' | 'trajet'>('text');
+  // Type de recherche active
+  const [searchMode, setSearchMode] = useState<"text" | "position" | "trajet">("text");
 
-  // ✅ État pour recherche position
+  // État pour recherche position
   const [positionCity, setPositionCity] = useState<string>("");
   const [positionRadius, setPositionRadius] = useState<number>(0);
 
-  // ✅ État pour recherche trajet
+  // État pour recherche trajet
   const [trajetDepart, setTrajetDepart] = useState<string>("");
   const [trajetArrivee, setTrajetArrivee] = useState<string>("");
   const [trajetRadius, setTrajetRadius] = useState<number>(0);
 
-  // ✅ Hook pour recherche texte
+  // ✅ Missions par défaut (non réservées / confirmées pour l’adhérent)
+  const {
+    missions: defaultMissions,
+    loading: defaultLoading,
+    error: defaultError,
+  } = useMissions();
+
+  // Hook pour recherche texte (paginated)
   const { 
     missions: textMissions, 
     loading: textLoading, 
@@ -54,7 +60,7 @@ export default function MissionsPage() {
     20
   );
 
-  // ✅ Hook pour recherche position
+  // Hook pour recherche position
   const { 
     search: searchByPosition,
     missions: positionMissions, 
@@ -64,7 +70,7 @@ export default function MissionsPage() {
     totalPages: positionTotalPages 
   } = useSearchMissionsByPosition();
 
-  // ✅ Hook pour recherche trajet
+  // Hook pour recherche trajet
   const { 
     search: searchByTrajet,
     missions: trajetMissions, 
@@ -74,76 +80,95 @@ export default function MissionsPage() {
     totalPages: trajetTotalPages 
   } = useSearchMissionsByTrajet();
 
+  // ✅ Est-ce qu'une recherche texte est vraiment active ?
+  const isTextSearchActive =
+    searchMode === "text" && debouncedSearch.trim() !== "";
+
   // ✅ Choisir quelle source afficher selon le mode
-  const missions = searchMode === 'trajet' 
-    ? trajetMissions 
-    : searchMode === 'position' 
-    ? positionMissions 
-    : textMissions;
+  const missions: MissionDetails[] =
+    searchMode === "trajet"
+      ? trajetMissions
+      : searchMode === "position"
+      ? positionMissions
+      : isTextSearchActive
+      ? textMissions
+      : defaultMissions;
 
-  const total = searchMode === 'trajet' 
-    ? trajetTotal 
-    : searchMode === 'position' 
-    ? positionTotal 
-    : textTotal;
+  const total =
+    searchMode === "trajet"
+      ? trajetTotal
+      : searchMode === "position"
+      ? positionTotal
+      : isTextSearchActive
+      ? textTotal
+      : defaultMissions.length;
 
-  const totalPages = searchMode === 'trajet' 
-    ? trajetTotalPages 
-    : searchMode === 'position' 
-    ? positionTotalPages 
-    : textTotalPages;
+  const totalPages =
+    searchMode === "trajet"
+      ? trajetTotalPages
+      : searchMode === "position"
+      ? positionTotalPages
+      : isTextSearchActive
+      ? textTotalPages
+      : 1;
 
-  const missionsLoading = searchMode === 'trajet' 
-    ? trajetLoading 
-    : searchMode === 'position' 
-    ? positionLoading 
-    : textLoading;
+  const missionsLoading =
+    searchMode === "trajet"
+      ? trajetLoading
+      : searchMode === "position"
+      ? positionLoading
+      : isTextSearchActive
+      ? textLoading
+      : defaultLoading;
 
-  const error = searchMode === 'trajet' 
-    ? trajetError 
-    : searchMode === 'position' 
-    ? positionError 
-    : textError;
+  const error =
+    searchMode === "trajet"
+      ? trajetError
+      : searchMode === "position"
+      ? positionError
+      : isTextSearchActive
+      ? textError
+      : defaultError;
 
-  // ✅ Debounce pour la recherche texte
+  // Debounce pour la recherche texte
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
       setCurrentPage(1);
       // Reset autres recherches si on tape du texte
-      if (searchQuery && searchMode !== 'text') {
-        setSearchMode('text');
+      if (searchQuery && searchMode !== "text") {
+        setSearchMode("text");
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, searchMode]);
 
-  // ✅ Scroll vers le haut quand on change de page
+  // Scroll vers le haut quand on change de page
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
 
   useEffect(() => {
     const checkAuth = () => {
-      const role = localStorage.getItem('role');
-      
+      const role = localStorage.getItem("role");
+
       if (!role) {
-        router.push('/auth/login');
+        router.push("/auth/login");
         return;
       }
 
-      if (role !== 'adherent') {
+      if (role !== "adherent") {
         const roleRedirects: Record<string, string> = {
-          partenaire: '/partenaire/acceuil',
-          admin: '/admin/overview',
-          manager: '/manager/home',
+          partenaire: "/partenaire/acceuil",
+          admin: "/admin/overview",
+          manager: "/manager/home",
         };
-        router.push(roleRedirects[role] || '/login');
+        router.push(roleRedirects[role] || "/login");
         return;
       }
 
-      const storedUserId = localStorage.getItem('userId');
+      const storedUserId = localStorage.getItem("userId");
       if (storedUserId) {
         setUserId(Number(storedUserId));
       }
@@ -155,10 +180,10 @@ export default function MissionsPage() {
     checkAuth();
   }, [router]);
 
-  const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
-  const toggleDesktopMenu = () => setIsDesktopMenuOpen(prev => !prev);
+  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
+  const toggleDesktopMenu = () => setIsDesktopMenuOpen((prev) => !prev);
 
-  // ✅ Handler pour recherche trajet depuis SearchFilter
+  // Handler pour recherche trajet depuis SearchFilter
   const handleFilterSearch = async (data: any) => {
     console.log("🔍 Recherche avec filtres:", data);
 
@@ -181,8 +206,8 @@ export default function MissionsPage() {
           20
         );
 
-        // ✅ Activer le mode trajet
-        setSearchMode('trajet');
+        // Activer le mode trajet
+        setSearchMode("trajet");
         setTrajetDepart(data.villeDepart.name);
         setTrajetArrivee(data.villeArrivee.name);
         setTrajetRadius(data.rayon);
@@ -194,13 +219,13 @@ export default function MissionsPage() {
     }
   };
 
-  // ✅ Handler pour recherche position depuis SearchBar
+  // Handler pour recherche position depuis SearchBar
   const handlePositionSearch = async (data: {
     city: any;
     radius: number;
   }) => {
     console.log("🔍 Lancement recherche position:", data);
-    
+
     try {
       await searchByPosition(
         data.city.name,
@@ -211,8 +236,8 @@ export default function MissionsPage() {
         20
       );
 
-      // ✅ Activer le mode position
-      setSearchMode('position');
+      // Activer le mode position
+      setSearchMode("position");
       setPositionCity(data.city.name);
       setPositionRadius(data.radius);
       setCurrentPage(1);
@@ -222,9 +247,9 @@ export default function MissionsPage() {
     }
   };
 
-  // ✅ Réinitialiser toutes les recherches
+  // Réinitialiser toutes les recherches
   const clearSearch = () => {
-    setSearchMode('text');
+    setSearchMode("text");
     setPositionCity("");
     setPositionRadius(0);
     setTrajetDepart("");
@@ -247,7 +272,9 @@ export default function MissionsPage() {
             <div className="absolute inset-0 border-4 border-transparent border-t-orange-500 rounded-full animate-spin"></div>
           </div>
           <p className="text-white text-lg font-medium">Chargement</p>
-          <p className="text-gray-500 text-sm mt-1">Vérification de votre accès...</p>
+          <p className="text-gray-500 text-sm mt-1">
+            Vérification de votre accès...
+          </p>
         </div>
       </div>
     );
@@ -260,24 +287,12 @@ export default function MissionsPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-black">
-        <SidebarAdherent
-          isMobileMenuOpen={isMobileMenuOpen}
-          onMobileMenuToggle={toggleMobileMenu}
-          isDesktopMenuOpen={isDesktopMenuOpen}
-          onDesktopMenuToggle={toggleDesktopMenu}
-        />
-
-        <ProfileHeader
-          isMobileMenuOpen={isMobileMenuOpen}
-          isDesktopMenuOpen={isDesktopMenuOpen}
-          toggleMobileMenu={toggleMobileMenu}
-          toggleDesktopMenu={toggleDesktopMenu}
-        />
-
         <main className="py-12 px-4">
           <div className="max-w-7xl mx-auto">
             <div className="bg-red-900/20 border border-red-500 rounded-lg p-6">
-              <p className="text-red-400">Erreur de chargement : {error.message}</p>
+              <p className="text-red-400">
+                Erreur de chargement : {error.message}
+              </p>
             </div>
           </div>
         </main>
@@ -287,21 +302,18 @@ export default function MissionsPage() {
 
   return (
     <div className="min-h-screen bg-black">
-     
-
       <main className="py-6 sm:py-8 lg:py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
-          
           {/* Barre de recherche */}
           <div className="flex items-center gap-3">
             <div className="flex-1">
-              <SearchBar 
+              <SearchBar
                 onSearch={setSearchQuery}
                 onPositionSearch={handlePositionSearch}
                 userId={userId}
               />
             </div>
-            
+
             <button
               onClick={() => setIsFilterOpen(true)}
               className="flex-shrink-0 p-3 hover:bg-zinc-800 rounded-lg transition-colors -mt-7"
@@ -311,12 +323,13 @@ export default function MissionsPage() {
             </button>
           </div>
 
-          {/* ✅ Badge recherche position active */}
-          {searchMode === 'position' && positionCity && (
+          {/* Badge recherche position active */}
+          {searchMode === "position" && positionCity && (
             <div className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-lg px-4 py-3">
               <MapPin className="w-5 h-5 text-orange-500" />
               <span className="text-white text-sm">
-                Missions près de <strong>{positionCity}</strong> (rayon: {positionRadius} km)
+                Missions près de <strong>{positionCity}</strong> (rayon:{" "}
+                {positionRadius} km)
               </span>
               <button
                 onClick={clearSearch}
@@ -328,12 +341,13 @@ export default function MissionsPage() {
             </div>
           )}
 
-          {/* ✅ Badge recherche trajet active */}
-          {searchMode === 'trajet' && trajetDepart && trajetArrivee && (
+          {/* Badge recherche trajet active */}
+          {searchMode === "trajet" && trajetDepart && trajetArrivee && (
             <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/30 rounded-lg px-4 py-3">
               <Route className="w-5 h-5 text-blue-500" />
               <span className="text-white text-sm">
-                Trajet <strong>{trajetDepart}</strong> → <strong>{trajetArrivee}</strong> (rayon: {trajetRadius} km)
+                Trajet <strong>{trajetDepart}</strong> →{" "}
+                <strong>{trajetArrivee}</strong> (rayon: {trajetRadius} km)
               </span>
               <button
                 onClick={clearSearch}
@@ -345,11 +359,12 @@ export default function MissionsPage() {
             </div>
           )}
 
-          {/* ✅ Nombre de résultats */}
+          {/* Nombre de résultats */}
           {!missionsLoading && (
             <div className="flex items-center justify-between">
               <p className="text-gray-400 text-sm">
-                {total} mission{total > 1 ? 's' : ''} trouvée{total > 1 ? 's' : ''}
+                {total} mission{total > 1 ? "s" : ""} trouvée
+                {total > 1 ? "s" : ""}
                 {debouncedSearch && ` pour "${debouncedSearch}"`}
               </p>
               <p className="text-gray-500 text-sm">
@@ -357,12 +372,15 @@ export default function MissionsPage() {
               </p>
             </div>
           )}
-          
-          {/* ✅ Liste des missions avec skeleton */}
+
+          {/* Liste des missions avec skeleton */}
           {missionsLoading ? (
             <div className="space-y-4">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="bg-zinc-900 rounded-full border-2 border-zinc-800 overflow-hidden animate-pulse">
+                <div
+                  key={i}
+                  className="bg-zinc-900 rounded-full border-2 border-zinc-800 overflow-hidden animate-pulse"
+                >
                   <div className="flex flex-row items-center h-24 md:h-32 gap-4 p-4">
                     <div className="w-16 h-16 md:w-20 md:h-20 bg-zinc-700 rounded-full flex-shrink-0"></div>
                     <div className="flex-1 space-y-3">
@@ -386,7 +404,7 @@ export default function MissionsPage() {
             <MissionList missions={missions} />
           )}
 
-          {/* ✅ Pagination */}
+          {/* Pagination */}
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

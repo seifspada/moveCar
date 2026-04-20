@@ -4,10 +4,12 @@ import { gql } from "@apollo/client";
 export const GET_AGENT_NAVBAR = gql`
   query GetAgentNavbar {
     agentMe {
+    id
       nom
       prenom
       email
       photo
+      agenceId
     }
   }
 `;

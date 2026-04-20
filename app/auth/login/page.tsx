@@ -1,8 +1,6 @@
 "use client";
 
-import React from "react"
-
-import { useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -16,83 +14,101 @@ import {
 export default function LoginPage() {
   const router = useRouter();
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  try {
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.message || "Erreur de connexion");
+      if (!response.ok) {
+        throw new Error(data.message || "Erreur de connexion");
+      }
+
+      // ✅ Token
+      const token = data.access_token || data.accessToken;
+      if (!token) throw new Error("Token manquant dans la réponse");
+      localStorage.setItem("token", token);
+
+      // ✅ User
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
+      // ✅ Role
+      const userRole = data.role?.toLowerCase();
+      if (!userRole || typeof userRole !== "string") {
+        throw new Error("Rôle utilisateur invalide ou manquant");
+      }
+      localStorage.setItem("role", userRole);
+
+      // ✅ Décoder le JWT pour extraire agentId / agenceId / adherentId / partenaireId
+      try {
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        console.log('🔑 JWT Payload:', tokenPayload);
+
+        if (userRole === 'agent') {
+          if (tokenPayload.agentId) {
+            localStorage.setItem("agentId", String(tokenPayload.agentId));
+            console.log('✅ agentId sauvegardé:', tokenPayload.agentId);
+          }
+          if (tokenPayload.agenceId) {
+            localStorage.setItem("agenceId", String(tokenPayload.agenceId));
+            console.log('✅ agenceId sauvegardé:', tokenPayload.agenceId);
+          }
+        }
+
+        if (userRole === 'adherent' && tokenPayload.adherentId) {
+          localStorage.setItem("adherentId", String(tokenPayload.adherentId));
+          console.log('✅ adherentId sauvegardé:', tokenPayload.adherentId);
+        }
+
+        if (userRole === 'partenaire' && tokenPayload.partenaireId) {
+          localStorage.setItem("partenaireId", String(tokenPayload.partenaireId));
+          console.log('✅ partenaireId sauvegardé:', tokenPayload.partenaireId);
+        }
+
+      } catch (jwtErr) {
+        console.warn('⚠️ Impossible de décoder le JWT:', jwtErr);
+      }
+
+      // ✅ Nettoyer ancien currentUser corrompu
+      localStorage.removeItem("currentUser");
+
+      // ✅ Redirection
+      const roleRoutes: Record<string, string> = {
+        adherent: "/adherent/mission-page",
+        partenaire: "/partenaire/acceuil",
+        admin: "/admin/demande-liste",
+        agent: "/agent/acceuil",
+      };
+
+      const redirectPath = roleRoutes[userRole];
+      if (!redirectPath) throw new Error(`Rôle non autorisé: ${userRole}`);
+
+      window.location.href = redirectPath;
+
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Une erreur est survenue";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
-
-    // ✅ CORRECTION : Utiliser "token" au lieu de "accessToken"
-    const token = data.access_token || data.accessToken;
-    if (token) {
-      localStorage.setItem("token", token);  // ✅ Changé ici
-    }
-
-    if (data.user) {
-      localStorage.setItem("user", JSON.stringify(data.user));
-    }
-
-    // ✅ Utiliser data.role directement
-    const userRole = data.role?.toLowerCase();
-
-    if (!userRole || typeof userRole !== "string") {
-      throw new Error("Rôle utilisateur invalide ou manquant");
-    }
-
-    localStorage.setItem("role", userRole);
-
-    const roleRoutes: Record<string, string> = {
-      adherent: "/adherent/mission-page",
-      partenaire: "/partenaire/acceuil",
-      admin: "/admin/demande-liste",
-      agent: "/agent/acceuil",
-    };
-
-    const redirectPath = roleRoutes[userRole];
-
-    if (!redirectPath) {
-      throw new Error(`Rôle non autorisé: ${userRole}`);
-    }
-
-    // ✅ IMPORTANT : Utiliser window.location.href pour recharger complètement
-    window.location.href = redirectPath;  // ✅ Changé ici aussi
-    
-  } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : "Une erreur est survenue";
-    setError(errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
@@ -131,7 +147,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               disabled={loading}
               autoComplete="new-email"
             />
-
             <AuthInput
               id="password"
               name="password"

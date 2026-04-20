@@ -17,11 +17,10 @@ export const GET_MISSIONS_FOR_CARDS = gql`
     }
   }
 `;
-export const GET_MISSIONS_BY_AGENCE = gql`
-  query GetMissionsByAgence($agenceId: Int!) {
-    getMissionsByAgence(agenceId: $agenceId) {
+export const GET_MISSIONS_FOR_CARDS_BY_AGENCE = gql`
+  query GetMissionsForCardsByAgence {
+    getMissionsForCardsByAgence {
       id
-      statut
       typeVehicule
       typeCarburant
       villeDepart
@@ -34,7 +33,6 @@ export const GET_MISSIONS_BY_AGENCE = gql`
     }
   }
 `;
-
 export const SEARCH_MISSIONS = gql`
   query SearchMissions($search: String, $page: Int, $pageSize: Int) {
     searchMissions(search: $search, page: $page, pageSize: $pageSize) {

@@ -8,15 +8,13 @@ export const GET_MISSION_BY_ID = gql`
       statut
       commentaire
       dateCreation
-      partenaire {
+      agent {
         id
         nom
         prenom
-        entiteGroupe
-        entiteAgence
         email
         telephone
-        logo
+        photo
       }
       vehicule {
         id

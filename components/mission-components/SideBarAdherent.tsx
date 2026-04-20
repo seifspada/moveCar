@@ -33,6 +33,7 @@ const showNavbar = pathname.startsWith('/adherent'); // ✅
     { key: 'compte', icon: User, label: 'Mon profile', href: '/adherent/profile-adherent' },
      { key: 'departMission', icon: Flag, label: 'Depart Mission', href: '/adherent/depart-mission/2' },
       { key: 'suivieMission', icon: Flag, label: 'Suivie Mission', href: '/adherent/suivie-mission/1' },
+       { key: 'mesReservations', icon: Flag, label: 'Mes Réservations', href: '/adherent/mes-reservations' },
   ];
 
   // ✅ Détection automatique de la page active au chargement et après navigation

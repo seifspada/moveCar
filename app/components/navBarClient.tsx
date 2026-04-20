@@ -18,7 +18,7 @@ export default function NavBarClient() {
   
   const { currentUser, setCurrentUser } = useUser();
 
-  const hideNavbar = pathname.startsWith('/adherent') || pathname.startsWith('/partenaire') || pathname.startsWith('/formulaire') || pathname.startsWith('/agent')|| pathname.startsWith('/admin');
+  const hideNavbar = pathname.startsWith('/') || pathname.startsWith('/partenaire') || pathname.startsWith('/formulaire') || pathname.startsWith('/agent')|| pathname.startsWith('/admin');
 
   // Fermer dropdown au clic extérieur
   useEffect(() => {

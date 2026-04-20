@@ -24,7 +24,7 @@ const TYPE_ORDER: TypeDocument[] = [
   'RC_PRO', 'RC_CIRCULATION', 'CASIER_JUDICIAIRE', 'W_GARAGE',
 ];
 
-const EDITABLE_TYPES: TypeDocument[] = ['RC_PRO', 'RC_CIRCULATION'];
+const EDITABLE_TYPES: TypeDocument[] = ['RC_PRO', 'RC_CIRCULATION','KBIS'];
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 

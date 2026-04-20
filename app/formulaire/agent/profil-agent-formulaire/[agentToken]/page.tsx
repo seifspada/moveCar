@@ -6,7 +6,7 @@ import {
   CheckCircle, User, Mail, Building2,
   AlertCircle, Eye, EyeOff,
 } from "lucide-react";
-import { useRouter, useParams, useSearchParams } from "next/navigation"; // ✅ ajout useSearchParams
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import NavFormulaire from "@/app/components/navFormulaire";
 import {
   CityAutocomplete,
@@ -19,8 +19,8 @@ export default function AgentProfilForm() {
   const router = useRouter();
   const params = useParams<RouteParams>();
   const token = params.agentToken;
-  const searchParams = useSearchParams();                      // ✅ ajout
-  const codeFromUrl = searchParams.get("code") || "";          // ✅ ajout
+  const searchParams = useSearchParams();
+  const codeFromUrl = searchParams.get("code") || "";
 
   const [isAccountCreated, setIsAccountCreated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -33,9 +33,9 @@ export default function AgentProfilForm() {
 
   // Champs formulaire
   const [email, setEmail] = useState("");
-  const [nom, setNom] = useState("");                          // 🔴 FIX ajouté
-  const [prenom, setPrenom] = useState("");                    // 🔴 FIX ajouté
-  const [telephone, setTelephone] = useState("");              // 🔴 FIX ajouté
+  const [nom, setNom] = useState("");
+  const [prenom, setPrenom] = useState("");
+  const [telephone, setTelephone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -45,7 +45,7 @@ export default function AgentProfilForm() {
   // Ville autocomplete
   const [inputValue, setInputValue] = useState("");
   const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
-  const [ville, setVille] = useState("");                      // 🔴 FIX ajouté
+  const [ville, setVille] = useState("");
 
   // ✅ Vérifier le token au chargement
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function AgentProfilForm() {
       return;
     }
 
-fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
       .then(async (res) => {
         const body = await res.json();
         if (!res.ok) throw new Error(body?.message || "Lien invalide ou expiré");
@@ -64,7 +64,6 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
       .then((data) => {
         setAgenceData(data);
         setEmail(data.email);
-        // Pré-remplir ville si disponible
         if (data.ville) {
           setVille(data.ville);
           setInputValue(data.ville);
@@ -98,7 +97,6 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
   const truncateFileName = (name: string) =>
     name.length > 20 ? name.substring(0, 20) + "..." : name;
 
-  // 🔴 FIX: photo optionnelle — ne bloque plus la soumission
   const isFormValid =
     nom.trim().length > 0 &&
     prenom.trim().length > 0 &&
@@ -117,20 +115,30 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
       const formData = new FormData();
       formData.append("password", password);
       formData.append("confirmPassword", confirmPassword);
-      formData.append("nom", nom);                             
-      formData.append("prenom", prenom);                       
-      if (telephone) formData.append("telephone", telephone);  
-      if (ville) formData.append("ville", ville);              
+      formData.append("nom", nom);
+      formData.append("prenom", prenom);
+      if (telephone) formData.append("telephone", telephone);
+      if (ville) formData.append("ville", ville);
       if (selectedFile) formData.append("photo", selectedFile);
 
-   const res = await fetch(
-  `${process.env.NEXT_PUBLIC_API_URL}/agents/complete-profile/${token}`,
-  { method: "POST", body: formData }
-);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/agents/complete-profile/${token}`,
+        { method: "POST", body: formData }
+      );
+
+      // ✅ FIX — lire res.json() UNE SEULE FOIS
+      const result = await res.json();
+      console.log("✅ Réponse backend:", result);
+
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || "Erreur lors de la création");
+        throw new Error(result?.message || "Erreur lors de la création");
       }
+
+      console.log("✅ Profil créé avec succès:", result);
+
+      // ✅ Nettoyer tout ancien localStorage corrompu
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('user');
 
       setIsAccountCreated(true);
     } catch (err: any) {
@@ -142,7 +150,7 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
 
   const handleCancel = () => router.push("/");
 
-  // ─── États de chargement / erreur token ───────────────────────────────────
+  // ─── État : erreur token ───────────────────────────────────────────────────
 
   if (error && !agenceData) {
     return (
@@ -158,7 +166,9 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
                 </h2>
                 <p className="text-gray-600 mb-6">{error}</p>
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-yellow-800">💡 <strong>Que faire ?</strong></p>
+                  <p className="text-sm text-yellow-800">
+                    💡 <strong>Que faire ?</strong>
+                  </p>
                   <ul className="text-sm text-yellow-700 mt-2 space-y-1 text-left">
                     <li>• Vérifiez que vous avez cliqué sur le bon lien dans l&apos;email</li>
                     <li>• Le lien est valide pendant 7 jours seulement</li>
@@ -179,6 +189,8 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
     );
   }
 
+  // ─── État : chargement token ───────────────────────────────────────────────
+
   if (loading && !agenceData) {
     return (
       <>
@@ -193,7 +205,7 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
     );
   }
 
-  // ─── Succès ────────────────────────────────────────────────────────────────
+  // ─── État : succès ─────────────────────────────────────────────────────────
 
   if (isAccountCreated) {
     return (
@@ -308,7 +320,56 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
 
             <form onSubmit={handleSubmit} className="space-y-6">
 
-              {/* Code partenaire (lecture seule) */}
+              {/* 1. Photo */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Photo de profil
+                  <span className="text-gray-400 text-xs ml-2">(optionnelle)</span>
+                </label>
+                <div className="flex items-center gap-6">
+                  <div className="shrink-0">
+                    {photo ? (
+                      <Image
+                        src={photo}
+                        alt="Photo de profil"
+                        width={160}
+                        height={160}
+                        className="h-40 w-40 object-cover rounded-full border-4 border-orange-400"
+                      />
+                    ) : (
+                      <div className="h-40 w-40 bg-gray-200 border-4 border-dashed border-gray-400 rounded-full flex items-center justify-center">
+                        <span className="text-gray-500 text-5xl">+</span>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="inline-block px-5 py-3 bg-orange-600 text-white font-semibold text-sm rounded-full cursor-pointer hover:bg-black transition-colors">
+                      Choisir une photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoChange}
+                        className="hidden"
+                      />
+                    </label>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {selectedFile ? truncateFileName(selectedFile.name) : "Aucun fichier sélectionné"}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-400">Max 5MB — JPG/PNG/WEBP</p>
+                    {photo && (
+                      <button
+                        type="button"
+                        onClick={() => { setPhoto(null); setSelectedFile(null); }}
+                        className="mt-2 text-xs text-red-500 hover:text-red-700 underline"
+                      >
+                        Supprimer la photo
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Code partenaire */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Code partenaire
@@ -321,7 +382,7 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
                 />
               </div>
 
-              {/* Email readonly */}
+              {/* 3. Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Adresse e-mail <span className="text-red-600">*</span>
@@ -338,7 +399,7 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
                 </p>
               </div>
 
-              {/* 🔴 FIX: Nom / Prénom ajoutés */}
+              {/* 4. Nom / Prénom */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -348,6 +409,7 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
                     type="text"
                     value={nom}
                     onChange={(e) => setNom(e.target.value)}
+                    placeholder="Votre nom"
                     className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 text-black"
                   />
                 </div>
@@ -359,12 +421,13 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
                     type="text"
                     value={prenom}
                     onChange={(e) => setPrenom(e.target.value)}
+                    placeholder="Votre prénom"
                     className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 text-black"
                   />
                 </div>
               </div>
 
-              {/* 🔴 FIX: Téléphone ajouté */}
+              {/* 5. Téléphone */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Téléphone
@@ -373,11 +436,12 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
                   type="tel"
                   value={telephone}
                   onChange={(e) => setTelephone(e.target.value)}
+                  placeholder="+216 XX XXX XXX"
                   className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 text-black"
                 />
               </div>
 
-              {/* 🔴 FIX: Ville ajoutée */}
+              {/* 6. Ville */}
               <div>
                 <CityAutocomplete
                   value={inputValue}
@@ -389,42 +453,7 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
                 />
               </div>
 
-              {/* Photo (optionnelle) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Photo de profil
-                  <span className="text-gray-400 text-xs ml-2">(optionnelle)</span>
-                </label>
-                <div className="flex items-center gap-6">
-                  <div className="shrink-0">
-                    {photo ? (
-                      <Image
-                        src={photo}
-                        alt="Photo de profil"
-                        width={160}
-                        height={160}
-                        className="h-40 w-40 object-cover rounded-full border-4 border-gray-200"
-                      />
-                    ) : (
-                      <div className="h-40 w-40 bg-gray-200 border-4 border-dashed border-gray-400 rounded-full flex items-center justify-center">
-                        <span className="text-gray-500 text-5xl">+</span>
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <label className="inline-block px-5 py-3 bg-orange-600 text-white font-semibold text-sm rounded-full cursor-pointer hover:bg-black transition-colors">
-                      Choisir une photo
-                      <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
-                    </label>
-                    <p className="mt-1 text-xs text-gray-500">
-                      {selectedFile ? truncateFileName(selectedFile.name) : "Aucun fichier sélectionné"}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-400">Max 5MB - JPG/PNG/WEBP</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mot de passe */}
+              {/* 7. Mot de passe */}
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -439,11 +468,35 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
                       placeholder="Minimum 8 caractères"
                       className="w-full px-6 py-3 pr-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 text-black"
                     />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
+                  {password.length > 0 && (
+                    <div className="mt-2">
+                      <div className="flex gap-1">
+                        {[...Array(4)].map((_, i) => (
+                          <div
+                            key={i}
+                            className={`h-1 flex-1 rounded-full transition-colors ${
+                              password.length >= (i + 1) * 2
+                                ? password.length >= 8
+                                  ? 'bg-green-500'
+                                  : 'bg-orange-400'
+                                : 'bg-gray-200'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <p className={`text-xs mt-1 ${password.length >= 8 ? 'text-green-600' : 'text-orange-500'}`}>
+                        {password.length >= 8 ? '✓ Mot de passe valide' : `${8 - password.length} caractères manquants`}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -459,45 +512,86 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
                       className={`w-full px-6 py-3 pr-12 border rounded-full focus:outline-none focus:ring-2 text-black ${
                         confirmPassword && password !== confirmPassword
                           ? "border-red-500 focus:ring-red-500"
+                          : confirmPassword && password === confirmPassword
+                          ? "border-green-500 focus:ring-green-500"
                           : "border-gray-300 focus:ring-orange-500"
                       }`}
                     />
-                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
                       {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
-                  {confirmPassword && password !== confirmPassword && (
-                    <p className="mt-1 text-xs text-red-600">Les mots de passe ne correspondent pas</p>
+                  {confirmPassword && (
+                    <p className={`mt-1 text-xs flex items-center gap-1 ${
+                      password === confirmPassword ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {password === confirmPassword
+                        ? <><CheckCircle className="w-3 h-3" /> Mots de passe identiques</>
+                        : '✗ Les mots de passe ne correspondent pas'
+                      }
+                    </p>
                   )}
                 </div>
               </div>
 
-              {/* CGV */}
+              {/* 8. CGV */}
               <div className="flex items-start gap-3">
                 <input
                   type="checkbox"
                   id="cgv"
                   checked={cgvAccepted}
                   onChange={(e) => setCgvAccepted(e.target.checked)}
-                  className="mt-1 h-5 w-5 text-orange-600 rounded border-gray-300"
+                  className="mt-1 h-5 w-5 text-orange-600 rounded border-gray-300 cursor-pointer"
                 />
-                <label htmlFor="cgv" className="text-sm text-gray-700">
+                <label htmlFor="cgv" className="text-sm text-gray-700 cursor-pointer">
                   J&apos;accepte les{" "}
-                  <a href="/cgv" target="_blank" className="text-blue-600 underline">
+                  <a
+                    href="/cgv"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline hover:text-blue-800"
+                  >
                     conditions générales d&apos;utilisation
                   </a>{" "}
                   <span className="text-red-600">*</span>
                 </label>
               </div>
 
-              {/* Boutons */}
+              {/* 9. Récapitulatif validation */}
+              {!isFormValid && (nom || prenom || password || cgvAccepted) && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-600 font-medium mb-2">Conditions requises :</p>
+                  <ul className="text-xs space-y-1">
+                    <li className={nom.trim() ? 'text-green-600' : 'text-gray-400'}>
+                      {nom.trim() ? '✓' : '○'} Nom renseigné
+                    </li>
+                    <li className={prenom.trim() ? 'text-green-600' : 'text-gray-400'}>
+                      {prenom.trim() ? '✓' : '○'} Prénom renseigné
+                    </li>
+                    <li className={password.length >= 8 ? 'text-green-600' : 'text-gray-400'}>
+                      {password.length >= 8 ? '✓' : '○'} Mot de passe (min. 8 caractères)
+                    </li>
+                    <li className={password === confirmPassword && confirmPassword ? 'text-green-600' : 'text-gray-400'}>
+                      {password === confirmPassword && confirmPassword ? '✓' : '○'} Mots de passe identiques
+                    </li>
+                    <li className={cgvAccepted ? 'text-green-600' : 'text-gray-400'}>
+                      {cgvAccepted ? '✓' : '○'} CGU acceptées
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+              {/* 10. Boutons */}
               <div className="flex justify-center gap-4 pt-4">
                 <button
                   type="button"
                   onClick={handleCancel}
                   disabled={loading}
-                  className="px-6 py-3 border border-red-600 text-red-600 rounded-full hover:bg-red-50 transition"
+                  className="px-6 py-3 border border-red-600 text-red-600 rounded-full hover:bg-red-50 transition disabled:opacity-50"
                 >
                   Annuler
                 </button>
@@ -506,11 +600,18 @@ fetch(`${process.env.NEXT_PUBLIC_API_URL}/agents/verify-token/${token}`)
                   disabled={!isFormValid || loading}
                   className={`px-10 py-3 rounded-full font-medium text-white transition ${
                     isFormValid && !loading
-                      ? "bg-green-600 hover:bg-green-700"
+                      ? "bg-green-600 hover:bg-green-700 shadow-md"
                       : "bg-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  {loading ? "Création en cours..." : "Créer mon profil"}
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Création en cours...
+                    </span>
+                  ) : (
+                    "Créer mon profil"
+                  )}
                 </button>
               </div>
 

@@ -5,7 +5,10 @@ const nextConfig = {
       bodySizeLimit: '10mb',
     },
   },
-  turbopack: {},
+  turbopack: {
+        root: __dirname,  // ✅ force la racine correcte du projet
+
+  },
   // ✅ Ajouter la configuration des images
   images: {
     remotePatterns: [
@@ -17,7 +20,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'your-production-domain.com', // Remplacer par ton domaine en prod
+        hostname: 'MoveCar.com', // Remplacer par ton domaine en prod
         pathname: '/uploads/**',
       },
     ],

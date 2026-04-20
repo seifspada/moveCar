@@ -3,36 +3,33 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+type Params = { params: Promise<{ id: string }> };
+
+export async function GET(req: NextRequest, { params }: Params) {
+  const { id } = await params;
+  const token = req.headers.get('authorization');
+
   try {
-    const token = req.headers.get('authorization')?.replace('Bearer ', '');
+    console.log('🔵 [GET demande-adherent] id:', id);
+    console.log('🔵 [GET demande-adherent] backend url:', `${BACKEND}/demandes-adherents/${id}`);
 
-    // 👇 log pour débugger
-    console.log('🔵 [GET demande-adherent] id:', params.id);
-    console.log('🔵 [GET demande-adherent] token:', token);
-    console.log('🔵 [GET demande-adherent] backend url:', `${BACKEND}/demandes-adherents/${params.id}`);
-
-    const res = await fetch(
-      `${BACKEND}/demandes-adherents/${params.id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const res = await fetch(`${BACKEND}/demandes-adherents/${id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: token } : {}),
+      },
+    });
 
     const responseText = await res.text();
 
-    // 👇 log pour voir la réponse brute du backend
     console.log('🔵 [GET demande-adherent] backend status:', res.status);
     console.log('🔵 [GET demande-adherent] backend response:', responseText);
 
     if (!res.ok) {
-      return NextResponse.json({ error: `Erreur ${res.status}` }, { status: res.status });
+      return NextResponse.json(
+        { error: `Erreur ${res.status}` },
+        { status: res.status },
+      );
     }
 
     return NextResponse.json(JSON.parse(responseText));
@@ -42,15 +39,13 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const token = req.headers.get('authorization')?.replace('Bearer ', '');
-    const body = await req.json();
+export async function PATCH(req: NextRequest, { params }: Params) {
+  const { id } = await params;
+  const token = req.headers.get('authorization');
 
-    const action = body.action;
+  try {
+    const body = await req.json();
+    const { action, ...bodyWithoutAction } = body;
 
     if (!action || !['confirmer', 'refuser'].includes(action)) {
       return NextResponse.json({ error: 'Action invalide' }, { status: 400 });
@@ -58,29 +53,33 @@ export async function PATCH(
 
     const endpoint =
       action === 'confirmer'
-        ? `${BACKEND}/demandes-adherents/${params.id}/accepter`
-        : `${BACKEND}/demandes-adherents/${params.id}/refuser`;
+        ? `${BACKEND}/demandes-adherents/${id}/accepter`
+        : `${BACKEND}/demandes-adherents/${id}/refuser`;
 
-    const { action: _, ...bodyWithoutAction } = body;
+    console.log('🔵 [PATCH demande-adherent] action:', action);
+    console.log('🔵 [PATCH demande-adherent] endpoint:', endpoint);
 
     const res = await fetch(endpoint, {
       method: 'PATCH',
       headers: {
-        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: token } : {}),
       },
       body: JSON.stringify(bodyWithoutAction),
     });
 
     const data = await res.json();
-    if (!res.ok)
+
+    if (!res.ok) {
       return NextResponse.json(
         { error: data.message || `Erreur ${res.status}` },
-        { status: res.status }
+        { status: res.status },
       );
+    }
 
     return NextResponse.json(data);
   } catch (error: any) {
+    console.log('🔴 [PATCH demande-adherent] catch error:', error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

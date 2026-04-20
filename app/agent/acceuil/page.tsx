@@ -14,8 +14,7 @@ import {
 } from "chart.js";
 import { Bar, Pie } from "react-chartjs-2";
 import { useRoleProtection } from "@/app/hooks/userRoleProtection";
-import SideBarAgent from "@/components/agent-component/SideBarAgent";
-import ProfileHeaderAgent from "@/components/agent-component/ProfieHeaderAgent";
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -29,12 +28,6 @@ ChartJS.register(
 export default function AgentDashboard() {
   // Protection du rôle agent
   useRoleProtection({ allowedRoles: ["agent"] });
-
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
-
-  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
-  const toggleDesktopMenu = () => setIsDesktopMenuOpen((prev) => !prev);
 
   // Données mockées (remplace par tes vraies données API)
   const [stats] = useState({

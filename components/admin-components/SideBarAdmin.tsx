@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Briefcase, Calendar, Heart, User, LogOut, Home } from 'lucide-react';
+import { Menu, X, Briefcase, Calendar, Heart, User, LogOut, Home, Flag } from 'lucide-react';
 import Image from "next/image";
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -30,7 +30,9 @@ export default function SideBarAdmin({
          { key: 'Acceuil', icon: Home, label: 'Acceuil', href: '/admin/acceuil' },
     { key: 'Demandes recues', icon: Briefcase, label: 'Demandes recues', href: '/admin/demande-liste' },
 { key: 'Demandes accepter ', icon: Briefcase, label: ' demandes acceptées ', href: '/admin/demande-accepter' },   
-{ key: 'Demandes refuser ', icon: Briefcase, label: ' demandes refusées ', href: '/admin/demande-refuser' },   
+{ key: 'Demandes refuser ', icon: Briefcase, label: ' demandes refusées ', href: '/admin/demande-refuser' },  
+        { key: 'list-utilisateurs', icon: Flag, label: 'list utlisateurs ', href: '/admin/list-utilisateurs' },
+
   ];
 
   // ✅ Détection automatique de la page active au chargement et après navigation

@@ -172,7 +172,7 @@ if (!showNavbar) return null; // ✅ avant le return JSX
   return (
     <>
       <div
-        className={`fixed inset-0 bg-black z-30 transition-opacity duration-700 ease-out pointer-events-none ${
+        className={`fixed inset-0 bg-black z-30 transition-opacity duration-700 ease-out pointer-events-none print:hidden ${
           isMobileMenuOpen || isDesktopMenuOpen ? 'opacity-70 pointer-events-auto' : 'opacity-0'
         }`}
         onClick={() => {
@@ -181,7 +181,7 @@ if (!showNavbar) return null; // ✅ avant le return JSX
         }}
       />
 
-      <header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-[2000]">
+      <header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-[2000] print:hidden">
         <div className="max-w-7xl mx-auto px-2 sm:px-3 md:px-6 lg:px-8 py-4 sm:py-5 md:py-6 lg:py-7 xl:py-3">
           <div className="flex items-center justify-between gap-1 sm:gap-2 md:gap-4">
 
