@@ -6,13 +6,14 @@ const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { statut: string } }
+  { params }: { params: Promise<{ statut: string }> }
 ) {
   try {
+    const { statut } = await params;
     const token = req.headers.get('authorization')?.replace('Bearer ', '');
 
     const res = await fetch(
-      `${BACKEND}/demandes-partenaire/statut/${params.statut}`,
+      `${BACKEND}/demandes-partenaire/statut/${statut}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

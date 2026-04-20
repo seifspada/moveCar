@@ -7,8 +7,7 @@ import CustomSelect from "@/app/components/customSelect";
 import NavFormulaire from "@/app/components/navFormulaire";
 import Stepper from "@/app/components/Stepper";
 import { CityAutocomplete, SelectedCity } from "@/components/mission-components/CityAutocomplete";
-import { AdherentAPI } from "@/app/api/adherent/inscription-formulaire/route";
-
+import { AdherentAPI } from "@/lib/api/adherent-api";
 type FormDataType = {
   nom: string;
   prenom: string;

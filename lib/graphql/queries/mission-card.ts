@@ -119,3 +119,20 @@ export const SEARCH_MISSIONS_BY_TRAJET = gql`
     }
   }
 `;
+
+export const GET_MISSIONS_BY_AGENCE = gql`
+  query GetMissionsByAgence($agenceId: Int!) {
+    getMissionsByAgence(agenceId: $agenceId) {
+      id
+      typeVehicule
+      typeCarburant
+      villeDepart
+      villeArrivee
+      distanceKm
+      fraisPeage
+      montantTotal
+      dateDebut
+      dateDepartMax
+    }
+  }
+`;

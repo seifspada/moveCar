@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { PartenaireAPI } from '@/app/api/partenaire/fiche-partenaire/route';
+import { PartenaireAPI } from '@/lib/api/partenaire-api';
 import { DemandePartenaireData, StatutEntreprise, TypeRendezvous } from '@/app/types/partenaire';
 
 export type PartenaireFormData = {

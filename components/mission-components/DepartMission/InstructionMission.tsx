@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
 import { FileText } from 'lucide-react';
-import { Mission } from '@/app/data/missions';
+import { MissionListItem } from '@/app/data/missions';
 import ToggleCondition from './ToggleCondition';
 import ValidationButtons from './ValidationButtom';
 
 interface InstructionMissionProps {
-  mission: Mission;
+  mission: MissionListItem;
   onValidate?: () => void;
 }
 

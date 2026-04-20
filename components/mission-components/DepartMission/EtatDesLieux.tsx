@@ -6,7 +6,7 @@ import { CameraMode } from './CameraMode';
 import NiveauCarburant from './CarburantLevel';
 import ValidationButtons from './ValidationButtom';
 import ToggleCondition from './ToggleCondition';
-import { Mission } from '@/app/data/missions';
+import { MissionListItem } from '@/app/data/missions';
 
 interface PhotoData {
   dataUrl: string;
@@ -30,7 +30,7 @@ interface EtatDesLieuxData {
 }
 
 interface EtatDesLieuxProps {
-  mission: Mission;
+  mission: MissionListItem;
   onValidate: () => void;
 }
 

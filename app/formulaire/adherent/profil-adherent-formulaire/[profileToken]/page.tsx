@@ -14,7 +14,7 @@ import {
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import NavFormulaire from "@/app/components/navFormulaire";
 import Stepper from "@/app/components/Stepper";
-import { AdherentProfilAPI } from "@/app/api/adherent/profile-adherent-formulaire/route";
+import { AdherentProfilAPI } from "@/lib/api/adherent-profil-api";
 type RouteParams = {
   profileToken: string;
 };

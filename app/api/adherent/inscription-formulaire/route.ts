@@ -1,18 +1,38 @@
-// app/api/adherent/demande-adherent/route.ts
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+// app/api/adherent/inscription-formulaire/route.ts
+import { NextRequest, NextResponse } from 'next/server';
 
-export class AdherentAPI {
-  static async createDemande(fd: FormData): Promise<any> {
-    const res = await fetch(`${API_URL}/demandes-adherents`, {
-      method: "POST",
-      body: fd,
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+export async function POST(req: NextRequest) {
+  const token = req.headers.get('authorization');
+
+  try {
+    // FormData (multipart) — on forward directement sans parser
+    const formData = await req.formData();
+
+    const res = await fetch(`${BACKEND}/demandes-adherents`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: token } : {}),
+        // ⚠️ Ne pas mettre Content-Type — fetch le génère automatiquement pour FormData
+      },
+      body: formData,
     });
 
+    const data = await res.json();
+
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.message ?? `Erreur API (${res.status})`);
+      return NextResponse.json(
+        { message: data?.message ?? 'Erreur serveur' },
+        { status: res.status },
+      );
     }
 
-    return res.json();
+    return NextResponse.json(data, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json(
+      { message: 'Impossible de contacter le serveur' },
+      { status: 502 },
+    );
   }
 }

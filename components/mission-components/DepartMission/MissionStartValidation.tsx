@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
-import { Mission, vehicleIcons, vehiculeCarburantIcons } from '@/app/data/missions';
+import { MissionListItem, vehicleIcons, vehiculeCarburantIcons } from '@/app/data/missions';
 import ValidationButtons from './ValidationButtom';
 import ToggleCondition from './ToggleCondition';
 
 interface MissionDepartureProps {
-  mission: Mission;
+  mission: MissionListItem;
   onValidate?: () => void;
 }
 

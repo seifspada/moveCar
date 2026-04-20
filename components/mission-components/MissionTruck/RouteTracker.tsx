@@ -4,11 +4,11 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Navigation, Clock, StopCircle, CheckCircle } from 'lucide-react';
 import ArretMissionModal from './ArretMissionModal';
-import { Mission, EtatMission } from '@/app/data/missions';
+import { MissionListItem, EtatMission } from '@/app/data/missions';
 import { DepartMission } from '@/app/data/departMission';
 
 interface RouteTrackerProps {
-  mission?: Mission;
+  mission?: MissionListItem;
   departMission?: DepartMission | null;  // 🔹 FIX: Ajouter "| null"
   onMissionComplete: (missionId: number, tempsTotal: number) => void;
   className?: string;

@@ -180,7 +180,21 @@ export interface MissionDetail {
 }
 
 
+// ✅ Import MissionListItem type
+import type { MissionListItem } from '@/app/data/missions';
+
 // Props pour le composant MissionDetailsCard
 export interface MissionCardProps {
   mission: MissionDetail;
 }
+
+// ✅ File data structure
+export interface FileData {
+  name: string;
+  size?: number;
+  type?: string;
+  url?: string;
+}
+
+// ✅ Alias for backwards compatibility - accepts multiple mission types
+export type Mission = MissionData | MissionDetail | MissionListItem;

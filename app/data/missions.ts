@@ -33,7 +33,7 @@ export type EtatMission =
   | "expiree";             // Mission expirée (date limite dépassée)
 
 // ✅ Interface Mission principale
-export interface Mission {
+export interface MissionListItem {
   id: number;
   villeDepart: string;
   villeArrivee: string;
@@ -207,7 +207,7 @@ export const vehicleIcons: Record<VehicleType, { image: string; label: string; e
 
 // ==================== DONNÉES ====================
 
-export const missionsData: Mission[] = [
+export const missionsData: MissionListItem[] = [
   {
     id: 1,
     villeDepart: "Paris",
@@ -377,12 +377,12 @@ export const missionsData: Mission[] = [
 
 export const missionHelpers = {
   // Vérifier si une mission est active
-  isActive: (mission: Mission): boolean => {
+  isActive: (mission: MissionListItem): boolean => {
     return mission.etatMission === "en_cours";
   },
 
   // Vérifier si une mission peut être démarrée
-  canStart: (mission: Mission): boolean => {
+  canStart: (mission: MissionListItem): boolean => {
     return mission.etatMission === "en_attente" || mission.etatMission === "pause";
   },
 
@@ -392,7 +392,7 @@ export const missionHelpers = {
   },
 
   // Filtrer les missions par état
-  filterByEtat: (missions: Mission[], etat: EtatMission): Mission[] => {
+  filterByEtat: (missions: MissionListItem[], etat: EtatMission): MissionListItem[] => {
     return missions.filter(m => m.etatMission === etat);
   },
 
