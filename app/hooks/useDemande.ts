@@ -65,10 +65,27 @@ export function useDemandes() {
   }, []);
 
   useEffect(() => {
-    const s = io(process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000');
+    // ── DEBUG : affiche l'URL utilisée dans F12 Console ──
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
+    console.log('🔌 Socket.IO BACKEND_URL:', backendUrl);
 
-    s.on('connect',    () => setConnected(true));
-    s.on('disconnect', () => setConnected(false));
+    const s = io(backendUrl, {
+      transports: ['websocket', 'polling'], // websocket en priorité
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+    });
+
+    s.on('connect',    () => {
+      console.log('✅ Socket connecté:', s.id);
+      setConnected(true);
+    });
+    s.on('disconnect', (reason) => {
+      console.warn('❌ Socket déconnecté:', reason);
+      setConnected(false);
+    });
+    s.on('connect_error', (err) => {
+      console.error('🚨 Socket connect_error:', err.message);
+    });
 
     // ── ADHÉRENT ──
     s.on('new-demande', (data: {
