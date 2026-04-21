@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 
 export type TypeDemande = 'adherent' | 'partenaire';
 
@@ -25,7 +25,6 @@ export interface Demande {
 export function useDemandes() {
   const [demandes, setDemandes] = useState<Demande[]>([]);
   const [connected, setConnected] = useState(false);
-  const [socket, setSocket] = useState<Socket | null>(null);
 
   const addDemande = useCallback((
     email: string,
@@ -64,113 +63,177 @@ export function useDemandes() {
     );
   }, []);
 
+  const clearAll = useCallback(() => setDemandes([]), []);
+
   useEffect(() => {
-    // ── DEBUG : affiche l'URL utilisée dans F12 Console ──
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL;
+
     console.log('🔌 Socket.IO BACKEND_URL:', backendUrl);
 
-    const s = io(backendUrl, {
-      transports: ['websocket', 'polling'], // websocket en priorité
+    if (!backendUrl) {
+      console.error('❌ NEXT_PUBLIC_API_URL is missing');
+      setConnected(false);
+      return;
+    }
+
+    const socket = io(backendUrl, {
+      transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
       reconnectionDelay: 2000,
     });
 
-    s.on('connect',    () => {
-      console.log('✅ Socket connecté:', s.id);
+    const onConnect = () => {
+      console.log('✅ Socket connecté:', socket.id);
       setConnected(true);
-    });
-    s.on('disconnect', (reason) => {
+    };
+
+    const onDisconnect = (reason: string) => {
       console.warn('❌ Socket déconnecté:', reason);
       setConnected(false);
-    });
-    s.on('connect_error', (err) => {
-      console.error('🚨 Socket connect_error:', err.message);
-    });
+    };
 
-    // ── ADHÉRENT ──
-    s.on('new-demande', (data: {
-      email: string; id?: number; nom?: string; prenom?: string; message?: string;
+    const onConnectError = (err: Error) => {
+      console.error('🚨 Socket connect_error:', err.message);
+    };
+
+    const onNewDemande = (data: {
+      email: string;
+      id?: number;
+      nom?: string;
+      prenom?: string;
+      message?: string;
     }) => {
       addDemande(
-        data.email, 'adherent',
+        data.email,
+        'adherent',
         data.message ?? `Demande de ${data.nom ?? ''} ${data.prenom ?? ''}`.trim(),
-        undefined, undefined, data.id, 'EN_ATTENTE',
+        undefined,
+        undefined,
+        data.id,
+        'EN_ATTENTE',
       );
-    });
+    };
 
-    s.on('demande-statut-change', (data: {
-      id: number; statut: StatutDemande; type: string;
+    const onDemandeStatutChange = (data: {
+      id: number;
+      statut: StatutDemande;
+      type: string;
     }) => {
-      if (data.type === 'adherent') updateStatut(data.id, 'adherent', data.statut);
-    });
+      if (data.type === 'adherent') {
+        updateStatut(data.id, 'adherent', data.statut);
+      }
+    };
 
-    s.on('historique-demandes', (data: {
+    const onHistoriqueDemandes = (data: {
       type: TypeDemande;
       demandes: { id: number; email: string; message: string; timestamp: string }[];
     }) => {
       if (data.type === 'adherent') {
-        data.demandes.forEach((d) =>
-          addDemande(d.email, 'adherent', d.message,
-            `hist-adherent-${d.id}`, new Date(d.timestamp), d.id, 'EN_ATTENTE'),
-        );
+        data.demandes.forEach((d) => {
+          addDemande(
+            d.email,
+            'adherent',
+            d.message,
+            `hist-adherent-${d.id}`,
+            new Date(d.timestamp),
+            d.id,
+            'EN_ATTENTE',
+          );
+        });
       }
-    });
+    };
 
-    // ── PARTENAIRE ──
-    s.on('new-demande-partenaire', (data: {
-      email: string; id?: number; nom?: string; entite?: string; message?: string;
+    const onNewDemandePartenaire = (data: {
+      email: string;
+      id?: number;
+      nom?: string;
+      entite?: string;
+      message?: string;
     }) => {
       addDemande(
-        data.email, 'partenaire',
+        data.email,
+        'partenaire',
         data.message ?? `${data.nom ?? ''} — ${data.entite ?? ''}`.trim(),
-        undefined, undefined, data.id, 'EN_ATTENTE',
+        undefined,
+        undefined,
+        data.id,
+        'EN_ATTENTE',
       );
-    });
+    };
 
-    s.on('demande-partenaire-statut-change', (data: {
-      id: number; statut: StatutDemande; type: string;
+    const onDemandePartenaireStatutChange = (data: {
+      id: number;
+      statut: StatutDemande;
+      type: string;
     }) => {
-      if (data.type === 'partenaire') updateStatut(data.id, 'partenaire', data.statut);
-    });
+      if (data.type === 'partenaire') {
+        updateStatut(data.id, 'partenaire', data.statut);
+      }
+    };
 
-    s.on('historique-demandes-partenaire', (data: {
+    const onHistoriqueDemandesPartenaire = (data: {
       type: TypeDemande;
       demandes: { id: number; email: string; message: string; timestamp: string }[];
     }) => {
       if (data.type === 'partenaire') {
-        data.demandes.forEach((d) =>
-          addDemande(d.email, 'partenaire', d.message,
-            `hist-partenaire-${d.id}`, new Date(d.timestamp), d.id, 'EN_ATTENTE'),
-        );
+        data.demandes.forEach((d) => {
+          addDemande(
+            d.email,
+            'partenaire',
+            d.message,
+            `hist-partenaire-${d.id}`,
+            new Date(d.timestamp),
+            d.id,
+            'EN_ATTENTE',
+          );
+        });
       }
-    });
+    };
 
-    setSocket(s);
-    return () => { s.disconnect(); };
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    socket.on('connect_error', onConnectError);
+    socket.on('new-demande', onNewDemande);
+    socket.on('demande-statut-change', onDemandeStatutChange);
+    socket.on('historique-demandes', onHistoriqueDemandes);
+    socket.on('new-demande-partenaire', onNewDemandePartenaire);
+    socket.on('demande-partenaire-statut-change', onDemandePartenaireStatutChange);
+    socket.on('historique-demandes-partenaire', onHistoriqueDemandesPartenaire);
+
+    return () => {
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.off('connect_error', onConnectError);
+      socket.off('new-demande', onNewDemande);
+      socket.off('demande-statut-change', onDemandeStatutChange);
+      socket.off('historique-demandes', onHistoriqueDemandes);
+      socket.off('new-demande-partenaire', onNewDemandePartenaire);
+      socket.off('demande-partenaire-statut-change', onDemandePartenaireStatutChange);
+      socket.off('historique-demandes-partenaire', onHistoriqueDemandesPartenaire);
+      socket.disconnect();
+    };
   }, [addDemande, updateStatut]);
 
-  const clearAll = useCallback(() => setDemandes([]), []);
-
-  const demandesEnAttente      = demandes.filter((d) => d.statut === 'EN_ATTENTE');
-  const demandesEnCours        = demandes.filter((d) => d.statut === 'EN_COURS_TRAITEMENT');
-  const demandesAcceptees      = demandes.filter((d) => d.statut === 'ACCEPTEE');
-  const demandesRefusees       = demandes.filter((d) => d.statut === 'REFUSEE');
-  const demandesAdherent       = demandes.filter((d) => d.type === 'adherent');
-  const demandesPartenaire     = demandes.filter((d) => d.type === 'partenaire');
-  const partenairesEnAttente   = demandes.filter((d) => d.type === 'partenaire' && d.statut === 'EN_ATTENTE');
+  const demandesEnAttente = demandes.filter((d) => d.statut === 'EN_ATTENTE');
+  const demandesEnCours = demandes.filter((d) => d.statut === 'EN_COURS_TRAITEMENT');
+  const demandesAcceptees = demandes.filter((d) => d.statut === 'ACCEPTEE');
+  const demandesRefusees = demandes.filter((d) => d.statut === 'REFUSEE');
+  const demandesAdherent = demandes.filter((d) => d.type === 'adherent');
+  const demandesPartenaire = demandes.filter((d) => d.type === 'partenaire');
+  const partenairesEnAttente = demandes.filter((d) => d.type === 'partenaire' && d.statut === 'EN_ATTENTE');
   const partenairesRdvConfirme = demandes.filter((d) => d.type === 'partenaire' && d.statut === 'EN_COURS_TRAITEMENT');
-  const partenairesAcceptes    = demandes.filter((d) => d.type === 'partenaire' && d.statut === 'ACCEPTEE');
-  const partenairesRefuses     = demandes.filter((d) => d.type === 'partenaire' && d.statut === 'REFUSEE');
+  const partenairesAcceptes = demandes.filter((d) => d.type === 'partenaire' && d.statut === 'ACCEPTEE');
+  const partenairesRefuses = demandes.filter((d) => d.type === 'partenaire' && d.statut === 'REFUSEE');
 
   const stats = {
-    total:       demandes.length,
-    adherents:   demandesAdherent.length,
+    total: demandes.length,
+    adherents: demandesAdherent.length,
     partenaires: demandesPartenaire.length,
     parStatut: {
-      enAttente:         demandesEnAttente.length,
+      enAttente: demandesEnAttente.length,
       enCoursTraitement: demandesEnCours.length,
-      acceptees:         demandesAcceptees.length,
-      refusees:          demandesRefusees.length,
+      acceptees: demandesAcceptees.length,
+      refusees: demandesRefusees.length,
     },
   };
 
