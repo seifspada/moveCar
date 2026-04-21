@@ -77,7 +77,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
               query AdherentMe {
                 adherentMe {
                   nom
-                  prenom
                   email
                   photo
                   typePack
@@ -99,7 +98,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             user = {
               role: 'adherent',
               nom: profil.nom,
-              prenom: profil.prenom,
+              prenom: undefined,  // ✅ Backend no longer provides separate prenom
               email: profil.email,
               photoPersonnelle: profil.photo ?? null,
               pack: profil.typePack === "premium" ? "premium" : "basique",
@@ -194,7 +193,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 agentMe {
                   email
                   nom
-                  prenom
                   photo
                 }
               }
@@ -215,8 +213,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
               role: 'agent',
               email: profil.email,
               nom: profil.nom,
-              prenom: profil.prenom,
-              nomComplet: `${profil.prenom ?? ''} ${profil.nom ?? ''}`.trim(),
+              prenom: undefined,  // ✅ Backend no longer provides separate prenom
+              nomComplet: profil.nom,  // ✅ Use nom directly
               photoPersonnelle: profil.photo ?? null,
             };
             log("✅ User agent créé:", user);
@@ -253,7 +251,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 adminMe {
                   email
                   nom
-                  prenom
                 }
               }
             `  // ✅ Pas de photo — AdminPublic ne l'expose pas
@@ -273,8 +270,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
               role: 'admin',
               email: profil.email,
               nom: profil.nom,
-              prenom: profil.prenom,
-              nomComplet: `${profil.prenom ?? ''} ${profil.nom ?? ''}`.trim(),
+              prenom: undefined,  // ✅ Backend no longer provides separate prenom
+              nomComplet: profil.nom,  // ✅ Use nom directly
               photoPersonnelle: null, // ✅ Admin n'a pas de photo
             };
             log("✅ User admin créé:", user);

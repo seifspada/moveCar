@@ -6,7 +6,6 @@ export const GET_AGENT_NAVBAR = gql`
     agentMe {
     id
       nom
-      prenom
       email
       photo
       agenceId
