@@ -1,4 +1,4 @@
-// components/admin-components/Demande-adherent-details/DocumentsAdherent.tsx
+// components/admin-components/Demande-details-adherent/DocumentsAdherent.tsx
 'use client';
 
 import {
@@ -25,7 +25,7 @@ const TYPE_ORDER: TypeDocument[] = [
   'RC_PRO', 'RC_CIRCULATION', 'CASIER_JUDICIAIRE', 'W_GARAGE',
 ];
 
-const EDITABLE_TYPES: TypeDocument[] = ['RC_PRO', 'RC_CIRCULATION','KBIS'];
+const EDITABLE_TYPES: TypeDocument[] = ['RC_PRO', 'RC_CIRCULATION', 'KBIS'];
 
 type EditState = { dateDebutValidite: string; dateFinValidite: string };
 
@@ -94,14 +94,20 @@ export function DocumentsAdherent({
   }
 
   function cancelEdit(docId: number) {
-    setEditing((p) => { const n = { ...p }; delete n[docId]; return n; });
+    setEditing((p) => {
+      const n = { ...p };
+      delete n[docId];
+      return n;
+    });
   }
 
   async function saveEdit(doc: DocumentAdherent) {
     const state = editing[doc.id];
     if (!state) return;
+
     setSaving((p)  => ({ ...p, [doc.id]: true }));
     setSaveErr((p) => ({ ...p, [doc.id]: null }));
+
     try {
       await onUpdateDocumentDates(doc.id, {
         dateDebutValidite: state.dateDebutValidite || undefined,
@@ -145,6 +151,7 @@ export function DocumentsAdherent({
                     <span className="text-[10px] text-green-600 font-medium">✓ Sauvegardé</span>
                   )}
                 </div>
+
                 {isEditable && !isEditing && (
                   <button
                     onClick={() => startEdit(doc)}
@@ -156,14 +163,14 @@ export function DocumentsAdherent({
                 )}
               </div>
 
-              {/* Dates (lecture) */}
+              {/* Dates lecture */}
               {!isEditing && (doc.dateDebutValidite || doc.dateFinValidite) && (
                 <div className="flex flex-wrap gap-4">
                   {doc.dateDebutValidite && (
                     <DateChip label="Début" value={fmtDate(doc.dateDebutValidite)} />
                   )}
                   {doc.dateFinValidite && (
-                    <DateChip label="Fin"   value={fmtDate(doc.dateFinValidite)} />
+                    <DateChip label="Fin" value={fmtDate(doc.dateFinValidite)} />
                   )}
                 </div>
               )}
@@ -194,7 +201,8 @@ export function DocumentsAdherent({
                       disabled={isSaving}
                       className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50"
                     >
-                      <X className="w-3.5 h-3.5" /> Annuler
+                      <X className="w-3.5 h-3.5" />
+                      Annuler
                     </button>
                     <button
                       onClick={() => saveEdit(doc)}
@@ -218,13 +226,16 @@ export function DocumentsAdherent({
                     const fileUrl   = buildDocumentUrl(f.cheminFichier);
                     const fileIndex = di + fi + 1;
                     const showIndex = docs.length > 1 || (d.fichiers?.length ?? 0) > 1;
+
                     return (
                       <button
                         key={f.id}
                         onClick={() =>
                           onOpenViewer({
                             url:   fileUrl,
-                            label: showIndex ? `${LABEL[type]} — fichier ${fileIndex}` : LABEL[type],
+                            label: showIndex
+                              ? `${LABEL[type]} — fichier ${fileIndex}`
+                              : LABEL[type],
                           })
                         }
                         className="flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5 hover:bg-orange-100 transition-colors"
@@ -239,8 +250,10 @@ export function DocumentsAdherent({
 
               {/* Méta */}
               <p className="text-[10px] text-slate-400">
-                Document #{doc.id} · Modifié le {new Date(doc.dateModification).toLocaleDateString('fr-FR')}
+                Document #{doc.id} · Modifié le{' '}
+                {new Date(doc.dateModification).toLocaleDateString('fr-FR')}
               </p>
+
             </div>
           );
         })}
@@ -249,15 +262,20 @@ export function DocumentsAdherent({
   );
 }
 
+// ── Composants utilitaires ──────────────────────────────────────────────────
+
 function StatutBadge({ statut }: { statut?: string | null }) {
   if (!statut) return null;
   const ok = statut === 'VALIDE';
+
   return (
-    <span className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-      ok
-        ? 'bg-green-50 text-green-600 border-green-200'
-        : 'bg-orange-50 text-orange-500 border-orange-200'
-    }`}>
+    <span
+      className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+        ok
+          ? 'bg-green-50 text-green-600 border-green-200'
+          : 'bg-orange-50 text-orange-500 border-orange-200'
+      }`}
+    >
       {ok ? <CheckCircle className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
       {ok ? 'Validé' : 'En attente'}
     </span>
@@ -274,11 +292,18 @@ function DateChip({ label, value }: { label: string; value: string }) {
   );
 }
 
-function DateField({ label, value, onChange }: {
-  label: string; value: string; onChange: (v: string) => void;
+function DateField({
+  label,
+  value,
+  onChange,
+}: {
+  label:    string;
+  value:    string;
+  onChange: (v: string) => void;
 }) {
   return (
     <div>
+      {/* ✅ CORRECTION : balise <label> complète (il manquait le "<l" dans ta version) */}
       <label className="text-[10px] text-slate-500 uppercase tracking-wide block mb-1">
         {label}
       </label>

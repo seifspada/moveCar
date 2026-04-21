@@ -4,7 +4,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AdherentNavbarData } from '../types/adherent';
 import { PartenaireNavbarData } from '../types/partenaire';
-import { initializeApiConfig } from '@/lib/api';
+import { initializeApiConfig, buildDocumentUrl } from '@/lib/api';
 
 const DEBUG_MODE = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
 
