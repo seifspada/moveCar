@@ -77,9 +77,11 @@ export function useDemandes() {
     }
 
     const socket = io(backendUrl, {
-      transports: ['websocket', 'polling'],
-      reconnectionAttempts: 5,
-      reconnectionDelay: 2000,
+      transports: ['polling'],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 3000,
+      timeout: 20000,
     });
 
     const onConnect = () => {
@@ -200,7 +202,14 @@ export function useDemandes() {
     socket.on('demande-partenaire-statut-change', onDemandePartenaireStatutChange);
     socket.on('historique-demandes-partenaire', onHistoriqueDemandesPartenaire);
 
+    const keepAlive = setInterval(() => {
+      if (socket.connected) {
+        socket.emit('ping');
+      }
+    }, 25000);
+
     return () => {
+      clearInterval(keepAlive);
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('connect_error', onConnectError);
