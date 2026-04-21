@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { gql } from "@apollo/client";
 import { AgentNavbarData } from "@/app/types/agent";
 import { GET_AGENT_NAVBAR } from "@/lib/graphql/queries/agent";
+import { buildDocumentUrl } from "@/lib/api";
 
 // ============================================
 // CONFIGURATION DES TITRES PAR ROUTE (AGENT)
@@ -110,14 +111,7 @@ console.log("🖼️ URL finale agent.photo:", photoUrl);
     fetchData();
   }, [isClient]);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-  const photoUrl = data?.agentMe?.photo
-    ? data.agentMe.photo.startsWith("http")
-      ? data.agentMe.photo
-      : data.agentMe.photo.startsWith("/uploads")
-      ? `${API_URL}${data.agentMe.photo}`
-      : null
-    : null;
+  const photoUrl = data?.agentMe?.photo ? buildDocumentUrl(data.agentMe.photo) : null;
 
   const agent = {
     nom: data?.agentMe?.nom || "",

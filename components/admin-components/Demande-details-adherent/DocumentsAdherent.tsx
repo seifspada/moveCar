@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { DocumentAdherent, TypeDocument } from '@/app/types/adherent';
+import { buildDocumentUrl } from '@/lib/api';
 
 const LABEL: Record<TypeDocument, string> = {
   CARTE_IDENTITE:    "Carte d'identité",
@@ -25,8 +26,6 @@ const TYPE_ORDER: TypeDocument[] = [
 ];
 
 const EDITABLE_TYPES: TypeDocument[] = ['RC_PRO', 'RC_CIRCULATION','KBIS'];
-
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
 type EditState = { dateDebutValidite: string; dateFinValidite: string };
 
@@ -216,7 +215,7 @@ export function DocumentsAdherent({
               <div className="flex flex-wrap gap-2">
                 {docs.flatMap((d, di) =>
                   (d.fichiers ?? []).map((f, fi) => {
-                    const fileUrl   = `${BACKEND}${f.cheminFichier}`;
+                    const fileUrl   = buildDocumentUrl(f.cheminFichier);
                     const fileIndex = di + fi + 1;
                     const showIndex = docs.length > 1 || (d.fichiers?.length ?? 0) > 1;
                     return (

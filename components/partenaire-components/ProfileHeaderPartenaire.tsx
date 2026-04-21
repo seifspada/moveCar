@@ -8,6 +8,7 @@ import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from 'react';
+import { buildDocumentUrl } from "@/lib/api";
 
 interface ProfileHeaderProps {
   isMobileMenuOpen: boolean;
@@ -27,9 +28,6 @@ export default function ProfileHeader({
   const pathname = usePathname();
   const showNavbar = pathname.startsWith('/partenaire');
   const [isClient, setIsClient] = useState(false);
-
-  // ✅ API_URL pour construire l'URL complète de la photo
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
   useEffect(() => {
     setIsClient(true);
@@ -54,11 +52,7 @@ export default function ProfileHeader({
 
   // ✅ Construire l'URL complète de la photo (comme adherent)
   const rawPhoto = data?.partenaireNavbar?.photo ?? null;
-  const photoUrl = rawPhoto
-    ? rawPhoto.startsWith('http')
-      ? rawPhoto
-      : `${API_URL}${rawPhoto}`  // → http://localhost:3001/uploads/partenaires/...
-    : null;
+  const photoUrl = rawPhoto ? buildDocumentUrl(rawPhoto) : null;
 
   const partner = {
     nom: data?.partenaireNavbar?.entite || 'Chargement...',

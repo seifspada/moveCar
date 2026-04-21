@@ -8,6 +8,7 @@ import { Menu, X, Crown } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from 'react';
+import { buildDocumentUrl } from "@/lib/api";
 
 // ============================================
 // CONFIGURATION DES TITRES PAR ROUTE
@@ -109,14 +110,7 @@ const showNavbar = pathname.startsWith('/adherent'); // ✅
   }, [isClient]);
 
   // ✅ Construire l'URL complète pour la photo
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-  const photoUrl = data?.adherentMe?.photo
-    ? data.adherentMe.photo.startsWith('http')
-      ? data.adherentMe.photo
-      : data.adherentMe.photo.startsWith('/uploads')
-      ? `${API_URL}${data.adherentMe.photo}`
-      : null
-    : null;
+  const photoUrl = data?.adherentMe?.photo ? buildDocumentUrl(data.adherentMe.photo) : null;
 
   // ✅ Données de l'adhérent
   const adherent = {

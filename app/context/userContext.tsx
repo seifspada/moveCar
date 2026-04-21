@@ -4,6 +4,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AdherentNavbarData } from '../types/adherent';
 import { PartenaireNavbarData } from '../types/partenaire';
+import { initializeApiConfig } from '@/lib/api';
 
 const DEBUG_MODE = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
 
@@ -361,6 +362,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (hasChecked) return;
     log("🔵 useEffect: Premier chargement");
+    initializeApiConfig();
     loadUserData();
     setHasChecked(true);
   }, [hasChecked]);
