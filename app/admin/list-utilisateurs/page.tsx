@@ -1,12 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import { useUsers } from "@/app/hooks/useUsers";
 import { UserList } from "@/components/admin-components/utilisateur-component/UserList";
 import { UserStats } from "@/components/admin-components/utilisateur-component/UserStats";
-
+import { RoleModal } from '@/components/admin-components/Role-component/Rolemodal';
 
 export default function UsersPage() {
   const { users, loading, error, refetch } = useUsers();
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
 
   const count = (role: string) => users.filter((u) => u.role.name === role).length;
 
@@ -18,12 +20,20 @@ export default function UsersPage() {
             <h1 className="text-lg font-bold text-white">Utilisateurs</h1>
             <p className="text-xs text-zinc-500 mt-0.5">Gestion des comptes et des rôles</p>
           </div>
-          <button
-            onClick={refetch}
-            className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors px-3 py-1.5 bg-zinc-800 rounded-lg"
-          >
-            ↺ Actualiser
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setRoleModalOpen(true)}
+              className="text-xs text-zinc-300 hover:text-white transition-colors px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg flex items-center gap-1.5"
+            >
+              <span className="text-blue-400">⊕</span> Rôles
+            </button>
+            <button
+              onClick={refetch}
+              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors px-3 py-1.5 bg-zinc-800 rounded-lg"
+            >
+              ↺ Actualiser
+            </button>
+          </div>
         </div>
 
         <UserStats
@@ -56,6 +66,8 @@ export default function UsersPage() {
           )}
         </div>
       </div>
+
+      <RoleModal isOpen={roleModalOpen} onClose={() => setRoleModalOpen(false)} />
     </div>
   );
 }
