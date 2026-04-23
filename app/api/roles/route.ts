@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const token = req.headers.get('authorization');
   try {
-    const res = await fetch(`${BACKEND_URL}/roles`, {
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch(`${API_URL}/roles`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: token } : {}),
+      },
       cache: 'no-store',
     });
-    if (!res.ok) throw new Error('Backend error');
     const data = await res.json();
+    if (!res.ok) return NextResponse.json(data, { status: res.status });
     return NextResponse.json(data);
   } catch {
     return NextResponse.json({ message: 'Erreur serveur' }, { status: 500 });
@@ -17,11 +21,15 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const token = req.headers.get('authorization');
   try {
     const body = await req.json();
-    const res = await fetch(`${BACKEND_URL}/roles`, {
+    const res = await fetch(`${API_URL}/roles`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: token } : {}),
+      },
       body: JSON.stringify(body),
     });
     const data = await res.json();
