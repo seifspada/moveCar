@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { createAgence } from '@/app/utils/agenceApi';
 
 interface AgenceFormProps {
   onSuccess: () => void;
@@ -35,22 +36,8 @@ export default function AgenceForm({ onSuccess, onCancel }: AgenceFormProps) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Session expirée, veuillez vous reconnecter');
-      setLoading(false);
-      return;
-    }
     try {
-      const res = await fetch('http://localhost:3000/agencies', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(formData),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || 'Erreur lors de la création');
-      }
+      await createAgence(formData);
       setFormData(initialForm);
       onSuccess();
     } catch (err: any) {
@@ -206,7 +193,6 @@ export default function AgenceForm({ onSuccess, onCancel }: AgenceFormProps) {
             })}
           </div>
 
-          {/* Actions */}
           <div className="flex items-center justify-end gap-3 mt-6 pt-5 border-t border-zinc-800">
             <button
               type="button"
