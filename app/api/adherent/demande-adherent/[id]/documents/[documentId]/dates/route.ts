@@ -1,7 +1,7 @@
 // app/api/adherent/demande-adherent/[id]/documents/[documentId]/dates/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND = process.env.NEXT_PUBLIC_BAC_URL || 'http://localhost:3000';
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 export async function PATCH(
   req: NextRequest,

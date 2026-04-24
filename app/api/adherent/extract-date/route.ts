@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:3000';
+const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     backendForm.append('typeDocument', typeDocument);
 
     const backendRes = await fetch(
-      `${BACKEND_URL}/document-processing/extract-dates`,
+      `${NEXT_PUBLIC_API_URL}/document-processing/extract-dates`,
       { method: 'POST', body: backendForm },
     );
 
