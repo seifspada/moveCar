@@ -69,7 +69,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
               }}
               placeholder="Nom complet"
               required={checked}
-              className="w-full px-4 py-2 border border-gray-300 bg-white text-black placeholder-gray-400 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-orange-50 transition-colors"
+              className="w-full px-4 py-2 border border-gray-300 bg-white text-white placeholder-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-orange-50 transition-colors"
             />
           </div>
 
@@ -88,7 +88,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
               }}
               placeholder="+33 6 12 34 56 78"
               required={checked}
-              className="w-full px-4 py-2 border border-gray-300 bg-white text-black placeholder-gray-400 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-orange-50 transition-colors"
+              className="w-full px-4 py-2 border border-gray-300 bg-white text-white placeholder-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-orange-50 transition-colors"
             />
           </div>
         </div>
