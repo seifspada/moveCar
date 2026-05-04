@@ -7,4 +7,3 @@ export { AvailabilitySection } from './AvailabilitySection';
 export { FormActions } from './FormActions';
 export { ValidationModal } from './ValidationModal';
 export { VehicleSection } from './VehicleSection';
-export { EntitySection } from './EntitySection';

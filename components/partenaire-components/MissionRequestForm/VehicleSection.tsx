@@ -22,7 +22,7 @@ export const VehicleSection: React.FC<VehicleSectionProps> = ({
         name="typeVehicule"
         value={formData.typeVehicule}
         onChange={onChange}
-        className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500 focus:outline-none"
+        className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-900 rounded-full focus:ring-2 focus:ring-orange-500 focus:outline-none"
       >
         <option value="">Type de véhicule</option>
         <option value="CITADINE">Citadine</option>
@@ -45,7 +45,7 @@ export const VehicleSection: React.FC<VehicleSectionProps> = ({
         name="typeCarburant"
         value={formData.typeCarburant}
         onChange={onChange}
-        className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500 focus:outline-none"
+        className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-900 rounded-full focus:ring-2 focus:ring-orange-500 focus:outline-none"
       >
         <option value="">Type de carburant</option>
         <option value="ESSENCE">Essence</option>
@@ -60,7 +60,7 @@ export const VehicleSection: React.FC<VehicleSectionProps> = ({
         value={formData.marqueModele}
         onChange={onChange}
         placeholder="Marque et modèle"
-        className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500 focus:outline-none"
+        className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 rounded-full focus:ring-2 focus:ring-orange-500 focus:outline-none"
       />
     </div>
 
@@ -72,14 +72,14 @@ export const VehicleSection: React.FC<VehicleSectionProps> = ({
         onChange={onChange}
         placeholder="Immatriculation"
         maxLength={10}
-        className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500 focus:outline-none uppercase"
+        className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 rounded-full focus:ring-2 focus:ring-orange-500 focus:outline-none uppercase"
       />
 
       <select
         name="nombrePlaces"
         value={String(formData.nombrePlaces)}
         onChange={onChange}
-        className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500 focus:outline-none"
+        className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-900 rounded-full focus:ring-2 focus:ring-orange-500 focus:outline-none"
       >
         <option value="">Nombre de places</option>
         <option value="2">2 places</option>
@@ -93,7 +93,7 @@ export const VehicleSection: React.FC<VehicleSectionProps> = ({
         name="boiteVitesse"
         value={formData.boiteVitesse}
         onChange={onChange}
-        className="w-full px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-orange-500 focus:outline-none"
+        className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-900 rounded-full focus:ring-2 focus:ring-orange-500 focus:outline-none"
       >
         <option value="">Boîte de vitesse</option>
         <option value="AUTOMATIQUE">Automatique</option>

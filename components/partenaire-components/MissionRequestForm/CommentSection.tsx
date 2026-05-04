@@ -15,7 +15,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ value, onChange 
       placeholder="Instructions complémentaires, consignes particulières..."
       rows={4}
       maxLength={500}
-      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none resize-none"
+      className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none resize-none"
     />
     <p className="text-xs text-gray-500 mt-2 text-right">
       {value.length}/500 caractères

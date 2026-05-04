@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import MissionRequestForm from '@/components/partenaire-components/MissionRequestForm';
@@ -10,7 +9,6 @@ interface CreatedMission extends MissionData {}
 
 export default function Page() {
   const router = useRouter();
-
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdMission, setCreatedMission] = useState<CreatedMission | null>(null);
   const [files, setFiles] = useState<File[]>([]);
@@ -28,7 +26,6 @@ export default function Page() {
     // ✅ Lire agentId directement (sauvegardé par le login fix)
     const agentIdRaw = localStorage.getItem('agentId');
     const resolvedAgentId = agentIdRaw ? Number(agentIdRaw) : null;
-
     console.log('🔑 agentId depuis localStorage:', resolvedAgentId);
 
     // ✅ Fallback — décoder le JWT si agentId absent
@@ -36,16 +33,13 @@ export default function Page() {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         console.log('🔑 JWT payload (fallback):', payload);
-
         const jwtAgentId = payload.agentId ? Number(payload.agentId) : null;
-
         if (!jwtAgentId) {
           console.error('❌ agentId introuvable dans localStorage ET dans le JWT');
           alert('Session invalide : agentId manquant. Veuillez vous reconnecter.');
           router.push('/auth/login');
           return;
         }
-
         // ✅ Sauvegarder pour les prochaines fois
         localStorage.setItem('agentId', String(jwtAgentId));
         setAgentId(jwtAgentId);
@@ -71,17 +65,14 @@ export default function Page() {
         alert('❌ Erreur: Aucun agent connecté. Veuillez vous reconnecter.');
         return;
       }
-
       if (!data.villeDepart) {
         alert('⚠️ Veuillez sélectionner une ville de départ');
         return;
       }
-
       if (!data.villeArrivee) {
         alert("⚠️ Veuillez sélectionner une ville d'arrivée");
         return;
       }
-
       if (!data.dateDebut || !data.dateFin) {
         alert('⚠️ Dates de disponibilité manquantes (dateDebut/dateFin).');
         return;
@@ -139,12 +130,10 @@ export default function Page() {
         const error = await response.json().catch(() => ({
           error: `Erreur HTTP ${response.status}`,
         }));
-
         const errorMessage =
           error.error ||
           (Array.isArray(error.message) ? error.message.join(', ') : error.message) ||
           'Une erreur est survenue lors de la création de la mission';
-
         alert('❌ ' + errorMessage);
         throw new Error(errorMessage);
       }
@@ -153,22 +142,22 @@ export default function Page() {
       console.log('✅ Mission créée:', result);
 
       if (result.data) {
+        // ✅ Fix: result.data au lieu de [result.data](http://result.data)
         setCreatedMission(result.data);
-        setFiles(uploadFiles.map((f) => f.file));
+        setFiles(uploadFiles.map((f) => f.file)); // ✅ Fix: uploadFiles.map au lieu de [uploadFiles.map](...)
         setShowSuccessModal(true);
       } else {
         router.push('/agent/missions');
       }
-
     } catch (error: any) {
       console.error('💥 Erreur handleSubmit:', error);
-
       if (error.name === 'AbortError') {
+        // ✅ Fix: error.name au lieu de [error.name](...)
         alert("⏱️ Délai d'attente dépassé. Le serveur met trop de temps à répondre.");
       } else if (!navigator.onLine) {
+        // ✅ Fix: navigator.onLine au lieu de [navigator.onLine](...)
         alert('📡 Pas de connexion internet. Vérifiez votre connexion.');
       }
-
       throw error;
     }
   };
@@ -200,10 +189,10 @@ export default function Page() {
 
   return (
     <>
-      <div className="print:hidden bg-black" key={formKey}>
+      {/* ✅ Fix: bg-black remplacé par bg-gray-50 */}
+      <div className="print:hidden bg-gray-50" key={formKey}>
         <MissionRequestForm onSubmit={handleSubmit} onCancel={handleCancel} />
       </div>
-
       {showSuccessModal && createdMission && (
         <MissionSuccess
           mission={createdMission}

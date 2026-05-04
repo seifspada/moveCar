@@ -1,16 +1,15 @@
 // components/MissionRequestForm/AvailabilitySection.tsx (VERSION SIMPLIFIÉE)
-
 import { DateTimePicker } from '@/app/components/DateTimePicker';
 import React from 'react';
 
 interface AvailabilitySectionProps {
-  selectedDate1: string;  // ✅ String au lieu de Date | null
+  selectedDate1: string;
   selectedTime1: string;
-  selectedDate2: string;  // ✅ String au lieu de Date | null
+  selectedDate2: string;
   selectedTime2: string;
-  onDate1Change: (date: string) => void;  // ✅ String
+  onDate1Change: (date: string) => void;
   onTime1Change: (time: string) => void;
-  onDate2Change: (date: string) => void;  // ✅ String
+  onDate2Change: (date: string) => void;
   onTime2Change: (time: string) => void;
   dateError: string | null;
   onDateErrorChange: (error: string | null) => void;
@@ -26,25 +25,20 @@ export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
   onDate2Change,
   onTime2Change,
   dateError,
-  onDateErrorChange
+  onDateErrorChange,
 }) => {
-  // ✅ Plus besoin de conversion, tout est en string !
-
   const handleDate1Change = (dateStr: string) => {
     onDate1Change(dateStr);
     onDateErrorChange(null);
   };
-
   const handleDate2Change = (dateStr: string) => {
     onDate2Change(dateStr);
     onDateErrorChange(null);
   };
-
   const handleTime1Change = (time: string) => {
     onTime1Change(time);
     onDateErrorChange(null);
   };
-
   const handleTime2Change = (time: string) => {
     onTime2Change(time);
     onDateErrorChange(null);
@@ -74,7 +68,6 @@ export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
         </div>
       )}
 
-      {/* DateTimePicker 1 - Pas de conversion nécessaire */}
       <DateTimePicker
         selectedDate={selectedDate1}
         selectedTime={selectedTime1}
@@ -83,7 +76,6 @@ export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
         label="Disponible à partir du"
       />
 
-      {/* DateTimePicker 2 avec minDate/minTime */}
       <DateTimePicker
         selectedDate={selectedDate2}
         selectedTime={selectedTime2}
