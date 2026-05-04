@@ -156,7 +156,7 @@ export default function AddressSection({
                   ? "Adresse de départ"
                   : "Adresse d'arrivée"
               }
-              className={`w-full px-4 py-3 border border-gray-300 bg-white text-white placeholder-gray-300 rounded-full ${focusRing} focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors`}
+              className={`w-full px-4 py-3 border border-gray-300 bg-white text-white placeholder-gray-500 rounded-full ${focusRing} focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors`}
             />
           </div>
 
@@ -206,7 +206,7 @@ export default function AddressSection({
             placeholder={`Nom du lieu (ex: ${
               type === "depart" ? "Agence XYZ" : "Concession ACME"
             })`}
-            className={`w-full px-4 py-3 border border-gray-300 bg-white text-white placeholder-gray-300 rounded-full ${focusRing} focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors`}
+            className={`w-full px-4 py-3 border border-gray-300 bg-white text-white placeholder-gray-500 rounded-full ${focusRing} focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors`}
           />
         </div>
 

@@ -8,6 +8,9 @@ interface VehicleFieldsProps {
 
 export const VehicleFields: React.FC<VehicleFieldsProps> = ({ formData, onChange }) => (
   <>
+    <h2 className="text-lg font-semibold text-gray-800 mb-4">
+      Informations du véhicule
+    </h2>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
