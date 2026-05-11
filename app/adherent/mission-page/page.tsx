@@ -180,8 +180,6 @@ export default function MissionsPage() {
     checkAuth();
   }, [router]);
 
-  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
-  const toggleDesktopMenu = () => setIsDesktopMenuOpen((prev) => !prev);
 
   // Handler pour recherche trajet depuis SearchFilter
   const handleFilterSearch = async (data: any) => {
