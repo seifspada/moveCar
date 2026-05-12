@@ -29,17 +29,18 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
     );
   }
 
+  // Debug logs
   if (process.env.NODE_ENV === 'development') {
-    console.log(🚗 [MissionCard] id=);
-    console.log(   typeVehicule  = "");
-    console.log(   typeCarburant = "");
+    console.log(`🚗 [MissionCard] id=${missionId}`);
+    console.log(`   typeVehicule  = "${mission.typeVehicule}"`);
+    console.log(`   typeCarburant = "${mission.typeCarburant}"`);
   }
 
   const vehicleConf = getVehicleConfig(mission.typeVehicule);
   const carburantInfo = getCarburantConfig(mission.typeCarburant);
 
   const handleCardClick = () => {
-    router.push(/adherent/mission-reservation/);
+    router.push(`/adherent/mission-reservation/${missionId || 'default'}`);
   };
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
@@ -104,7 +105,11 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
             aria-label="Ajouter aux favoris"
           >
             <svg
-              className={w-5 h-5 sm:w-6 sm:h-6 transition-all duration-200 }
+              className={`w-5 h-5 sm:w-6 sm:h-6 transition-all duration-200 ${
+                isFavorite
+                  ? 'fill-orange-500 text-orange-500'
+                  : 'fill-none text-gray-400 hover:text-orange-400'
+              }`}
               stroke="currentColor"
               strokeWidth={1.5}
               viewBox="0 0 24 24"
@@ -186,7 +191,7 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
                 />
                 <p className="text-gray-400 text-[9px] sm:text-xs font-medium">Carburant</p>
               </div>
-              <p className={ont-semibold text-xs sm:text-sm leading-tight }>
+              <p className={`font-semibold text-xs sm:text-sm leading-tight ${carburantInfo.color}`}>
                 {carburantInfo.label}
               </p>
             </div>
