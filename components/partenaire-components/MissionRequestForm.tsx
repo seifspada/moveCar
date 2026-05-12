@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FileUpload, MissionFormData } from '@/app/types/mission';
+import type { VehicleType, VehiculeCarburant } from '@/app/config/mission-icons.config';
 import { FormHeader } from './MissionRequestForm/FormHeader';
 import AddressSection from './AddressSection';
 import { DocumentUpload } from './MissionRequestForm/DocumentUpload';
@@ -245,8 +246,8 @@ export const MissionRequestForm: React.FC<MissionRequestFormProps> = ({
         typeof formData.nombrePlaces === 'string'
           ? parseInt(formData.nombrePlaces, 10)
           : formData.nombrePlaces,
-      typeVehicule: formData.typeVehicule.toUpperCase(),
-      typeCarburant: formData.typeCarburant.toUpperCase(),
+      typeVehicule: formData.typeVehicule.toUpperCase() as VehicleType,
+      typeCarburant: formData.typeCarburant.toUpperCase() as VehiculeCarburant,
       boiteVitesse: formData.boiteVitesse.toUpperCase(),
       immatriculation: formData.immatriculation.toUpperCase(),
       typeLieuDepart: formData.typeLieuDepart || 'AUTRE',

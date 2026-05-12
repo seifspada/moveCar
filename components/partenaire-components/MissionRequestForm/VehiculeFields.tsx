@@ -23,20 +23,20 @@ export const VehicleFields: React.FC<VehicleFieldsProps> = ({ formData, onChange
           className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-900 rounded-full focus:ring-2 focus:ring-orange-500 focus:outline-none"
         >
           <option value="">Sélectionner...</option>
-          <option value="citadine">Citadine</option>
-          <option value="berline">Berline</option>
-          <option value="compacte">Compacte</option>
-          <option value="cabriolet">Cabriolet</option>
-          <option value="monospace">Monospace</option>
-          <option value="luxe">Voiture de luxe</option>
-          <option value="VU3m3">VU 3m³</option>
-          <option value="VU6m3">VU 6m³</option>
-          <option value="VU9m3">VU 9m³</option>
-          <option value="VU12m3">VU 12m³</option>
-          <option value="VU15m3">VU 15m³</option>
-          <option value="VU20m3">VU 20m³</option>
-          <option value="VU25m3">VU 25m³</option>
-          <option value="VU30m3">VU 30m³</option>
+          <option value="CITADINE">Citadine</option>
+          <option value="BERLINE">Berline</option>
+          <option value="COMPACTE">Compacte</option>
+          <option value="CABRIOLET">Cabriolet</option>
+          <option value="MONOSPACE">Monospace</option>
+          <option value="LUXE">Voiture de luxe</option>
+          <option value="VU_3M3">VU 3m³</option>
+          <option value="VU_6M3">VU 6m³</option>
+          <option value="VU_9M3">VU 9m³</option>
+          <option value="VU_12M3">VU 12m³</option>
+          <option value="VU_15M3">VU 15m³</option>
+          <option value="VU_20M3">VU 20m³</option>
+          <option value="VU_25M3">VU 25m³</option>
+          <option value="VU_30M3">VU 30m³</option>
         </select>
       </div>
 
@@ -51,10 +51,10 @@ export const VehicleFields: React.FC<VehicleFieldsProps> = ({ formData, onChange
           className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-900 rounded-full focus:ring-2 focus:ring-orange-500 focus:outline-none"
         >
           <option value="">Sélectionner...</option>
-          <option value="Essence">Essence</option>
-          <option value="Diesel">Diesel</option>
-          <option value="Hybride">Hybride</option>
-          <option value="Electrique">Électrique</option>
+          <option value="ESSENCE">Essence</option>
+          <option value="DIESEL">Diesel</option>
+          <option value="HYBRIDE">Hybride</option>
+          <option value="ELECTRIQUE">Électrique</option>
         </select>
       </div>
 

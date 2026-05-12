@@ -1,4 +1,5 @@
 // app/types/mission.ts
+import type { VehicleType, VehiculeCarburant } from '@/app/config/mission-icons.config';
 
 export interface Adresse {
   villeNom: string;
@@ -24,8 +25,8 @@ export interface Calcul {
 export interface Vehicule {
   marqueModele: string;
   immatriculation: string;
-  typeVehicule: string;
-  typeCarburant: string;
+  typeVehicule: VehicleType;
+  typeCarburant: VehiculeCarburant;
   nombrePlaces: number;
   boiteVitesse?: string;      // ✅ Ajouté
 }
@@ -74,8 +75,8 @@ export interface MissionFormData {
 
 
   // Véhicule
-  typeVehicule: string;
-  typeCarburant: string;
+  typeVehicule: VehicleType | '';
+  typeCarburant: VehiculeCarburant | '';
   marqueModele: string;
   immatriculation: string;
   nombrePlaces: number | string;
@@ -136,8 +137,8 @@ export interface MissionData {
 export type MissionDetails = {
   id: string;
   statut: string;    
-  typeVehicule: string;
-  typeCarburant: string;
+  typeVehicule: VehicleType;
+  typeCarburant: VehiculeCarburant;
   villeDepart: string;
   villeArrivee: string;
   distanceKm: number;

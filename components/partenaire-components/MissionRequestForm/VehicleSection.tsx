@@ -1,9 +1,10 @@
 import React from 'react';
+import type { VehicleType, VehiculeCarburant } from '@/app/config/mission-icons.config';
 
 interface VehicleSectionProps {
   formData: {
-    typeVehicule: string;
-    typeCarburant: string;
+    typeVehicule: VehicleType | '';
+    typeCarburant: VehiculeCarburant | '';
     marqueModele: string;
     immatriculation: string;
     nombrePlaces: string | number;
