@@ -1,4 +1,4 @@
-// app/components/mission/MissionList.tsx
+// components/mission-components/MissionList.tsx
 // ✅ Grid responsive: Mobile (2 col) → Tablet (3 col) → Desktop (4 col)
 
 import { MissionDetails } from "@/app/types/mission";
