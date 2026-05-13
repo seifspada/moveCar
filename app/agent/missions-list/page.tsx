@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // ✅ ajout
+import { useRouter } from 'next/navigation';
 import { MissionDetails } from '@/app/types/mission';
 import { Search, RefreshCw } from 'lucide-react';
 import { useQuery } from '@apollo/client/react';
-import MissionCard from '@/components/mission-components/MissionCard';
+import MissionList from '@/components/mission-components/MissionList'; // ✅ Utiliser MissionList
 import { GET_MISSIONS_FOR_CARDS_BY_AGENCE } from '@/lib/graphql/queries/mission-card';
 
 interface GetMissionsForCardsByAgenceData {
@@ -13,7 +13,7 @@ interface GetMissionsForCardsByAgenceData {
 }
 
 export default function AgenceMissionsPage() {
-  const router = useRouter(); // ✅ ajout
+  const router = useRouter();
   const [searchText, setSearchText] = useState('');
 
   const { data, loading, error, refetch } = useQuery<GetMissionsForCardsByAgenceData>(
@@ -30,6 +30,10 @@ export default function AgenceMissionsPage() {
           m.villeArrivee?.toLowerCase().includes(searchText.toLowerCase()),
       )
     : missions;
+
+  const handleMissionClick = (missionId: string) => {
+    router.push(`/agent/reservations-mission-list/${missionId}`);
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950 px-4 py-8 md:px-8">
@@ -74,15 +78,6 @@ export default function AgenceMissionsPage() {
         )}
       </div>
 
-      {/* ── Loading ── */}
-      {loading && (
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-28 bg-zinc-800 rounded-full animate-pulse" />
-          ))}
-        </div>
-      )}
-
       {/* ── Erreur ── */}
       {!loading && error && (
         <div className="bg-red-900/20 border border-red-500 rounded-lg p-6 text-center">
@@ -97,48 +92,43 @@ export default function AgenceMissionsPage() {
         </div>
       )}
 
-      {/* ── Empty state ── */}
-      {!loading && !error && filtered.length === 0 && (
+      {/* ── Empty state (montré seulement si aucun résultat filtré, pas de données du tout) ── */}
+      {!loading && !error && missions.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
             <Search className="w-8 h-8 text-gray-500" />
           </div>
-          <h3 className="text-white font-semibold text-lg mb-2">
-            {searchText ? 'Aucun résultat' : 'Aucune mission'}
-          </h3>
-          <p className="text-gray-500 text-sm max-w-xs">
-            {searchText
-              ? `Aucune mission trouvée pour "${searchText}"`
-              : 'Aucune mission disponible.'}
-          </p>
-          {searchText && (
-            <button
-              onClick={() => setSearchText('')}
-              className="mt-4 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-sm"
-            >
-              Effacer le filtre
-            </button>
-          )}
+          <h3 className="text-white font-semibold text-lg mb-2">Aucune mission</h3>
+          <p className="text-gray-500 text-sm max-w-xs">Aucune mission disponible.</p>
         </div>
       )}
 
-      {/* ── Liste des missions ── */}
-      {!loading && !error && filtered.length > 0 && (
-        <div className="space-y-4">
-          {filtered.map((mission) => (
-            // ✅ wrapper div intercepte le click avant MissionCard
-            <div
-              key={mission.id}
-              onClick={() => router.push(`/agent/reservations-mission-list/${mission.id}`)}
-              className="cursor-pointer"
-            >
-              <MissionCard
-                mission={mission}
-                missionId={mission.id}
-              />
-            </div>
-          ))}
+      {/* ── Empty state pour recherche sans résultat ── */}
+      {!loading && !error && missions.length > 0 && filtered.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+            <Search className="w-8 h-8 text-gray-500" />
+          </div>
+          <h3 className="text-white font-semibold text-lg mb-2">Aucun résultat</h3>
+          <p className="text-gray-500 text-sm max-w-xs">
+            Aucune mission trouvée pour "{searchText}"
+          </p>
+          <button
+            onClick={() => setSearchText('')}
+            className="mt-4 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-sm"
+          >
+            Effacer le filtre
+          </button>
         </div>
+      )}
+
+      {/* ── MissionList Component ── */}
+      {!loading && !error && filtered.length > 0 && (
+        <MissionList
+          missions={filtered}
+          loading={loading}
+          onMissionClick={handleMissionClick}
+        />
       )}
 
     </div>

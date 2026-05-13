@@ -1,12 +1,25 @@
 import { MissionDetails } from "@/app/types/mission";
 import MissionCard from "./MissionCard";
+import { useRouter } from 'next/navigation';
 
 type Props = {
   missions: MissionDetails[];
   loading?: boolean;
+  onMissionClick?: (missionId: string) => void; // ✅ Optional callback pour plus de flexibilité
 };
 
-export default function MissionList({ missions, loading = false }: Props) {
+export default function MissionList({ missions, loading = false, onMissionClick }: Props) {
+  const router = useRouter();
+
+  const handleMissionClick = (missionId: string) => {
+    if (onMissionClick) {
+      onMissionClick(missionId);
+    } else {
+      // Comportement par défaut
+      router.push(`/agent/reservations-mission-list/${missionId}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-4">
@@ -53,8 +66,8 @@ export default function MissionList({ missions, loading = false }: Props) {
             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        <p className="text-lg font-medium text-gray-400">Aucune mission trouv&eacute;e</p>
-        <p className="mt-2 text-sm text-gray-500">Ajustez vos filtres et r&eacute;essayez</p>
+        <p className="text-lg font-medium text-gray-400">Aucune mission trouvée</p>
+        <p className="mt-2 text-sm text-gray-500">Ajustez vos filtres et réessayez</p>
       </div>
     );
   }
@@ -62,11 +75,16 @@ export default function MissionList({ missions, loading = false }: Props) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-4">
       {missions.map((mission) => (
-        <MissionCard
+        <div
           key={mission.id}
-          mission={mission}
-          missionId={mission.id}
-        />
+          onClick={() => handleMissionClick(mission.id)}
+          className="cursor-pointer"
+        >
+          <MissionCard
+            mission={mission}
+            missionId={mission.id}
+          />
+        </div>
       ))}
     </div>
   );
