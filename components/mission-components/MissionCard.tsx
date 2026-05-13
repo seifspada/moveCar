@@ -49,10 +49,10 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
       onClick={handleCardClick}
       className="group relative min-h-[282px] w-full cursor-pointer overflow-hidden rounded-[22px] border border-orange-500/35
                  bg-[radial-gradient(circle_at_28%_0%,rgba(249,115,22,0.12),transparent_34%),linear-gradient(145deg,#18181b_0%,#111113_52%,#09090b_100%)]
-                 p-2.5 pt-3 text-white shadow-[0_18px_45px_rgba(0,0,0,0.32),0_0_0_1px_rgba(255,255,255,0.04)]
+                 p-2.5 pb-2 pt-3 text-white shadow-[0_18px_45px_rgba(0,0,0,0.32),0_0_0_1px_rgba(255,255,255,0.04)]
                  transition-all duration-300 hover:-translate-y-1 hover:border-orange-400/80
                  hover:shadow-[0_22px_60px_rgba(0,0,0,0.36),0_0_28px_rgba(249,115,22,0.26)]
-                 sm:min-h-[340px] sm:rounded-[28px] sm:p-5 xl:min-h-[370px] xl:p-6"
+                 sm:min-h-[340px] sm:rounded-[28px] sm:p-5 sm:pb-4 xl:min-h-[370px] xl:p-6 xl:pb-5"
     >
       {/* Décorations */}
       <div className="pointer-events-none absolute inset-0 rounded-[22px] ring-1 ring-inset ring-white/5 sm:rounded-[28px]" />
@@ -151,20 +151,20 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-1.5 sm:gap-4">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2 sm:gap-4">
             <div className="flex min-w-0 items-start gap-1 sm:gap-3">
-              <CalendarDays className="mt-0.5 h-4 w-4 flex-none text-zinc-500 sm:mt-1 sm:h-6 sm:w-6 xl:h-7 xl:w-7" strokeWidth={1.8} />
-              <p className="text-[0.68rem] font-extrabold leading-tight text-zinc-100 sm:text-xl xl:text-2xl">
+              <CalendarDays className="mt-0.5 h-4 w-4 flex-none text-zinc-500 sm:mt-1 sm:h-5 sm:w-5 xl:h-6 xl:w-6" strokeWidth={1.8} />
+              <p className="text-[0.68rem] font-extrabold leading-tight text-zinc-100 sm:text-base xl:text-lg">
                 <span className="block">{dateStart}</span>
                 {dateEnd && <span className="block">{dateEnd}</span>}
               </p>
             </div>
             <div className="text-right">
-              <p className="flex items-center justify-end gap-0.5 text-[0.62rem] font-medium text-zinc-500 sm:gap-2 sm:text-base xl:text-lg">
-                <Ticket className="h-3.5 w-3.5 sm:h-5 sm:w-5 xl:h-6 xl:w-6" strokeWidth={1.8} />
+              <p className="flex items-center justify-end gap-0.5 text-[0.62rem] font-medium text-zinc-500 sm:gap-1.5 sm:text-sm xl:text-base">
+                <Ticket className="h-3.5 w-3.5 sm:h-4 sm:w-4 xl:h-5 xl:w-5" strokeWidth={1.8} />
                 P&eacute;age
               </p>
-              <p className="mt-0.5 text-[0.74rem] font-extrabold leading-none text-zinc-100 sm:mt-1 sm:text-xl xl:text-2xl">
+              <p className="mt-0.5 text-[0.74rem] font-extrabold leading-none text-zinc-100 sm:mt-1 sm:text-base xl:text-xl">
                 {formatPrice(mission.fraisPeage)}&euro;
               </p>
             </div>
