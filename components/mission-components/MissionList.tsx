@@ -13,28 +13,30 @@ export default function MissionList({ missions, loading = false }: Props) {
         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
           <div
             key={i}
-            className="relative min-h-[284px] overflow-hidden rounded-[22px] border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-900 p-3 animate-pulse sm:min-h-[340px] sm:rounded-[28px] sm:p-5 xl:min-h-[370px] xl:p-6"
+            className="relative aspect-square overflow-hidden rounded-[18px] border border-zinc-700/80 bg-zinc-900 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.24)] sm:rounded-[22px] sm:p-4"
           >
-            <div
-              className="absolute left-0 top-0 h-24 w-28 bg-zinc-700 sm:h-32 sm:w-36 xl:h-40 xl:w-44"
-              style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }}
-            />
-            <div className="relative z-10">
-              <div className="flex justify-between">
-                <div className="h-12 w-12 rounded-full bg-zinc-600 sm:h-16 sm:w-16 xl:h-20 xl:w-20" />
-                <div className="h-8 w-8 rounded-full bg-zinc-700 sm:h-10 sm:w-10 xl:h-11 xl:w-11" />
+            <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950" />
+            <div className="absolute inset-x-0 top-0 h-1/2 -translate-x-full animate-[pulse_1.8s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+            <div className="relative z-10 flex h-full flex-col justify-between">
+              <div className="flex items-start justify-between">
+                <div className="h-10 w-10 rounded-full bg-zinc-700 sm:h-12 sm:w-12" />
+                <div className="h-7 w-7 rounded-full bg-zinc-800 sm:h-8 sm:w-8" />
               </div>
-              <div className="mx-auto mt-3 space-y-2 sm:mt-4">
-                <div className="mx-auto h-5 w-2/3 rounded bg-zinc-700 sm:h-7" />
-                <div className="mx-auto h-5 w-1/2 rounded bg-zinc-700 sm:h-7" />
+
+              <div className="space-y-2">
+                <div className="h-3.5 w-3/4 rounded-full bg-zinc-700 sm:h-4" />
+                <div className="h-3.5 w-1/2 rounded-full bg-zinc-800 sm:h-4" />
               </div>
-              <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:gap-3">
-                <div className="h-14 rounded-xl bg-zinc-700 sm:h-20 sm:rounded-2xl" />
-                <div className="h-14 rounded-xl bg-zinc-700 sm:h-20 sm:rounded-2xl" />
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="aspect-square rounded-xl bg-zinc-800" />
+                <div className="aspect-square rounded-xl bg-zinc-800" />
               </div>
-              <div className="mt-5 space-y-3 sm:mt-6 sm:space-y-4">
-                <div className="h-6 rounded bg-zinc-700 sm:h-8" />
-                <div className="h-12 rounded bg-zinc-700 sm:h-16" />
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="h-3 rounded-full bg-zinc-800" />
+                <div className="h-3 rounded-full bg-zinc-700" />
+                <div className="h-3 rounded-full bg-zinc-800" />
               </div>
             </div>
           </div>
