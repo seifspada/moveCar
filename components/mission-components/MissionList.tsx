@@ -9,7 +9,7 @@ type Props = {
 export default function MissionList({ missions, loading = false }: Props) {
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-4">
         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
           <div
             key={i}
@@ -22,17 +22,14 @@ export default function MissionList({ missions, loading = false }: Props) {
                 <div className="h-10 w-10 rounded-full bg-zinc-700 sm:h-12 sm:w-12" />
                 <div className="h-7 w-7 rounded-full bg-zinc-800 sm:h-8 sm:w-8" />
               </div>
-
               <div className="space-y-2">
                 <div className="h-3.5 w-3/4 rounded-full bg-zinc-700 sm:h-4" />
                 <div className="h-3.5 w-1/2 rounded-full bg-zinc-800 sm:h-4" />
               </div>
-
               <div className="grid grid-cols-2 gap-2">
                 <div className="aspect-square rounded-xl bg-zinc-800" />
                 <div className="aspect-square rounded-xl bg-zinc-800" />
               </div>
-
               <div className="grid grid-cols-3 gap-2">
                 <div className="h-3 rounded-full bg-zinc-800" />
                 <div className="h-3 rounded-full bg-zinc-700" />
@@ -63,7 +60,7 @@ export default function MissionList({ missions, loading = false }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-4">
       {missions.map((mission) => (
         <MissionCard
           key={mission.id}
