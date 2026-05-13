@@ -48,7 +48,7 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
   return (
     <div
       onClick={handleCardClick}
-      className="group relative min-h-[260px] w-full cursor-pointer overflow-hidden rounded-[22px] border border-orange-500/35
+      className="group relative min-h-[282px] w-full cursor-pointer overflow-hidden rounded-[22px] border border-orange-500/35
                  bg-[radial-gradient(circle_at_28%_0%,rgba(249,115,22,0.12),transparent_34%),linear-gradient(145deg,#18181b_0%,#111113_52%,#09090b_100%)]
                  p-2.5 pt-3 text-white shadow-[0_18px_45px_rgba(0,0,0,0.32),0_0_0_1px_rgba(255,255,255,0.04)]
                  transition-all duration-300 hover:-translate-y-1 hover:border-orange-400/80
@@ -88,13 +88,13 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
       </button>
 
       <div className="relative z-10 flex h-full flex-col">
-        <div className="min-h-[62px] pl-12 pr-8 sm:min-h-[96px] sm:pl-20 sm:pr-12 xl:min-h-[120px] xl:pl-24">
-          <div className="flex flex-col items-center gap-0.5 pt-6 text-center sm:gap-1 sm:pt-10 xl:pt-11">
-            <h3 className="max-w-full text-balance text-[0.82rem] font-extrabold leading-tight tracking-normal text-zinc-100 drop-shadow sm:text-[1.35rem] xl:text-2xl">
-              <span className="block truncate">{mission.villeDepart}</span>
-              <span className="mt-0.5 inline-flex max-w-full items-center justify-center gap-1 text-zinc-200 sm:mt-1 sm:gap-2">
-                <ArrowRight className="h-3.5 w-3.5 flex-none text-orange-400 sm:h-5 sm:w-5" strokeWidth={2.4} />
-                <span className="truncate">{mission.villeArrivee}</span>
+        <div className="min-h-[84px] pl-12 pr-8 sm:min-h-[116px] sm:pl-20 sm:pr-12 xl:min-h-[132px] xl:pl-24">
+          <div className="flex flex-col items-center gap-0.5 pt-5 text-center sm:gap-1 sm:pt-9 xl:pt-10">
+            <h3 className="max-w-full text-balance text-[0.76rem] font-extrabold leading-tight tracking-normal text-zinc-100 drop-shadow sm:text-[1.08rem] xl:text-[1.55rem]">
+              <span className="block whitespace-normal break-words">{mission.villeDepart}</span>
+              <span className="mt-0.5 flex max-w-full items-start justify-center gap-1 text-zinc-200 sm:mt-1 sm:gap-2">
+                <ArrowRight className="mt-0.5 h-3.5 w-3.5 flex-none text-orange-400 sm:h-5 sm:w-5" strokeWidth={2.4} />
+                <span className="min-w-0 whitespace-normal break-words text-left">{mission.villeArrivee}</span>
               </span>
             </h3>
           </div>
@@ -123,7 +123,7 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
           <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
             <div className="flex min-w-0 items-center gap-1 sm:gap-3">
               <Truck className="h-4 w-4 flex-none text-zinc-500 sm:h-6 sm:w-6 xl:h-7 xl:w-7" strokeWidth={1.8} />
-              <p className="truncate text-[0.82rem] font-extrabold text-zinc-100 sm:text-xl xl:text-2xl">
+              <p className="min-w-0 whitespace-normal break-words text-[0.74rem] font-extrabold leading-tight text-zinc-100 sm:text-base xl:text-xl">
                 {vehicleConf.label}
               </p>
             </div>
@@ -137,7 +137,7 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
                 className="h-4 w-4 flex-none object-contain sm:h-6 sm:w-6 xl:h-7 xl:w-7"
                 priority
               />
-              <p className={`truncate text-[0.82rem] font-extrabold sm:text-xl xl:text-2xl ${carburantInfo.color}`}>
+              <p className={`min-w-0 whitespace-normal break-words text-right text-[0.74rem] font-extrabold leading-tight sm:text-base xl:text-xl ${carburantInfo.color}`}>
                 {carburantInfo.label}
               </p>
             </div>
