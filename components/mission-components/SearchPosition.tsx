@@ -7,14 +7,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { CityAutocomplete, SelectedCity } from "./CityAutocomplete";
 
-// ✅ AJOUTER LE MODE DEBUG
 const DEBUG_MODE = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
-
-const log = (...args: any[]) => {
-  if (DEBUG_MODE) {
-    console.log(...args);
-  }
-};
+const log = (...args: any[]) => { if (DEBUG_MODE) console.log(...args); };
 
 interface SearchPositionProps {
   isOpen: boolean;
@@ -35,11 +29,12 @@ const MapComponent = dynamic(() => import("./MapComponent").then(mod => mod.defa
   ),
 });
 
-// ✅ Type pour les états sauvegardés
 interface SavedPositionState {
   inputValue: string;
   selectedCity: SelectedCity | null;
   radius: number;
+  dateDepart: string;      // ← ajout
+  dateDepartMax: string;   // ← ajout
 }
 
 const STORAGE_KEY = 'search-position-state';
@@ -50,13 +45,14 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
   const [radius, setRadius] = useState(10);
   const [alertActive, setAlertActive] = useState(false);
   const [isCreatingAlert, setIsCreatingAlert] = useState(false);
+  const [dateDepart, setDateDepart] = useState("");        // ← ajout
+  const [dateDepartMax, setDateDepartMax] = useState(""); // ← ajout
 
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Charger les états sauvegardés au montage
+  // Charger les états sauvegardés au montage
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
     const savedState = localStorage.getItem(STORAGE_KEY);
     if (savedState) {
       try {
@@ -64,27 +60,26 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
         setInputValue(parsed.inputValue || "");
         setSelectedCity(parsed.selectedCity);
         setRadius(parsed.radius || 10);
-        
-        // ✅ REMPLACER console.log par log (ligne 59)
+        setDateDepart(parsed.dateDepart || "");           // ← ajout
+        setDateDepartMax(parsed.dateDepartMax || "");     // ← ajout
         log('✅ États restaurés (position):', parsed);
       } catch (error) {
-        console.error('❌ Erreur lors de la restauration:', error); // ✅ Garder console.error
+        console.error('❌ Erreur lors de la restauration:', error);
       }
     }
   }, []);
 
-  // ✅ Sauvegarder les états à chaque changement
+  // Sauvegarder les états à chaque changement
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    const stateToSave: SavedPositionState = {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
       inputValue,
       selectedCity,
       radius,
-    };
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-  }, [inputValue, selectedCity, radius]);
+      dateDepart,      // ← ajout
+      dateDepartMax,   // ← ajout
+    }));
+  }, [inputValue, selectedCity, radius, dateDepart, dateDepartMax]); // ← ajout deps
 
   const getZoomFromRadius = useCallback((radiusKm: number): number => {
     if (radiusKm <= 20) return 10;
@@ -96,12 +91,9 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
 
   const createAlert = useCallback(async () => {
     if (!selectedCity || !alertActive) return;
-    
     setIsCreatingAlert(true);
-
     try {
       const token = localStorage.getItem("token");
-      
       if (!token) {
         toast.error("Vous devez être connecté pour créer une alerte");
         return;
@@ -113,9 +105,11 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
         latitude: selectedCity.lat,
         longitude: selectedCity.lon,
         rayon: radius,
+        emailActif: true,                              // ← ajout
+        dateDepart: dateDepart || undefined,           // ← ajout
+        dateDepartMax: dateDepartMax || undefined,     // ← ajout
       };
 
-      // ✅ REMPLACER console.log par log
       log('📤 Création alerte:', payload);
 
       const response = await fetch("/api/mission/alertes-missions", {
@@ -128,52 +122,39 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la création de l'alerte");
-      }
+      if (!response.ok) throw new Error(data.error || "Erreur lors de la création de l'alerte");
 
       toast.success(`🔔 Alerte créée pour ${selectedCity.name} (${radius} km)`);
     } catch (error: any) {
-      console.error("❌ Erreur création alerte:", error); // ✅ Garder console.error
+      console.error("❌ Erreur création alerte:", error);
       toast.error(error.message || "Erreur lors de la création de l'alerte");
       throw error;
     } finally {
       setIsCreatingAlert(false);
     }
-  }, [selectedCity, radius, alertActive]);
+  }, [selectedCity, radius, alertActive, dateDepart, dateDepartMax]); // ← ajout deps
 
   const handleSearch = useCallback(async () => {
     if (!selectedCity) {
       toast.warning("Veuillez sélectionner une ville");
       return;
     }
-
     try {
-      // 1. Créer l'alerte si activée
-      if (alertActive) {
-        await createAlert();
-      }
-
-      // 2. Transmettre les données au parent (mission-page)
-      onSearch({ 
-        city: selectedCity, 
-        radius,
-      });
-
+      if (alertActive) await createAlert();
+      onSearch({ city: selectedCity, radius });
       onClose();
     } catch (error) {
-      console.error("❌ Erreur:", error); // ✅ Garder console.error
+      console.error("❌ Erreur:", error);
     }
   }, [selectedCity, radius, alertActive, createAlert, onSearch, onClose]);
 
-  // ✅ Fonction pour effacer les filtres
   const handleClearFilters = () => {
     setInputValue("");
     setSelectedCity(null);
     setRadius(10);
     setAlertActive(false);
-    
+    setDateDepart("");       // ← ajout
+    setDateDepartMax("");    // ← ajout
     localStorage.removeItem(STORAGE_KEY);
     toast.success('Filtres effacés');
   };
@@ -182,7 +163,6 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) onClose();
     };
-
     if (isOpen) {
       document.addEventListener("keydown", handleEscape);
       return () => document.removeEventListener("keydown", handleEscape);
@@ -209,7 +189,6 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
             <h2 className="text-xl font-bold text-white">Missions autour de moi</h2>
           </div>
           <div className="flex items-center gap-2">
-            {/* ✅ Bouton Effacer */}
             {selectedCity && (
               <button
                 onClick={handleClearFilters}
@@ -274,6 +253,35 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
               <span>300 km</span>
             </div>
           </div>
+
+          {/* ← ajout : champs dates, visibles uniquement si alerte activée */}
+          {selectedCity && alertActive && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Date de départ souhaitée
+                </label>
+                <input
+                  type="date"
+                  value={dateDepart}
+                  onChange={(e) => setDateDepart(e.target.value)}
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Date limite de départ
+                </label>
+                <input
+                  type="date"
+                  value={dateDepartMax}
+                  onChange={(e) => setDateDepartMax(e.target.value)}
+                  min={dateDepart || undefined}
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+            </div>
+          )}
 
           {selectedCity && (
             <div className="flex items-center justify-between p-4 bg-zinc-800 rounded-lg border border-orange-500/20">

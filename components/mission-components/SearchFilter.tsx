@@ -126,17 +126,17 @@ export function SearchFilter({ isOpen, onClose, onSearch, userId }: SearchFilter
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          type: 'TRAJET',
-          villeDepartNom: selectedDepart.name,
-          latitudeDepart: selectedDepart.lat,
-          longitudeDepart: selectedDepart.lon,
-          villeArriveeNom: selectedArrivee.name,
-          latitudeArrivee: selectedArrivee.lat,
-          longitudeArrivee: selectedArrivee.lon,
-          rayon: rayon,
-          dateDepart: dateDepart || undefined,
-          dateRetour: dateRetour || undefined,
-        }),
+  type: 'TRAJET',
+  villeDepartNom: selectedDepart.name,
+  latitudeDepart: selectedDepart.lat,
+  longitudeDepart: selectedDepart.lon,
+  villeArriveeNom: selectedArrivee.name,
+  latitudeArrivee: selectedArrivee.lat,
+  longitudeArrivee: selectedArrivee.lon,
+  rayon: rayon,
+  dateDepart: dateDepart || undefined,
+  dateDepartMax: dateRetour || undefined,  // ← renommer dateRetour en dateDepartMax
+}),
       });
 
       const data = await response.json();

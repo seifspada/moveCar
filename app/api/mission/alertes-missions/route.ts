@@ -127,33 +127,37 @@ export async function POST(request: NextRequest) {
     console.log(`🔄 Envoi vers: ${endpoint}`);
 
     // ✅ 7. 🔥 CONSTRUIRE LE BODY SELON LE TYPE
-    let backendBody: any;
+// ✅ 7. Construire le body selon le type
+let backendBody: any;
 
-    if (body.type === 'GEOGRAPHIQUE') {
-      // ✅ Pour alerte géographique : seulement les champs GEO
-      backendBody = {
-        userId,
-        villeNom: body.villeNom,
-        latitude: body.latitude,
-        longitude: body.longitude,
-        rayon: body.rayon,
-      };
-    } else {
-      // ✅ Pour alerte trajet : seulement les champs TRAJET
-      backendBody = {
-        userId,
-        villeDepartNom: body.villeDepartNom,
-        latitudeDepart: body.latitudeDepart,
-        longitudeDepart: body.longitudeDepart,
-        villeArriveeNom: body.villeArriveeNom,
-        latitudeArrivee: body.latitudeArrivee,
-        longitudeArrivee: body.longitudeArrivee,
-        rayon: body.rayon,
-        dateDepart: body.dateDepart || undefined,
-        dateDepartMax: body.dateDepartMax || undefined,
-      };
-    }
-
+if (body.type === 'GEOGRAPHIQUE') {
+  backendBody = {
+    userId,
+    villeNom: body.villeNom,
+    latitude: body.latitude,
+    longitude: body.longitude,
+    rayon: body.rayon,
+    emailActif: body.emailActif ?? true,
+    pushActif: false,
+    dateDepart: body.dateDepart || undefined,
+    dateDepartMax: body.dateDepartMax || undefined,
+  };
+} else if (body.type === 'TRAJET') {  // ← else if, pas if
+  backendBody = {
+    userId,
+    villeDepartNom: body.villeDepartNom,
+    latitudeDepart: body.latitudeDepart,
+    longitudeDepart: body.longitudeDepart,
+    villeArriveeNom: body.villeArriveeNom,
+    latitudeArrivee: body.latitudeArrivee,
+    longitudeArrivee: body.longitudeArrivee,
+    rayon: body.rayon,
+    emailActif: body.emailActif ?? true,
+    pushActif: false,
+    dateDepart: body.dateDepart || undefined,
+    dateDepartMax: body.dateDepartMax || undefined,  // ← dateDepartMax pas dateRetour
+  };
+}
     console.log('📤 Body envoyé au backend:', JSON.stringify(backendBody, null, 2));
 
     // ✅ 8. Appel backend avec timeout
