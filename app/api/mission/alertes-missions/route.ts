@@ -1,96 +1,110 @@
 // app/api/mission/alertes-missions/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { verify, decode } from 'jsonwebtoken';
+import { decode, verify } from 'jsonwebtoken';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const BACKEND_URL =
+  process.env.BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://localhost:3000';
+
+const JWT_SECRET = process.env.JWT_SECRET;
 const REQUEST_TIMEOUT = 10000;
 
 interface DecodedToken {
   sub?: number;
   userId?: number;
-  email: string;
+  email?: string;
   role?: string;
   iat?: number;
   exp?: number;
 }
 
+interface AlertRequestBody {
+  type?: 'GEOGRAPHIQUE' | 'TRAJET';
+  villeNom?: string;
+  latitude?: number;
+  longitude?: number;
+  villeDepartNom?: string;
+  latitudeDepart?: number;
+  longitudeDepart?: number;
+  villeArriveeNom?: string;
+  latitudeArrivee?: number;
+  longitudeArrivee?: number;
+  rayon?: number;
+  emailActif?: boolean;
+  pushActif?: boolean;
+  fcmToken?: string;
+  dateDepart?: string;
+  dateDepartMax?: string;
+}
+
+function getDecodedToken(token: string): DecodedToken | null {
+  if (JWT_SECRET) {
+    return verify(token, JWT_SECRET) as DecodedToken;
+  }
+
+  // Fallback temporaire: utile si JWT_SECRET n'est pas configure sur le deploy.
+  // Le backend reste responsable de valider les donnees recues.
+  console.warn('JWT_SECRET manquant: utilisation temporaire de decode() sans verification');
+  return decode(token) as DecodedToken | null;
+}
+
+function getUserIdFromToken(token: string): number {
+  const rawDecoded = getDecodedToken(token);
+  console.log('Token decode:', rawDecoded);
+
+  if (!rawDecoded) {
+    throw new Error('Token malforme');
+  }
+
+  const userId = rawDecoded.sub ?? rawDecoded.userId ?? 0;
+  if (!userId) {
+    throw new Error('userId manquant dans le token');
+  }
+
+  return userId;
+}
+
 export async function POST(request: NextRequest) {
-  console.log('🔔 API Route Alertes - POST appelée');
+  console.log('API Route Alertes - POST appelee');
 
   try {
-    // 1. Récupérer le token
     const authHeader = request.headers.get('authorization');
-
-    console.log('🔑 Auth header présent:', !!authHeader);
+    console.log('Auth header present:', !!authHeader);
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
-        { success: false, error: 'Token manquant. Vous devez être connecté.' },
-        { status: 401 }
+        { success: false, error: 'Token manquant. Vous devez etre connecte.' },
+        { status: 401 },
       );
     }
 
     const token = authHeader.substring(7);
-    console.log('🔑 Token reçu (début):', token.substring(0, 30) + '...');
+    let userId: number;
 
-// 2. Décoder le token JWT (sans vérification de signature)
-let userId: number;
-let userEmail: string;
+    try {
+      userId = getUserIdFromToken(token);
+    } catch (jwtError) {
+      const message = jwtError instanceof Error ? jwtError.message : 'Token invalide';
+      console.error('Erreur token:', message);
 
-try {
-  // Décoder sans vérifier — la validation est faite par le backend NestJS
-  const rawDecoded = decode(token) as DecodedToken | null;
-  console.log('🔍 Token décodé:', rawDecoded);
-
-  if (!rawDecoded) {
-    return NextResponse.json(
-      { success: false, error: 'Token malformé' },
-      { status: 401 }
-    );
-  }
-
-  // Vérifier expiration manuellement
-  if (rawDecoded.exp && rawDecoded.exp < Math.floor(Date.now() / 1000)) {
-    return NextResponse.json(
-      { success: false, error: 'Session expirée, veuillez vous reconnecter' },
-      { status: 401 }
-    );
-  }
-
-  userId = rawDecoded.sub ?? rawDecoded.userId ?? 0;
-
-  if (!userId || userId === 0) {
-    return NextResponse.json(
-      { success: false, error: 'userId manquant dans le token' },
-      { status: 401 }
-    );
-  }
-
-  userEmail = rawDecoded.email;
-  console.log('🔐 Utilisateur:', { userId, email: userEmail });
-
-} catch (jwtError: any) {
-  console.error('❌ Erreur décodage token:', jwtError.message);
-  return NextResponse.json(
-    { success: false, error: 'Token invalide' },
-    { status: 401 }
-  );
-}
-
-    // 3. Récupérer le body
-    const body = await request.json();
-    console.log('📥 Body reçu:', JSON.stringify(body, null, 2));
-
-    // 4. Validation du type
-    if (!body.type || !['GEOGRAPHIQUE', 'TRAJET'].includes(body.type)) {
       return NextResponse.json(
-        { success: false, error: 'Type invalide (GEOGRAPHIQUE ou TRAJET requis)' },
-        { status: 400 }
+        { success: false, error: message },
+        { status: 401 },
       );
     }
 
-    // 5. Validation selon le type
+    const body = (await request.json()) as AlertRequestBody;
+    console.log('Body recu:', JSON.stringify(body, null, 2));
+
+    if (!body.type || !['GEOGRAPHIQUE', 'TRAJET'].includes(body.type)) {
+      return NextResponse.json(
+        { success: false, error: 'Type invalide (GEOGRAPHIQUE ou TRAJET requis)' },
+        { status: 400 },
+      );
+    }
+
     if (body.type === 'GEOGRAPHIQUE') {
       const missing = [];
       if (!body.villeNom) missing.push('villeNom');
@@ -101,7 +115,7 @@ try {
       if (missing.length > 0) {
         return NextResponse.json(
           { success: false, error: `Champs manquants: ${missing.join(', ')}` },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -119,53 +133,50 @@ try {
       if (missing.length > 0) {
         return NextResponse.json(
           { success: false, error: `Champs manquants: ${missing.join(', ')}` },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
-    // 6. Endpoint selon le type
-    const endpoint = body.type === 'GEOGRAPHIQUE'
-      ? `${BACKEND_URL}/api/alertes/geographique`
-      : `${BACKEND_URL}/api/alertes/trajet`;
+    const endpoint =
+      body.type === 'GEOGRAPHIQUE'
+        ? `${BACKEND_URL}/api/alertes/geographique`
+        : `${BACKEND_URL}/api/alertes/trajet`;
 
-    console.log(`🔄 Envoi vers: ${endpoint}`);
+    const backendBody =
+      body.type === 'GEOGRAPHIQUE'
+        ? {
+            userId,
+            villeNom: body.villeNom,
+            latitude: body.latitude,
+            longitude: body.longitude,
+            rayon: body.rayon,
+            emailActif: body.emailActif ?? true,
+            pushActif: body.pushActif ?? false,
+            fcmToken: body.fcmToken,
+            dateDepart: body.dateDepart || undefined,
+            dateDepartMax: body.dateDepartMax || undefined,
+          }
+        : {
+            userId,
+            villeDepartNom: body.villeDepartNom,
+            latitudeDepart: body.latitudeDepart,
+            longitudeDepart: body.longitudeDepart,
+            villeArriveeNom: body.villeArriveeNom,
+            latitudeArrivee: body.latitudeArrivee,
+            longitudeArrivee: body.longitudeArrivee,
+            rayon: body.rayon,
+            emailActif: body.emailActif ?? true,
+            pushActif: body.pushActif ?? false,
+            fcmToken: body.fcmToken,
+            dateDepart: body.dateDepart || undefined,
+            dateDepartMax: body.dateDepartMax || undefined,
+          };
 
-    // 7. Construire le body selon le type
-    let backendBody: any;
+    console.log('Backend URL:', BACKEND_URL);
+    console.log('Envoi vers:', endpoint);
+    console.log('Body envoye au backend:', JSON.stringify(backendBody, null, 2));
 
-    if (body.type === 'GEOGRAPHIQUE') {
-      backendBody = {
-        userId,
-        villeNom: body.villeNom,
-        latitude: body.latitude,
-        longitude: body.longitude,
-        rayon: body.rayon,
-        emailActif: body.emailActif ?? true,
-        pushActif: false,
-        dateDepart: body.dateDepart || undefined,
-        dateDepartMax: body.dateDepartMax || undefined,
-      };
-    } else {
-      backendBody = {
-        userId,
-        villeDepartNom: body.villeDepartNom,
-        latitudeDepart: body.latitudeDepart,
-        longitudeDepart: body.longitudeDepart,
-        villeArriveeNom: body.villeArriveeNom,
-        latitudeArrivee: body.latitudeArrivee,
-        longitudeArrivee: body.longitudeArrivee,
-        rayon: body.rayon,
-        emailActif: body.emailActif ?? true,
-        pushActif: false,
-        dateDepart: body.dateDepart || undefined,
-        dateDepartMax: body.dateDepartMax || undefined,
-      };
-    }
-
-    console.log('📤 Body envoyé au backend:', JSON.stringify(backendBody, null, 2));
-
-    // 8. Appel backend avec timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
@@ -174,24 +185,23 @@ try {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify(backendBody),
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
-
-      console.log(`📥 Réponse backend: ${response.status} ${response.statusText}`);
+      console.log('Reponse backend:', response.status, response.statusText);
 
       const contentType = response.headers.get('content-type');
 
       if (!response.ok) {
         if (contentType?.includes('application/json')) {
           const error = await response.json();
-          console.error('❌ Erreur backend (JSON):', error);
+          console.error('Erreur backend JSON:', error);
 
-          let errorMessage = 'Erreur lors de la création de l\'alerte';
+          let errorMessage = 'Erreur lors de la creation de l\'alerte';
           if (error.message && Array.isArray(error.message)) {
             errorMessage = error.message.join(', ');
           } else if (error.message) {
@@ -202,60 +212,51 @@ try {
 
           return NextResponse.json(
             { success: false, error: errorMessage, details: error },
-            { status: response.status }
+            { status: response.status },
           );
         }
 
         const textError = await response.text();
-        console.error('❌ Erreur backend (texte):', textError.substring(0, 300));
+        console.error('Erreur backend texte:', textError.substring(0, 300));
 
         return NextResponse.json(
-          { success: false, error: `Erreur ${response.status}: ${response.statusText}` },
-          { status: response.status }
+          { success: false, error: textError || `Erreur ${response.status}: ${response.statusText}` },
+          { status: response.status },
         );
       }
 
       const data = await response.json();
-      console.log('✅ Alerte créée avec succès, ID:', data.data?.id || 'inconnu');
+      console.log('Alerte creee avec succes, ID:', data.data?.id || 'inconnu');
 
       return NextResponse.json(data, { status: 201 });
-
-    } catch (fetchError: any) {
+    } catch (fetchError) {
       clearTimeout(timeoutId);
 
-      if (fetchError.name === 'AbortError') {
-        console.error('⏱️ Timeout dépassé');
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        console.error('Timeout depasse');
         return NextResponse.json(
-          { success: false, error: 'Délai d\'attente dépassé (10s).' },
-          { status: 504 }
+          { success: false, error: 'Delai d\'attente depasse (10s).' },
+          { status: 504 },
         );
       }
 
-      if (fetchError.code === 'ECONNREFUSED' || fetchError.cause?.code === 'ECONNREFUSED') {
-        console.error('🔌 Backend hors ligne');
-        return NextResponse.json(
-          { success: false, error: `Backend hors ligne (${BACKEND_URL}).` },
-          { status: 503 }
-        );
-      }
-
-      console.error('❌ Erreur réseau:', fetchError);
+      console.error('Erreur reseau:', fetchError);
       throw fetchError;
     }
-
-  } catch (error: any) {
-    console.error('💥 Erreur dans API Route:', error);
+  } catch (error) {
+    console.error('Erreur dans API Route:', error);
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(
-        { success: false, error: 'JSON invalide dans la requête' },
-        { status: 400 }
+        { success: false, error: 'JSON invalide dans la requete' },
+        { status: 400 },
       );
     }
 
+    const message = error instanceof Error ? error.message : 'Erreur serveur interne';
     return NextResponse.json(
-      { success: false, error: error.message || 'Erreur serveur interne' },
-      { status: 500 }
+      { success: false, error: message },
+      { status: 500 },
     );
   }
 }
