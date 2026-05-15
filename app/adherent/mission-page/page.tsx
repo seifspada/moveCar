@@ -162,7 +162,7 @@ export default function MissionsPage() {
         const roleRedirects: Record<string, string> = {
           partenaire: "/partenaire/acceuil",
           admin: "/admin/overview",
-          manager: "/manager/home",
+          agent: "/agent/acceuil",
         };
         router.push(roleRedirects[role] || "/login");
         return;

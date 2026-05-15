@@ -5,17 +5,21 @@ import { useRouter } from 'next/navigation';
 type Props = {
   missions: MissionDetails[];
   loading?: boolean;
-  onMissionClick?: (missionId: string) => void; // ✅ Optional callback pour plus de flexibilité
+  mode?: 'agent' | 'adherent';
+  onMissionClick?: (missionId: string) => void;
 };
 
-export default function MissionList({ missions, loading = false, onMissionClick }: Props) {
+export default function MissionList({ missions, loading = false, mode = 'agent', onMissionClick }: Props) {
   const router = useRouter();
 
   const handleMissionClick = (missionId: string) => {
     if (onMissionClick) {
       onMissionClick(missionId);
+      return;
+    }
+    if (mode === 'adherent') {
+      router.push(`/adherent/mission-reservation/${missionId}`);
     } else {
-      // Comportement par défaut
       router.push(`/agent/reservations-mission-list/${missionId}`);
     }
   };
@@ -59,12 +63,7 @@ export default function MissionList({ missions, loading = false, onMissionClick 
     return (
       <div className="col-span-full py-16 text-center">
         <svg className="mx-auto mb-4 h-16 w-16 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <p className="text-lg font-medium text-gray-400">Aucune mission trouvée</p>
         <p className="mt-2 text-sm text-gray-500">Ajustez vos filtres et réessayez</p>
@@ -75,15 +74,8 @@ export default function MissionList({ missions, loading = false, onMissionClick 
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-4">
       {missions.map((mission) => (
-        <div
-          key={mission.id}
-          onClick={() => handleMissionClick(mission.id)}
-          className="cursor-pointer"
-        >
-          <MissionCard
-            mission={mission}
-            missionId={mission.id}
-          />
+        <div key={mission.id} onClick={() => handleMissionClick(mission.id)} className="cursor-pointer">
+          <MissionCard mission={mission} missionId={mission.id} />
         </div>
       ))}
     </div>
