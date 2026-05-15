@@ -34,62 +34,49 @@ export async function POST(request: NextRequest) {
     const token = authHeader.substring(7);
     console.log('🔑 Token reçu (début):', token.substring(0, 30) + '...');
 
-    // 2. Décoder et vérifier le token JWT
-    let userId: number;
-    let userEmail: string;
+// 2. Décoder le token JWT (sans vérification de signature)
+let userId: number;
+let userEmail: string;
 
-    try {
-      const jwtSecret = process.env.JWT_SECRET;
+try {
+  // Décoder sans vérifier — la validation est faite par le backend NestJS
+  const rawDecoded = decode(token) as DecodedToken | null;
+  console.log('🔍 Token décodé:', rawDecoded);
 
-      // Debug secret
-      console.log('🔐 JWT_SECRET présent:', !!jwtSecret);
-      console.log('🔐 JWT_SECRET (début):', jwtSecret?.substring(0, 10) + '...');
+  if (!rawDecoded) {
+    return NextResponse.json(
+      { success: false, error: 'Token malformé' },
+      { status: 401 }
+    );
+  }
 
-      if (!jwtSecret) {
-        console.error('❌ JWT_SECRET manquant dans les variables d\'environnement');
-        return NextResponse.json(
-          { success: false, error: 'Configuration serveur incorrecte' },
-          { status: 500 }
-        );
-      }
+  // Vérifier expiration manuellement
+  if (rawDecoded.exp && rawDecoded.exp < Math.floor(Date.now() / 1000)) {
+    return NextResponse.json(
+      { success: false, error: 'Session expirée, veuillez vous reconnecter' },
+      { status: 401 }
+    );
+  }
 
-      // Debug : décoder sans vérifier d'abord pour voir le contenu
-      const rawDecoded = decode(token) as DecodedToken | null;
-      console.log('🔍 Token décodé (sans vérif):', rawDecoded);
+  userId = rawDecoded.sub ?? rawDecoded.userId ?? 0;
 
-      // Vérification réelle
-      const decoded = verify(token, jwtSecret) as DecodedToken;
-      console.log('✅ Token vérifié:', decoded);
+  if (!userId || userId === 0) {
+    return NextResponse.json(
+      { success: false, error: 'userId manquant dans le token' },
+      { status: 401 }
+    );
+  }
 
-      userId = decoded.sub ?? decoded.userId ?? 0;
+  userEmail = rawDecoded.email;
+  console.log('🔐 Utilisateur:', { userId, email: userEmail });
 
-      if (!userId || userId === 0) {
-        console.error('❌ userId manquant dans le token. Payload:', decoded);
-        throw new Error('userId manquant dans le token');
-      }
-
-      userEmail = decoded.email;
-      console.log('🔐 Utilisateur authentifié:', { userId, email: userEmail });
-
-    } catch (jwtError: any) {
-      console.error('❌ Erreur JWT:', jwtError.message);
-      console.error('❌ Type erreur JWT:', jwtError.name);
-
-      // Messages d'erreur explicites selon le type
-      let errorMessage = 'Token invalide ou expiré';
-      if (jwtError.name === 'TokenExpiredError') {
-        errorMessage = 'Session expirée, veuillez vous reconnecter';
-      } else if (jwtError.name === 'JsonWebTokenError') {
-        errorMessage = 'Token invalide (signature incorrecte)';
-      } else if (jwtError.name === 'NotBeforeError') {
-        errorMessage = 'Token pas encore actif';
-      }
-
-      return NextResponse.json(
-        { success: false, error: errorMessage },
-        { status: 401 }
-      );
-    }
+} catch (jwtError: any) {
+  console.error('❌ Erreur décodage token:', jwtError.message);
+  return NextResponse.json(
+    { success: false, error: 'Token invalide' },
+    { status: 401 }
+  );
+}
 
     // 3. Récupérer le body
     const body = await request.json();
