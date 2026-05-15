@@ -106,15 +106,14 @@ export function SearchFilter({ isOpen, onClose, onSearch, userId }: SearchFilter
   }, [inputDepart, inputArrivee, selectedDepart, selectedArrivee, dateDepart, dateRetour, rayon]);
 
   // Créer l'alerte trajet
- const createAlert = async () => {
+const createAlert = async () => {
   if (!selectedDepart || !selectedArrivee || !alertActive) return;
   setIsCreatingAlert(true);
 
   try {
-    // ✅ Vérifier toutes les clés possibles
-    const token = 
-      localStorage.getItem('token') || 
-      localStorage.getItem('accessToken') || 
+    const token =
+      localStorage.getItem('token') ||
+      localStorage.getItem('accessToken') ||
       localStorage.getItem('authToken') ||
       localStorage.getItem('jwt');
 
@@ -123,9 +122,6 @@ export function SearchFilter({ isOpen, onClose, onSearch, userId }: SearchFilter
       setIsCreatingAlert(false);
       return;
     }
-
-    // ✅ Debug temporaire — à retirer après confirmation
-    console.log('Token trouvé:', token.substring(0, 20) + '...');
 
     const response = await fetch('/api/mission/alertes-missions', {
       method: 'POST',
@@ -147,17 +143,19 @@ export function SearchFilter({ isOpen, onClose, onSearch, userId }: SearchFilter
       }),
     });
 
-    // ✅ Lire la réponse brute pour mieux diagnostiquer
     const data = await response.json();
-    console.log('Réponse API:', response.status, data);
 
+    // ✅ Lire data.error en priorité (format de votre API route)
     if (!response.ok) {
       throw new Error(data.error || data.message || 'Erreur lors de la création de l\'alerte');
     }
 
     toast.success(`Alerte créée pour ${selectedDepart.name} → ${selectedArrivee.name}`);
+    log('✅ Alerte créée:', data);
+
   } catch (error: any) {
-    console.error('Erreur création alerte:', error);
+    console.error('❌ Erreur création alerte:', error);
+    // ✅ error.message contient maintenant exactement ce que l'API a retourné
     toast.error(error.message || 'Erreur lors de la création de l\'alerte');
   } finally {
     setIsCreatingAlert(false);
