@@ -38,6 +38,7 @@ interface SavedPositionState {
 }
 
 const STORAGE_KEY = 'search-position-state';
+const ALERT_REQUEST_TIMEOUT = 10000;
 
 export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPositionProps) {
   const [inputValue, setInputValue] = useState("");
@@ -114,6 +115,9 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
 
       log('📤 Création alerte:', payload);
 
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), ALERT_REQUEST_TIMEOUT);
+
       const response = await fetch("/api/mission/alertes-missions", {
         method: "POST",
         headers: {
@@ -121,7 +125,10 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
+
+      window.clearTimeout(timeoutId);
 
       const data = await response.json().catch(() => null);
       if (!response.ok) {
@@ -137,7 +144,11 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
       return true;
     } catch (error: any) {
       console.error("❌ Erreur création alerte:", error);
-      toast.error(error.message || "Erreur lors de la création de l'alerte", { id: toastId });
+      const message =
+        error?.name === 'AbortError'
+          ? "Delai d'attente depasse (10s)."
+          : error.message || "Erreur lors de la création de l'alerte";
+      toast.error(message, { id: toastId });
       return false;
     } finally {
       setIsCreatingAlert(false);

@@ -44,6 +44,7 @@ interface SavedFilterState {
 }
 
 const STORAGE_KEY = 'search-filter-state';
+const ALERT_REQUEST_TIMEOUT = 10000;
 
 export function SearchFilter({ isOpen, onClose, onSearch, userId }: SearchFilterProps) {
   // Villes
@@ -124,6 +125,9 @@ const createAlert = async () => {
       return false;
     }
 
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), ALERT_REQUEST_TIMEOUT);
+
     const response = await fetch('/api/mission/alertes-missions', {
       method: 'POST',
       headers: {
@@ -142,7 +146,10 @@ const createAlert = async () => {
         dateDepart: dateDepart || undefined,
         dateDepartMax: dateRetour || undefined,
       }),
+      signal: controller.signal,
     });
+
+    window.clearTimeout(timeoutId);
 
     const data = await response.json().catch(() => null);
 
@@ -163,7 +170,11 @@ const createAlert = async () => {
   } catch (error: any) {
     console.error('❌ Erreur création alerte:', error);
     // ✅ error.message contient maintenant exactement ce que l'API a retourné
-    toast.error(error.message || 'Erreur lors de la création de l\'alerte', { id: toastId });
+    const message =
+      error?.name === 'AbortError'
+        ? "Delai d'attente depasse (10s)."
+        : error.message || 'Erreur lors de la création de l\'alerte';
+    toast.error(message, { id: toastId });
     return false;
   } finally {
     setIsCreatingAlert(false);
