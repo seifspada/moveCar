@@ -1,14 +1,11 @@
 // app/api/mission/alertes-missions/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { verify, JwtPayload } from 'jsonwebtoken';
+import { verify, decode } from 'jsonwebtoken';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 const REQUEST_TIMEOUT = 10000;
 
-/**
- * Interface pour le payload JWT
- */
 interface DecodedToken {
   sub?: number;
   userId?: number;
@@ -18,16 +15,15 @@ interface DecodedToken {
   exp?: number;
 }
 
-/**
- * POST - Créer une alerte (géographique ou trajet)
- */
 export async function POST(request: NextRequest) {
   console.log('🔔 API Route Alertes - POST appelée');
 
   try {
-    // ✅ 1. Récupérer le token depuis l'en-tête Authorization
+    // 1. Récupérer le token
     const authHeader = request.headers.get('authorization');
-    
+
+    console.log('🔑 Auth header présent:', !!authHeader);
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         { success: false, error: 'Token manquant. Vous devez être connecté.' },
@@ -36,42 +32,70 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.substring(7);
+    console.log('🔑 Token reçu (début):', token.substring(0, 30) + '...');
 
-    // ✅ 2. Décoder et vérifier le token JWT
+    // 2. Décoder et vérifier le token JWT
     let userId: number;
     let userEmail: string;
 
     try {
-      const decoded = verify(token, process.env.JWT_SECRET!) as DecodedToken;
+      const jwtSecret = process.env.JWT_SECRET;
 
-      console.log('🔍 Token décodé:', decoded);
+      // Debug secret
+      console.log('🔐 JWT_SECRET présent:', !!jwtSecret);
+      console.log('🔐 JWT_SECRET (début):', jwtSecret?.substring(0, 10) + '...');
+
+      if (!jwtSecret) {
+        console.error('❌ JWT_SECRET manquant dans les variables d\'environnement');
+        return NextResponse.json(
+          { success: false, error: 'Configuration serveur incorrecte' },
+          { status: 500 }
+        );
+      }
+
+      // Debug : décoder sans vérifier d'abord pour voir le contenu
+      const rawDecoded = decode(token) as DecodedToken | null;
+      console.log('🔍 Token décodé (sans vérif):', rawDecoded);
+
+      // Vérification réelle
+      const decoded = verify(token, jwtSecret) as DecodedToken;
+      console.log('✅ Token vérifié:', decoded);
 
       userId = decoded.sub ?? decoded.userId ?? 0;
 
       if (!userId || userId === 0) {
+        console.error('❌ userId manquant dans le token. Payload:', decoded);
         throw new Error('userId manquant dans le token');
       }
 
       userEmail = decoded.email;
-
-      console.log('🔐 Utilisateur authentifié:', {
-        userId,
-        email: userEmail,
-      });
+      console.log('🔐 Utilisateur authentifié:', { userId, email: userEmail });
 
     } catch (jwtError: any) {
       console.error('❌ Erreur JWT:', jwtError.message);
+      console.error('❌ Type erreur JWT:', jwtError.name);
+
+      // Messages d'erreur explicites selon le type
+      let errorMessage = 'Token invalide ou expiré';
+      if (jwtError.name === 'TokenExpiredError') {
+        errorMessage = 'Session expirée, veuillez vous reconnecter';
+      } else if (jwtError.name === 'JsonWebTokenError') {
+        errorMessage = 'Token invalide (signature incorrecte)';
+      } else if (jwtError.name === 'NotBeforeError') {
+        errorMessage = 'Token pas encore actif';
+      }
+
       return NextResponse.json(
-        { success: false, error: 'Token invalide ou expiré' },
+        { success: false, error: errorMessage },
         { status: 401 }
       );
     }
 
-    // ✅ 3. Récupérer le body de la requête
+    // 3. Récupérer le body
     const body = await request.json();
     console.log('📥 Body reçu:', JSON.stringify(body, null, 2));
 
-    // ✅ 4. Validation du type
+    // 4. Validation du type
     if (!body.type || !['GEOGRAPHIQUE', 'TRAJET'].includes(body.type)) {
       return NextResponse.json(
         { success: false, error: 'Type invalide (GEOGRAPHIQUE ou TRAJET requis)' },
@@ -79,7 +103,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ✅ 5. Validation selon le type
+    // 5. Validation selon le type
     if (body.type === 'GEOGRAPHIQUE') {
       const missing = [];
       if (!body.villeNom) missing.push('villeNom');
@@ -89,10 +113,7 @@ export async function POST(request: NextRequest) {
 
       if (missing.length > 0) {
         return NextResponse.json(
-          { 
-            success: false, 
-            error: `Champs manquants: ${missing.join(', ')}` 
-          },
+          { success: false, error: `Champs manquants: ${missing.join(', ')}` },
           { status: 400 }
         );
       }
@@ -110,57 +131,54 @@ export async function POST(request: NextRequest) {
 
       if (missing.length > 0) {
         return NextResponse.json(
-          { 
-            success: false, 
-            error: `Champs manquants: ${missing.join(', ')}` 
-          },
+          { success: false, error: `Champs manquants: ${missing.join(', ')}` },
           { status: 400 }
         );
       }
     }
 
-    // ✅ 6. Endpoint selon le type
+    // 6. Endpoint selon le type
     const endpoint = body.type === 'GEOGRAPHIQUE'
       ? `${BACKEND_URL}/api/alertes/geographique`
       : `${BACKEND_URL}/api/alertes/trajet`;
 
     console.log(`🔄 Envoi vers: ${endpoint}`);
 
-    // ✅ 7. 🔥 CONSTRUIRE LE BODY SELON LE TYPE
-// ✅ 7. Construire le body selon le type
-let backendBody: any;
+    // 7. Construire le body selon le type
+    let backendBody: any;
 
-if (body.type === 'GEOGRAPHIQUE') {
-  backendBody = {
-    userId,
-    villeNom: body.villeNom,
-    latitude: body.latitude,
-    longitude: body.longitude,
-    rayon: body.rayon,
-    emailActif: body.emailActif ?? true,
-    pushActif: false,
-    dateDepart: body.dateDepart || undefined,
-    dateDepartMax: body.dateDepartMax || undefined,
-  };
-} else if (body.type === 'TRAJET') {  // ← else if, pas if
-  backendBody = {
-    userId,
-    villeDepartNom: body.villeDepartNom,
-    latitudeDepart: body.latitudeDepart,
-    longitudeDepart: body.longitudeDepart,
-    villeArriveeNom: body.villeArriveeNom,
-    latitudeArrivee: body.latitudeArrivee,
-    longitudeArrivee: body.longitudeArrivee,
-    rayon: body.rayon,
-    emailActif: body.emailActif ?? true,
-    pushActif: false,
-    dateDepart: body.dateDepart || undefined,
-    dateDepartMax: body.dateDepartMax || undefined,  // ← dateDepartMax pas dateRetour
-  };
-}
+    if (body.type === 'GEOGRAPHIQUE') {
+      backendBody = {
+        userId,
+        villeNom: body.villeNom,
+        latitude: body.latitude,
+        longitude: body.longitude,
+        rayon: body.rayon,
+        emailActif: body.emailActif ?? true,
+        pushActif: false,
+        dateDepart: body.dateDepart || undefined,
+        dateDepartMax: body.dateDepartMax || undefined,
+      };
+    } else {
+      backendBody = {
+        userId,
+        villeDepartNom: body.villeDepartNom,
+        latitudeDepart: body.latitudeDepart,
+        longitudeDepart: body.longitudeDepart,
+        villeArriveeNom: body.villeArriveeNom,
+        latitudeArrivee: body.latitudeArrivee,
+        longitudeArrivee: body.longitudeArrivee,
+        rayon: body.rayon,
+        emailActif: body.emailActif ?? true,
+        pushActif: false,
+        dateDepart: body.dateDepart || undefined,
+        dateDepartMax: body.dateDepartMax || undefined,
+      };
+    }
+
     console.log('📤 Body envoyé au backend:', JSON.stringify(backendBody, null, 2));
 
-    // ✅ 8. Appel backend avec timeout
+    // 8. Appel backend avec timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
@@ -187,7 +205,6 @@ if (body.type === 'GEOGRAPHIQUE') {
           console.error('❌ Erreur backend (JSON):', error);
 
           let errorMessage = 'Erreur lors de la création de l\'alerte';
-
           if (error.message && Array.isArray(error.message)) {
             errorMessage = error.message.join(', ');
           } else if (error.message) {
@@ -197,11 +214,7 @@ if (body.type === 'GEOGRAPHIQUE') {
           }
 
           return NextResponse.json(
-            {
-              success: false,
-              error: errorMessage,
-              details: error,
-            },
+            { success: false, error: errorMessage, details: error },
             { status: response.status }
           );
         }
@@ -210,17 +223,13 @@ if (body.type === 'GEOGRAPHIQUE') {
         console.error('❌ Erreur backend (texte):', textError.substring(0, 300));
 
         return NextResponse.json(
-          {
-            success: false,
-            error: `Erreur ${response.status}: ${response.statusText}`,
-          },
+          { success: false, error: `Erreur ${response.status}: ${response.statusText}` },
           { status: response.status }
         );
       }
 
-      // ✅ Succès
       const data = await response.json();
-      console.log('✅ Alerte créée:', data.data?.id || 'ID inconnu');
+      console.log('✅ Alerte créée avec succès, ID:', data.data?.id || 'inconnu');
 
       return NextResponse.json(data, { status: 201 });
 
@@ -230,10 +239,7 @@ if (body.type === 'GEOGRAPHIQUE') {
       if (fetchError.name === 'AbortError') {
         console.error('⏱️ Timeout dépassé');
         return NextResponse.json(
-          {
-            success: false,
-            error: 'Délai d\'attente dépassé (10s).',
-          },
+          { success: false, error: 'Délai d\'attente dépassé (10s).' },
           { status: 504 }
         );
       }
@@ -241,10 +247,7 @@ if (body.type === 'GEOGRAPHIQUE') {
       if (fetchError.code === 'ECONNREFUSED' || fetchError.cause?.code === 'ECONNREFUSED') {
         console.error('🔌 Backend hors ligne');
         return NextResponse.json(
-          {
-            success: false,
-            error: `Backend hors ligne (${BACKEND_URL}).`,
-          },
+          { success: false, error: `Backend hors ligne (${BACKEND_URL}).` },
           { status: 503 }
         );
       }
@@ -264,10 +267,7 @@ if (body.type === 'GEOGRAPHIQUE') {
     }
 
     return NextResponse.json(
-      {
-        success: false,
-        error: error.message || 'Erreur serveur interne',
-      },
+      { success: false, error: error.message || 'Erreur serveur interne' },
       { status: 500 }
     );
   }

@@ -106,54 +106,63 @@ export function SearchFilter({ isOpen, onClose, onSearch, userId }: SearchFilter
   }, [inputDepart, inputArrivee, selectedDepart, selectedArrivee, dateDepart, dateRetour, rayon]);
 
   // Créer l'alerte trajet
-  const createAlert = async () => {
-    if (!selectedDepart || !selectedArrivee || !alertActive) return;
+ const createAlert = async () => {
+  if (!selectedDepart || !selectedArrivee || !alertActive) return;
+  setIsCreatingAlert(true);
 
-    setIsCreatingAlert(true);
+  try {
+    // ✅ Vérifier toutes les clés possibles
+    const token = 
+      localStorage.getItem('token') || 
+      localStorage.getItem('accessToken') || 
+      localStorage.getItem('authToken') ||
+      localStorage.getItem('jwt');
 
-    try {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        toast.error('Vous devez être connecté pour créer une alerte');
-        return;
-      }
-
-      const response = await fetch('/api/mission/alertes-missions', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-  type: 'TRAJET',
-  villeDepartNom: selectedDepart.name,
-  latitudeDepart: selectedDepart.lat,
-  longitudeDepart: selectedDepart.lon,
-  villeArriveeNom: selectedArrivee.name,
-  latitudeArrivee: selectedArrivee.lat,
-  longitudeArrivee: selectedArrivee.lon,
-  rayon: rayon,
-  dateDepart: dateDepart || undefined,
-  dateDepartMax: dateRetour || undefined,  // ← renommer dateRetour en dateDepartMax
-}),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de la création de l\'alerte');
-      }
-
-      toast.success(`🔔 Alerte créée pour le trajet ${selectedDepart.name} → ${selectedArrivee.name} (${rayon} km)`);
-      log('✅ Alerte créée:', data.data); // ✅ REMPLACER console.log par log
-    } catch (error: any) {
-      console.error('❌ Erreur création alerte:', error); // ✅ Garder console.error
-      toast.error(error.message || 'Erreur lors de la création de l\'alerte');
-    } finally {
+    if (!token) {
+      toast.error('Vous devez être connecté pour créer une alerte');
       setIsCreatingAlert(false);
+      return;
     }
-  };
+
+    // ✅ Debug temporaire — à retirer après confirmation
+    console.log('Token trouvé:', token.substring(0, 20) + '...');
+
+    const response = await fetch('/api/mission/alertes-missions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        type: 'TRAJET',
+        villeDepartNom: selectedDepart.name,
+        latitudeDepart: selectedDepart.lat,
+        longitudeDepart: selectedDepart.lon,
+        villeArriveeNom: selectedArrivee.name,
+        latitudeArrivee: selectedArrivee.lat,
+        longitudeArrivee: selectedArrivee.lon,
+        rayon,
+        dateDepart: dateDepart || undefined,
+        dateDepartMax: dateRetour || undefined,
+      }),
+    });
+
+    // ✅ Lire la réponse brute pour mieux diagnostiquer
+    const data = await response.json();
+    console.log('Réponse API:', response.status, data);
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || 'Erreur lors de la création de l\'alerte');
+    }
+
+    toast.success(`Alerte créée pour ${selectedDepart.name} → ${selectedArrivee.name}`);
+  } catch (error: any) {
+    console.error('Erreur création alerte:', error);
+    toast.error(error.message || 'Erreur lors de la création de l\'alerte');
+  } finally {
+    setIsCreatingAlert(false);
+  }
+};
 
   const handleSearch = async () => {
     // Créer l'alerte si activée et les 2 villes sont sélectionnées
