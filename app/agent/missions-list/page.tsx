@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { MissionDetails } from '@/app/types/mission';
 import { Search, RefreshCw } from 'lucide-react';
 import { useQuery } from '@apollo/client/react';
@@ -13,7 +12,6 @@ interface GetMissionsForCardsByAgenceData {
 }
 
 export default function AgenceMissionsPage() {
-  const router = useRouter();
   const [searchText, setSearchText] = useState('');
 
   const { data, loading, error, refetch } = useQuery<GetMissionsForCardsByAgenceData>(
@@ -31,9 +29,7 @@ export default function AgenceMissionsPage() {
       )
     : missions;
 
-  const handleMissionClick = (missionId: string) => {
-    router.push(`/agent/reservations-mission-list/${missionId}`);
-  };
+
 
   return (
     <div className="min-h-screen bg-zinc-950 px-4 py-8 md:px-8">
@@ -125,10 +121,10 @@ export default function AgenceMissionsPage() {
       {/* ── MissionList Component ── */}
       {!loading && !error && filtered.length > 0 && (
         <MissionList
-          missions={filtered}
-          loading={loading}
-          onMissionClick={handleMissionClick}
-        />
+  missions={filtered}
+  loading={loading}
+  mode="agent"
+/>
       )}
 
     </div>

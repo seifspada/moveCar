@@ -399,7 +399,7 @@ export default function MissionsPage() {
               ))}
             </div>
           ) : (
-            <MissionList missions={missions} />
+            <MissionList missions={missions} mode="adherent" />
           )}
 
           {/* Pagination */}
