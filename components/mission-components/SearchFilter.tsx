@@ -44,7 +44,7 @@ interface SavedFilterState {
 }
 
 const STORAGE_KEY = 'search-filter-state';
-const ALERT_REQUEST_TIMEOUT = 10000;
+const ALERT_REQUEST_TIMEOUT = 30000;
 
 export function SearchFilter({ isOpen, onClose, onSearch, userId }: SearchFilterProps) {
   // Villes
@@ -172,7 +172,7 @@ const createAlert = async () => {
     // ✅ error.message contient maintenant exactement ce que l'API a retourné
     const message =
       error?.name === 'AbortError'
-        ? "Delai d'attente depasse (10s)."
+        ? "Delai d'attente depasse (30s)."
         : error.message || 'Erreur lors de la création de l\'alerte';
     toast.error(message, { id: toastId });
     return false;

@@ -9,7 +9,7 @@ const BACKEND_URL =
   'http://localhost:3000';
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const REQUEST_TIMEOUT = 10000;
+const REQUEST_TIMEOUT = 30000;
 
 interface DecodedToken {
   sub?: number;
@@ -235,7 +235,7 @@ export async function POST(request: NextRequest) {
       if (fetchError instanceof Error && fetchError.name === 'AbortError') {
         console.error('Timeout depasse');
         return NextResponse.json(
-          { success: false, error: 'Delai d\'attente depasse (10s).' },
+          { success: false, error: 'Delai d\'attente depasse (30s).' },
           { status: 504 },
         );
       }

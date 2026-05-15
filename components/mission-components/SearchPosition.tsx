@@ -38,7 +38,7 @@ interface SavedPositionState {
 }
 
 const STORAGE_KEY = 'search-position-state';
-const ALERT_REQUEST_TIMEOUT = 10000;
+const ALERT_REQUEST_TIMEOUT = 30000;
 
 export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPositionProps) {
   const [inputValue, setInputValue] = useState("");
@@ -146,7 +146,7 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
       console.error("❌ Erreur création alerte:", error);
       const message =
         error?.name === 'AbortError'
-          ? "Delai d'attente depasse (10s)."
+          ? "Delai d'attente depasse (30s)."
           : error.message || "Erreur lors de la création de l'alerte";
       toast.error(message, { id: toastId });
       return false;
