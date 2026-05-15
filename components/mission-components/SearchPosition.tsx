@@ -90,13 +90,15 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
   }, []);
 
   const createAlert = useCallback(async () => {
-    if (!selectedCity || !alertActive) return;
+    if (!selectedCity || !alertActive) return true;
     setIsCreatingAlert(true);
+    const toastId = toast.loading("Création de l'alerte...");
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        toast.error("Vous devez être connecté pour créer une alerte");
-        return;
+        toast.error("Vous devez être connecté pour créer une alerte", { id: toastId });
+        return false;
       }
 
       const payload = {
@@ -121,14 +123,22 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Erreur lors de la création de l'alerte");
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        const message =
+          data?.error ||
+          data?.message ||
+          data?.details?.message ||
+          "Erreur lors de la création de l'alerte";
+        throw new Error(message);
+      }
 
-      toast.success(`🔔 Alerte créée pour ${selectedCity.name} (${radius} km)`);
+      toast.success(`Alerte créée pour ${selectedCity.name} (${radius} km)`, { id: toastId });
+      return true;
     } catch (error: any) {
       console.error("❌ Erreur création alerte:", error);
-      toast.error(error.message || "Erreur lors de la création de l'alerte");
-      throw error;
+      toast.error(error.message || "Erreur lors de la création de l'alerte", { id: toastId });
+      return false;
     } finally {
       setIsCreatingAlert(false);
     }
@@ -140,7 +150,10 @@ export function SearchPosition({ isOpen, onClose, onSearch, userId }: SearchPosi
       return;
     }
     try {
-      if (alertActive) await createAlert();
+      if (alertActive) {
+        const alertCreated = await createAlert();
+        if (!alertCreated) return;
+      }
       onSearch({ city: selectedCity, radius });
       onClose();
     } catch (error) {

@@ -107,8 +107,9 @@ export function SearchFilter({ isOpen, onClose, onSearch, userId }: SearchFilter
 
   // Créer l'alerte trajet
 const createAlert = async () => {
-  if (!selectedDepart || !selectedArrivee || !alertActive) return;
+  if (!selectedDepart || !selectedArrivee || !alertActive) return true;
   setIsCreatingAlert(true);
+  const toastId = toast.loading('Création de l\'alerte...');
 
   try {
     const token =
@@ -118,9 +119,9 @@ const createAlert = async () => {
       localStorage.getItem('jwt');
 
     if (!token) {
-      toast.error('Vous devez être connecté pour créer une alerte');
+      toast.error('Vous devez être connecté pour créer une alerte', { id: toastId });
       setIsCreatingAlert(false);
-      return;
+      return false;
     }
 
     const response = await fetch('/api/mission/alertes-missions', {
@@ -143,20 +144,27 @@ const createAlert = async () => {
       }),
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
 
     // ✅ Lire data.error en priorité (format de votre API route)
     if (!response.ok) {
-      throw new Error(data.error || data.message || 'Erreur lors de la création de l\'alerte');
+      const message =
+        data?.error ||
+        data?.message ||
+        data?.details?.message ||
+        'Erreur lors de la création de l\'alerte';
+      throw new Error(message);
     }
 
-    toast.success(`Alerte créée pour ${selectedDepart.name} → ${selectedArrivee.name}`);
+    toast.success(`Alerte créée pour ${selectedDepart.name} → ${selectedArrivee.name}`, { id: toastId });
     log('✅ Alerte créée:', data);
+    return true;
 
   } catch (error: any) {
     console.error('❌ Erreur création alerte:', error);
     // ✅ error.message contient maintenant exactement ce que l'API a retourné
-    toast.error(error.message || 'Erreur lors de la création de l\'alerte');
+    toast.error(error.message || 'Erreur lors de la création de l\'alerte', { id: toastId });
+    return false;
   } finally {
     setIsCreatingAlert(false);
   }
@@ -165,7 +173,8 @@ const createAlert = async () => {
   const handleSearch = async () => {
     // Créer l'alerte si activée et les 2 villes sont sélectionnées
     if (alertActive && selectedDepart && selectedArrivee) {
-      await createAlert();
+      const alertCreated = await createAlert();
+      if (!alertCreated) return;
     }
 
     onSearch({
