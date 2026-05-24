@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import { Marker, Popup, Polyline } from "react-leaflet";
 import { divIcon } from "leaflet";
 import Link from "next/link";
@@ -43,13 +44,30 @@ function getVehicleIconSVG(
     </filter>
   </defs>
   ${selectedRing}
-  <path d="M24 3 C14 3 6 11 6 21 c0 13 18 24 18 24 s18-11 18-24 C42 11 34 3 24 3Z"
+  <rect x="3" y="5" width="42" height="38" rx="10"
     fill="#18181b" stroke="${borderColor}" stroke-width="${selected ? 3 : 2.5}"
     filter="url(#sh${size})"/>
-  <circle cx="24" cy="21" r="11" fill="${borderColor}" opacity="0.2"/>
-  <path d="M27 8 L15 24 h8 l-2 11 12-17 h-8 l2-10Z" fill="#f8fafc"/>
-  <circle cx="37" cy="11" r="5" fill="${borderColor}" stroke="#18181b" stroke-width="1.5"/>
+  <path d="M8 27 L12 18 C13 15.8 15 14 17.5 14h13c2.5 0 4.5 1.8 5.5 4l4 9v7H8v-7Z" fill="#f8fafc"/>
+  <path d="M14 18.5 C14.7 17 16 16 17.8 16h12.4c1.8 0 3.1 1 3.8 2.5l2.2 5H11.8l2.2-5Z" fill="#bfdbfe"/>
+  <path d="M23 17 L19 24h4l-1.5 7 6-9h-4l1.5-5Z" fill="${borderColor}"/>
+  <circle cx="15" cy="34" r="4.5" fill="#18181b" stroke="#e5e7eb" stroke-width="1.5"/>
+  <circle cx="33" cy="34" r="4.5" fill="#18181b" stroke="#e5e7eb" stroke-width="1.5"/>
+  <circle cx="38" cy="12" r="5" fill="${borderColor}" stroke="#18181b" stroke-width="1.5"/>
 </svg>`.trim();
+}
+
+async function fetchRoadRoute(start: [number, number], end: [number, number]): Promise<[number, number][]> {
+  const url = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`;
+  const response = await fetch(url);
+  if (!response.ok) return [start, end];
+
+  const data = await response.json() as {
+    routes?: Array<{ geometry?: { coordinates?: [number, number][] } }>;
+  };
+  const coordinates = data.routes?.[0]?.geometry?.coordinates;
+
+  if (!coordinates?.length) return [start, end];
+  return coordinates.map(([longitude, latitude]) => [latitude, longitude]);
 }
 
 function buildRoutePointIcon(type: "departure" | "destination") {
@@ -93,6 +111,51 @@ export default function AgentMapMarkers({
   trackHistory = {},
   routePoints = {},
 }: AgentMapMarkersProps) {
+  const [roadRoutes, setRoadRoutes] = useState<Record<string, {
+    full?: [number, number][];
+    remaining?: [number, number][];
+  }>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRoadRoutes() {
+      const entries = await Promise.all(missions.map(async (mission) => {
+        const history = trackHistory[mission.missionId] ?? [];
+        const route = routePoints[mission.missionId] ?? {};
+        const departure = history[0] ? ([history[0].latitude, history[0].longitude] as [number, number]) : undefined;
+        const current = [mission.latitude, mission.longitude] as [number, number];
+        const destination = route.destination;
+
+        if (!destination) return [mission.missionId, undefined] as const;
+
+        const [full, remaining] = await Promise.all([
+          departure ? fetchRoadRoute(departure, destination) : Promise.resolve(undefined),
+          fetchRoadRoute(current, destination),
+        ]);
+
+        return [mission.missionId, { full, remaining }] as const;
+      }));
+
+      if (cancelled) return;
+
+      setRoadRoutes((prev) => {
+        const next = { ...prev };
+        entries.forEach(([missionId, route]) => {
+          if (route) next[missionId] = route;
+          else delete next[missionId];
+        });
+        return next;
+      });
+    }
+
+    loadRoadRoutes();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [missions, routePoints, trackHistory]);
+
   return (
     <>
       {missions.map((mission) => {
@@ -113,13 +176,16 @@ export default function AgentMapMarkers({
         const fullRoutePath: [number, number][] = departure && destination
           ? [departure, destination]
           : [];
+        const roadRoute = roadRoutes[mission.missionId];
+        const remainingRoadPath = roadRoute?.remaining ?? remainingPath;
+        const fullRoadPath = roadRoute?.full ?? fullRoutePath;
 
         return (
           <span key={mission.missionId}>
             {/* Trajectoire passée — bleu */}
-            {fullRoutePath.length === 2 && (
+            {fullRoadPath.length > 1 && (
               <Polyline
-                positions={fullRoutePath}
+                positions={fullRoadPath}
                 pathOptions={{
                   color: "#06b6d4",
                   weight: 4,
@@ -141,9 +207,9 @@ export default function AgentMapMarkers({
             )}
 
             {/* Trajectoire restante — orange */}
-            {remainingPath.length === 2 && (
+            {remainingRoadPath.length > 1 && (
               <Polyline
-                positions={remainingPath}
+                positions={remainingRoadPath}
                 pathOptions={{
                   color: "#ea580c",
                   weight: 3,
