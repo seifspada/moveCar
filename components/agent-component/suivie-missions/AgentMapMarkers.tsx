@@ -83,7 +83,7 @@ interface AgentMapMarkersProps {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   trackHistory?: Record<string, GPSTrack[]>;
-  routePoints?: Record<string, { departure?: [number, number]; destination?: [number, number] }>;
+  routePoints?: Record<string, { destination?: [number, number] }>;
 }
 
 export default function AgentMapMarkers({
@@ -100,7 +100,7 @@ export default function AgentMapMarkers({
         const isSelected = selectedId === mission.missionId;
         const history = trackHistory[mission.missionId] ?? [];
         const route = routePoints[mission.missionId] ?? {};
-        const departure = route.departure ?? (history[0] ? ([history[0].latitude, history[0].longitude] as [number, number]) : undefined);
+        const departure = history[0] ? ([history[0].latitude, history[0].longitude] as [number, number]) : undefined;
         const destination = route.destination;
 
         // ── Tracé passé (bleu) ──────────────────────────────

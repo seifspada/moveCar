@@ -52,19 +52,15 @@ export default function AgentMapView() {
 
   // Points de route extraits depuis les missions.
   const routePoints = useMemo(() => {
-    const map: Record<string, { departure?: [number, number]; destination?: [number, number] }> = {};
+    const map: Record<string, { destination?: [number, number] }> = {};
     missions.forEach((m) => {
-      const departure =
-        typeof m.latitudeDepart === "number" && typeof m.longitudeDepart === "number"
-          ? ([m.latitudeDepart, m.longitudeDepart] as [number, number])
-          : undefined;
       const destination =
         typeof m.latitudeArrivee === "number" && typeof m.longitudeArrivee === "number"
           ? ([m.latitudeArrivee, m.longitudeArrivee] as [number, number])
           : undefined;
 
-      if (departure || destination) {
-        map[m.missionId] = { departure, destination };
+      if (destination) {
+        map[m.missionId] = { destination };
       }
     });
     return map;
