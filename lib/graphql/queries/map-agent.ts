@@ -13,8 +13,10 @@ export const GET_ACTIVE_MISSIONS_MAP = gql`
     accuracy
     lastGpsAt
     isDeviated
-    latitudeArrivee   # ← à ajouter
-    longitudeArrivee  # ← à ajouter
+    latitudeDepart
+    longitudeDepart
+    latitudeArrivee
+    longitudeArrivee
   }
 }
 `;

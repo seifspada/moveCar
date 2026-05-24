@@ -18,7 +18,7 @@ export default function AgentMapView() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     import("leaflet").then((L) => {
-      delete (L as any).Icon.Default.prototype._getIconUrl;
+      delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
         iconUrl:       "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -42,7 +42,7 @@ export default function AgentMapView() {
           [missionId]: data.getMissionTrackingHistory,
         }));
       }
-    } catch (_) {}
+    } catch {}
   }, [client, trackHistory]);
 
   const handleSelect = useCallback((id: string | null) => {
@@ -50,14 +50,21 @@ export default function AgentMapView() {
     if (id) loadHistory(id);
   }, [loadHistory]);
 
-  // Points d'arrivée : extraits depuis les missions
-  // Votre backend devrait fournir latitudeFin/longitudeFin dans getActiveMissionsMap
-  // Sinon on laisse vide — la ligne orange n'apparaît que si dispo
-  const destinations = useMemo(() => {
-    const map: Record<string, [number, number]> = {};
+  // Points de route extraits depuis les missions.
+  const routePoints = useMemo(() => {
+    const map: Record<string, { departure?: [number, number]; destination?: [number, number] }> = {};
     missions.forEach((m) => {
-      if ((m as any).latitudeArrivee && (m as any).longitudeArrivee) {
-        map[m.missionId] = [(m as any).latitudeArrivee, (m as any).longitudeArrivee];
+      const departure =
+        typeof m.latitudeDepart === "number" && typeof m.longitudeDepart === "number"
+          ? ([m.latitudeDepart, m.longitudeDepart] as [number, number])
+          : undefined;
+      const destination =
+        typeof m.latitudeArrivee === "number" && typeof m.longitudeArrivee === "number"
+          ? ([m.latitudeArrivee, m.longitudeArrivee] as [number, number])
+          : undefined;
+
+      if (departure || destination) {
+        map[m.missionId] = { departure, destination };
       }
     });
     return map;
@@ -98,8 +105,9 @@ export default function AgentMapView() {
         <LegendItem dot="bg-orange-400" label="GPS ancien (> 10 min)" />
         <LegendItem dot="bg-red-400"    label="Déviation GPS" />
         <div className="border-t border-zinc-700 pt-1.5 space-y-1">
-          <LegendLine color="bg-blue-400"   label="Trajet parcouru" />
-          <LegendLine color="bg-orange-400" label="Trajet restant" dashed />
+          <LegendLine color="bg-cyan-400" label="Route départ-arrivée" />
+          <LegendLine color="bg-blue-400" label="Trajet parcouru" />
+          <LegendLine color="bg-orange-400" label="Position-arrivée" dashed />
         </div>
       </div>
 
@@ -135,7 +143,7 @@ export default function AgentMapView() {
           selectedId={selectedId}
           onSelect={handleSelect}
           trackHistory={trackHistory}
-          destinations={destinations}
+          routePoints={routePoints}
         />
       </MapContainer>
 

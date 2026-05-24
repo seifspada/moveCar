@@ -11,6 +11,8 @@ export interface ActiveMission {
   accuracy: number | null;
   lastGpsAt: string;
   isDeviated: boolean;
+  latitudeDepart?: number;
+  longitudeDepart?: number;
   latitudeArrivee?: number;
   longitudeArrivee?: number;
 }

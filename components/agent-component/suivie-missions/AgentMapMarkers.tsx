@@ -5,63 +5,12 @@ import Link from "next/link";
 import { ActiveMission, getMarkerStatus, formatLastSeen } from "@/app/types/map-agent";
 import { GPSTrack } from "@/app/types/map-agent";
 
-// ── Icône véhicule SVG inline par type ──────────────────────
-function getVehicleSVG(vehicleName: string, status: "normal" | "gps_old" | "deviated"): string {
-  const borderColor = {
-    normal:   "#22c55e",
-    gps_old:  "#ea580c",
-    deviated: "#dc2626",
-  }[status];
-
-  // Déduction du type de véhicule depuis le nom
-  const name = vehicleName.toLowerCase();
-  const isVan = name.includes("van") || name.includes("utilitaire") || name.includes("camion");
-  const isSuv = name.includes("suv") || name.includes("4x4");
-  const isCabrio = name.includes("cabrio") || name.includes("cabriolet");
-
-  // SVG voiture de profil — 3 variants
-  const carBody = isVan
-    ? `<!-- Van/Utilitaire -->
-       <rect x="4" y="14" width="38" height="18" rx="3" fill="white"/>
-       <rect x="4" y="10" width="22" height="10" rx="2" fill="white" opacity="0.9"/>
-       <circle cx="13" cy="34" r="5" fill="#374151" stroke="white" stroke-width="1.5"/>
-       <circle cx="35" cy="34" r="5" fill="#374151" stroke="white" stroke-width="1.5"/>
-       <rect x="26" y="12" width="14" height="7" rx="1" fill="#93c5fd" opacity="0.7"/>`
-    : isCabrio
-    ? `<!-- Cabriolet -->
-       <path d="M8 22 Q24 10 40 22" stroke="white" stroke-width="2" fill="none"/>
-       <rect x="4" y="22" width="38" height="10" rx="3" fill="white"/>
-       <circle cx="13" cy="34" r="5" fill="#374151" stroke="white" stroke-width="1.5"/>
-       <circle cx="35" cy="34" r="5" fill="#374151" stroke="white" stroke-width="1.5"/>`
-    : `<!-- Berline/SUV -->
-       <path d="M6 24 L10 14 Q24 8 38 14 L42 24 L42 32 L6 32 Z" fill="white"/>
-       <path d="M11 14 Q24 8 37 14 L38 23 L10 23 Z" fill="#93c5fd" opacity="0.6"/>
-       <circle cx="14" cy="34" r="5" fill="#374151" stroke="white" stroke-width="1.5"/>
-       <circle cx="34" cy="34" r="5" fill="#374151" stroke="white" stroke-width="1.5"/>
-       <rect x="6" y="23" width="36" height="9" rx="1" fill="white"/>`;
-
-  return `
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-  <defs>
-    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.5)"/></filter>
-  </defs>
-  <!-- Fond carte -->
-  <rect x="2" y="2" width="44" height="44" rx="10"
-    fill="#18181b" stroke="${borderColor}" stroke-width="2.5" filter="url(#sh)"/>
-  <!-- Indicateur statut (coin haut droit) -->
-  <circle cx="38" cy="10" r="5" fill="${borderColor}" stroke="#18181b" stroke-width="1.5"/>
-  <!-- Corps véhicule -->
-  ${carBody}
-</svg>`.trim();
-}
-
 function buildVehicleIcon(
-  vehicleName: string,
   status: "normal" | "gps_old" | "deviated",
   selected: boolean
 ) {
   const size = selected ? 56 : 48;
-  const svg = getVehicleIconSVG(vehicleName, status, selected, size);
+  const svg = getVehicleIconSVG(status, selected, size);
   return divIcon({
     html: svg,
     className: "",
@@ -72,7 +21,6 @@ function buildVehicleIcon(
 }
 
 function getVehicleIconSVG(
-  vehicleName: string,
   status: "normal" | "gps_old" | "deviated",
   selected: boolean,
   size: number
@@ -82,30 +30,6 @@ function getVehicleIconSVG(
     gps_old:  "#ea580c",
     deviated: "#dc2626",
   }[status];
-
-  const name = vehicleName.toLowerCase();
-  const isVan = name.includes("van") || name.includes("utilitaire") || name.includes("camion") || name.includes("vu");
-  const isCabrio = name.includes("cabrio") || name.includes("cabriolet");
-
-  const scale = size / 48;
-  const carPath = isVan
-    ? `<rect x="4" y="14" width="38" height="18" rx="3" fill="white"/>
-       <rect x="4" y="10" width="22" height="10" rx="2" fill="white" opacity="0.9"/>
-       <circle cx="13" cy="33" r="4.5" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.5"/>
-       <circle cx="35" cy="33" r="4.5" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.5"/>
-       <rect x="27" y="12" width="13" height="7" rx="1" fill="#93c5fd" opacity="0.7"/>
-       <rect x="6" y="20" width="18" height="5" rx="1" fill="#93c5fd" opacity="0.5"/>`
-    : isCabrio
-    ? `<path d="M8 24 Q14 13 28 13 Q36 13 40 20 L42 24" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-       <rect x="4" y="24" width="40" height="9" rx="3" fill="white"/>
-       <circle cx="14" cy="35" r="4.5" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.5"/>
-       <circle cx="34" cy="35" r="4.5" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.5"/>`
-    : `<path d="M7 25 L12 15 Q24 9 36 15 L41 25 L41 33 L7 33 Z" fill="white"/>
-       <path d="M13 15 Q24 9 35 15 L37 24 L11 24 Z" fill="#bfdbfe" opacity="0.8"/>
-       <circle cx="15" cy="35" r="4.5" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.5"/>
-       <circle cx="33" cy="35" r="4.5" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.5"/>
-       <rect x="7" y="24" width="34" height="9" rx="1" fill="white"/>
-       <rect x="28" y="17" width="8" height="6" rx="1" fill="#bfdbfe" opacity="0.7"/>`;
 
   const selectedRing = selected
     ? `<circle cx="24" cy="24" r="22" fill="none" stroke="${borderColor}" stroke-width="2" stroke-dasharray="4 3" opacity="0.7"/>`
@@ -119,12 +43,38 @@ function getVehicleIconSVG(
     </filter>
   </defs>
   ${selectedRing}
-  <rect x="2" y="2" width="44" height="44" rx="10"
+  <path d="M24 3 C14 3 6 11 6 21 c0 13 18 24 18 24 s18-11 18-24 C42 11 34 3 24 3Z"
     fill="#18181b" stroke="${borderColor}" stroke-width="${selected ? 3 : 2.5}"
     filter="url(#sh${size})"/>
-  <circle cx="38" cy="10" r="5" fill="${borderColor}" stroke="#18181b" stroke-width="1.5"/>
-  ${carPath}
+  <circle cx="24" cy="21" r="11" fill="${borderColor}" opacity="0.2"/>
+  <path d="M27 8 L15 24 h8 l-2 11 12-17 h-8 l2-10Z" fill="#f8fafc"/>
+  <circle cx="37" cy="11" r="5" fill="${borderColor}" stroke="#18181b" stroke-width="1.5"/>
 </svg>`.trim();
+}
+
+function buildRoutePointIcon(type: "departure" | "destination") {
+  const isDeparture = type === "departure";
+  const color = isDeparture ? "#06b6d4" : "#f97316";
+  const label = isDeparture ? "D" : "A";
+  const symbol = isDeparture
+    ? `<path d="M16 28 V15 h9.5 c3 0 5 1.8 5 4.5s-2 4.5-5 4.5H16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`
+    : `<path d="M16 29 24 13l8 16M19 24h10" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+  return divIcon({
+    className: "",
+    iconSize: [36, 44],
+    iconAnchor: [18, 42],
+    popupAnchor: [0, -38],
+    html: `
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
+  <defs><filter id="route-${type}"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.55)"/></filter></defs>
+  <path d="M18 2 C9.7 2 3 8.7 3 17 c0 11 15 25 15 25s15-14 15-25C33 8.7 26.3 2 18 2Z"
+    fill="#18181b" stroke="${color}" stroke-width="2.5" filter="url(#route-${type})"/>
+  <circle cx="18" cy="17" r="11" fill="${color}"/>
+  ${symbol}
+  <text x="18" y="39" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="700" fill="white">${label}</text>
+</svg>`.trim(),
+  });
 }
 
 // ── Types ────────────────────────────────────────────────────
@@ -132,8 +82,8 @@ interface AgentMapMarkersProps {
   missions: ActiveMission[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
-  trackHistory?: Record<string, GPSTrack[]>;   // historique GPS déjà chargé
-  destinations?: Record<string, [number, number]>; // point d'arrivée par missionId
+  trackHistory?: Record<string, GPSTrack[]>;
+  routePoints?: Record<string, { departure?: [number, number]; destination?: [number, number] }>;
 }
 
 export default function AgentMapMarkers({
@@ -141,7 +91,7 @@ export default function AgentMapMarkers({
   selectedId,
   onSelect,
   trackHistory = {},
-  destinations = {},
+  routePoints = {},
 }: AgentMapMarkersProps) {
   return (
     <>
@@ -149,7 +99,9 @@ export default function AgentMapMarkers({
         const status = getMarkerStatus(mission);
         const isSelected = selectedId === mission.missionId;
         const history = trackHistory[mission.missionId] ?? [];
-        const destination = destinations[mission.missionId];
+        const route = routePoints[mission.missionId] ?? {};
+        const departure = route.departure ?? (history[0] ? ([history[0].latitude, history[0].longitude] as [number, number]) : undefined);
+        const destination = route.destination;
 
         // ── Tracé passé (bleu) ──────────────────────────────
         const pastPath: [number, number][] = history.map((t) => [t.latitude, t.longitude]);
@@ -158,10 +110,24 @@ export default function AgentMapMarkers({
         const remainingPath: [number, number][] = destination
           ? [[mission.latitude, mission.longitude], destination]
           : [];
+        const fullRoutePath: [number, number][] = departure && destination
+          ? [departure, destination]
+          : [];
 
         return (
           <span key={mission.missionId}>
             {/* Trajectoire passée — bleu */}
+            {fullRoutePath.length === 2 && (
+              <Polyline
+                positions={fullRoutePath}
+                pathOptions={{
+                  color: "#06b6d4",
+                  weight: 4,
+                  opacity: 0.45,
+                }}
+              />
+            )}
+
             {pastPath.length > 1 && (
               <Polyline
                 positions={pastPath}
@@ -188,9 +154,17 @@ export default function AgentMapMarkers({
             )}
 
             {/* Marker icône véhicule */}
+            {departure && (
+              <Marker position={departure} icon={buildRoutePointIcon("departure")} />
+            )}
+
+            {destination && (
+              <Marker position={destination} icon={buildRoutePointIcon("destination")} />
+            )}
+
             <Marker
               position={[mission.latitude, mission.longitude]}
-              icon={buildVehicleIcon(mission.vehicleName, status, isSelected)}
+              icon={buildVehicleIcon(status, isSelected)}
               eventHandlers={{
                 click: () => onSelect(isSelected ? null : mission.missionId),
               }}
@@ -276,3 +250,5 @@ export default function AgentMapMarkers({
     </>
   );
 }
+
+
