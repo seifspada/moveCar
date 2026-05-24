@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Marker, Popup, Polyline } from "react-leaflet";
-import { divIcon } from "leaflet";
 import Link from "next/link";
 import { ActiveMission, getMarkerStatus, formatLastSeen } from "@/app/types/map-agent";
 import { GPSTrack } from "@/app/types/map-agent";
+import { buildRoutePointIcon, RouteLineStyles } from "@/app/utils/route-point-icons";
 
 function buildVehicleIcon(
   status: "normal" | "gps_old" | "deviated",
@@ -12,13 +12,13 @@ function buildVehicleIcon(
 ) {
   const size = selected ? 56 : 48;
   const svg = getVehicleIconSVG(status, selected, size);
-  return divIcon({
+  return {
     html: svg,
     className: "",
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
     popupAnchor: [0, -(size / 2 + 4)],
-  });
+  };
 }
 
 function getVehicleIconSVG(
@@ -57,42 +57,22 @@ function getVehicleIconSVG(
 }
 
 async function fetchRoadRoute(start: [number, number], end: [number, number]): Promise<[number, number][]> {
-  const url = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`;
-  const response = await fetch(url);
-  if (!response.ok) return [start, end];
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`;
+    const response = await fetch(url);
+    if (!response.ok) return [start, end];
 
-  const data = await response.json() as {
-    routes?: Array<{ geometry?: { coordinates?: [number, number][] } }>;
-  };
-  const coordinates = data.routes?.[0]?.geometry?.coordinates;
+    const data = await response.json() as {
+      routes?: Array<{ geometry?: { coordinates?: [number, number][] } }>;
+    };
+    const coordinates = data.routes?.[0]?.geometry?.coordinates;
 
-  if (!coordinates?.length) return [start, end];
-  return coordinates.map(([longitude, latitude]) => [latitude, longitude]);
-}
-
-function buildRoutePointIcon(type: "departure" | "destination") {
-  const isDeparture = type === "departure";
-  const color = isDeparture ? "#06b6d4" : "#f97316";
-  const label = isDeparture ? "D" : "A";
-  const symbol = isDeparture
-    ? `<path d="M16 28 V15 h9.5 c3 0 5 1.8 5 4.5s-2 4.5-5 4.5H16" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`
-    : `<path d="M16 29 24 13l8 16M19 24h10" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
-
-  return divIcon({
-    className: "",
-    iconSize: [36, 44],
-    iconAnchor: [18, 42],
-    popupAnchor: [0, -38],
-    html: `
-<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
-  <defs><filter id="route-${type}"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.55)"/></filter></defs>
-  <path d="M18 2 C9.7 2 3 8.7 3 17 c0 11 15 25 15 25s15-14 15-25C33 8.7 26.3 2 18 2Z"
-    fill="#18181b" stroke="${color}" stroke-width="2.5" filter="url(#route-${type})"/>
-  <circle cx="18" cy="17" r="11" fill="${color}"/>
-  ${symbol}
-  <text x="18" y="39" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="700" fill="white">${label}</text>
-</svg>`.trim(),
-  });
+    if (!coordinates?.length) return [start, end];
+    return coordinates.map(([longitude, latitude]) => [latitude, longitude]);
+  } catch (error) {
+    console.error("Erreur OSRM:", error);
+    return [start, end];
+  }
 }
 
 // ── Types ────────────────────────────────────────────────────
@@ -101,7 +81,10 @@ interface AgentMapMarkersProps {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   trackHistory?: Record<string, GPSTrack[]>;
-  routePoints?: Record<string, { destination?: [number, number] }>;
+  routePoints?: Record<string, { 
+    departure?: [number, number];
+    destination?: [number, number] 
+  }>;
 }
 
 export default function AgentMapMarkers({
@@ -123,7 +106,7 @@ export default function AgentMapMarkers({
       const entries = await Promise.all(missions.map(async (mission) => {
         const history = trackHistory[mission.missionId] ?? [];
         const route = routePoints[mission.missionId] ?? {};
-        const departure = history[0] ? ([history[0].latitude, history[0].longitude] as [number, number]) : undefined;
+        const departure = route.departure ?? (history[0] ? ([history[0].latitude, history[0].longitude] as [number, number]) : undefined);
         const current = [mission.latitude, mission.longitude] as [number, number];
         const destination = route.destination;
 
@@ -163,7 +146,7 @@ export default function AgentMapMarkers({
         const isSelected = selectedId === mission.missionId;
         const history = trackHistory[mission.missionId] ?? [];
         const route = routePoints[mission.missionId] ?? {};
-        const departure = history[0] ? ([history[0].latitude, history[0].longitude] as [number, number]) : undefined;
+        const departure = route.departure ?? (history[0] ? ([history[0].latitude, history[0].longitude] as [number, number]) : undefined);
         const destination = route.destination;
 
         // ── Tracé passé (bleu) ──────────────────────────────
@@ -182,55 +165,76 @@ export default function AgentMapMarkers({
 
         return (
           <span key={mission.missionId}>
-            {/* Trajectoire passée — bleu */}
+            {/* ✅ Trajet complet (départ → destination) en route réelle */}
             {fullRoadPath.length > 1 && (
               <Polyline
                 positions={fullRoadPath}
                 pathOptions={{
-                  color: "#06b6d4",
+                  color: "#f97316",
                   weight: 4,
-                  opacity: 0.45,
+                  opacity: 0.3,
+                  lineCap: "round" as const,
+                  lineJoin: "round" as const,
                 }}
               />
             )}
 
+            {/* Trajectoire passée — bleu ciel avec fond léger */}
             {pastPath.length > 1 && (
               <Polyline
                 positions={pastPath}
-                pathOptions={{
-                  color: "#3b82f6",
-                  weight: 3,
-                  opacity: 0.75,
-                  dashArray: undefined,
-                }}
+                pathOptions={RouteLineStyles.pastTrack}
               />
             )}
 
-            {/* Trajectoire restante — orange */}
+            {/* Trajectoire restante — orange pointillée */}
             {remainingRoadPath.length > 1 && (
               <Polyline
                 positions={remainingRoadPath}
-                pathOptions={{
-                  color: "#ea580c",
-                  weight: 3,
-                  opacity: 0.8,
-                  dashArray: "8 6",
-                }}
+                pathOptions={RouteLineStyles.remainingTrack}
               />
             )}
 
-            {/* Marker icône véhicule */}
+            {/* ✅ Marqueur icône départ (ville de départ) — icône unifiée */}
             {departure && (
-              <Marker position={departure} icon={buildRoutePointIcon("departure")} />
+              <Marker 
+                position={departure} 
+                icon={new (window as any).L.Icon({
+                  ...buildRoutePointIcon("departure", "small"),
+                  iconSize: [32, 40],
+                  iconAnchor: [16, 38],
+                })
+              }>
+                <Popup closeButton={false} minWidth={200}>
+                  <div className="text-xs text-zinc-700 font-semibold">
+                    🚀 Ville de départ
+                  </div>
+                </Popup>
+              </Marker>
             )}
 
+            {/* ✅ Marqueur icône destination (arrivée) — icône unifiée */}
             {destination && (
-              <Marker position={destination} icon={buildRoutePointIcon("destination")} />
+              <Marker 
+                position={destination} 
+                icon={new (window as any).L.Icon({
+                  ...buildRoutePointIcon("destination", "small"),
+                  iconSize: [32, 40],
+                  iconAnchor: [16, 38],
+                })
+              }>
+                <Popup closeButton={false} minWidth={200}>
+                  <div className="text-xs text-zinc-700 font-semibold">
+                    🎯 Destination
+                  </div>
+                </Popup>
+              </Marker>
             )}
 
+            {/* Marker icône véhicule */}
             <Marker
               position={[mission.latitude, mission.longitude]}
-              icon={buildVehicleIcon(status, isSelected)}
+              icon={new (window as any).L.Icon(buildVehicleIcon(status, isSelected))}
               eventHandlers={{
                 click: () => onSelect(isSelected ? null : mission.missionId),
               }}
@@ -316,5 +320,3 @@ export default function AgentMapMarkers({
     </>
   );
 }
-
-

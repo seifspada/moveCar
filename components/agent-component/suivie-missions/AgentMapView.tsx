@@ -42,7 +42,9 @@ export default function AgentMapView() {
           [missionId]: data.getMissionTrackingHistory,
         }));
       }
-    } catch {}
+    } catch (error) {
+      console.error("Erreur chargement historique:", error);
+    }
   }, [client, trackHistory]);
 
   const handleSelect = useCallback((id: string | null) => {
@@ -50,17 +52,27 @@ export default function AgentMapView() {
     if (id) loadHistory(id);
   }, [loadHistory]);
 
-  // Points de route extraits depuis les missions.
+  // ✅ Points de route extraits depuis les missions + historique
   const routePoints = useMemo(() => {
-    const map: Record<string, { destination?: [number, number] }> = {};
+    const map: Record<string, { 
+      departure?: [number, number];
+      destination?: [number, number] 
+    }> = {};
+    
     missions.forEach((m) => {
       const destination =
         typeof m.latitudeArrivee === "number" && typeof m.longitudeArrivee === "number"
           ? ([m.latitudeArrivee, m.longitudeArrivee] as [number, number])
           : undefined;
 
-      if (destination) {
-        map[m.missionId] = { destination };
+      // ✅ Utiliser le point de départ de la mission si disponible
+      const departure =
+        typeof m.latitudeDepart === "number" && typeof m.longitudeDepart === "number"
+          ? ([m.latitudeDepart, m.longitudeDepart] as [number, number])
+          : undefined;
+
+      if (destination || departure) {
+        map[m.missionId] = { destination, departure };
       }
     });
     return map;
@@ -101,7 +113,8 @@ export default function AgentMapView() {
         <LegendItem dot="bg-orange-400" label="GPS ancien (> 10 min)" />
         <LegendItem dot="bg-red-400"    label="Déviation GPS" />
         <div className="border-t border-zinc-700 pt-1.5 space-y-1">
-          <LegendLine color="bg-cyan-400" label="Route départ-arrivée" />
+          <LegendLine color="bg-orange-600" label="Trajet complet (route)" opacity="opacity-30" />
+          <LegendLine color="bg-orange-600" label="Route départ-arrivée" />
           <LegendLine color="bg-blue-400" label="Trajet parcouru" />
           <LegendLine color="bg-orange-400" label="Position-arrivée" dashed />
         </div>
@@ -180,10 +193,10 @@ function LegendItem({ dot, label }: { dot: string; label: string }) {
   );
 }
 
-function LegendLine({ color, label, dashed }: { color: string; label: string; dashed?: boolean }) {
+function LegendLine({ color, label, dashed, opacity }: { color: string; label: string; dashed?: boolean; opacity?: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className={`w-5 h-0.5 flex-shrink-0 rounded ${color} ${dashed ? "opacity-70" : ""}`}
+      <span className={`w-5 h-0.5 flex-shrink-0 rounded ${color} ${opacity || ""} ${dashed ? "opacity-70" : ""}`}
         style={dashed ? { backgroundImage: "repeating-linear-gradient(90deg, #ea580c 0,#ea580c 4px,transparent 4px,transparent 8px)", background: "none", borderTop: "2px dashed #ea580c", height: 0 } : {}} />
       <span className="text-[11px] text-zinc-300">{label}</span>
     </div>
