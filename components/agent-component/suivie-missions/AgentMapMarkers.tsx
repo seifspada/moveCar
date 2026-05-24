@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Marker, Popup, Polyline } from "react-leaflet";
+import { divIcon } from "leaflet";
 import Link from "next/link";
 import { ActiveMission, getMarkerStatus, formatLastSeen } from "@/app/types/map-agent";
 import { GPSTrack } from "@/app/types/map-agent";
@@ -12,13 +13,13 @@ function buildVehicleIcon(
 ) {
   const size = selected ? 56 : 48;
   const svg = getVehicleIconSVG(status, selected, size);
-  return {
+  return divIcon({
     html: svg,
     className: "",
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
     popupAnchor: [0, -(size / 2 + 4)],
-  };
+  });
 }
 
 function getVehicleIconSVG(
@@ -199,12 +200,8 @@ export default function AgentMapMarkers({
             {departure && (
               <Marker 
                 position={departure} 
-                icon={new (window as any).L.Icon({
-                  ...buildRoutePointIcon("departure", "small"),
-                  iconSize: [32, 40],
-                  iconAnchor: [16, 38],
-                })
-              }>
+                icon={buildRoutePointIcon("departure", "small")}
+              >
                 <Popup closeButton={false} minWidth={200}>
                   <div className="text-xs text-zinc-700 font-semibold">
                     🚀 Ville de départ
@@ -217,12 +214,8 @@ export default function AgentMapMarkers({
             {destination && (
               <Marker 
                 position={destination} 
-                icon={new (window as any).L.Icon({
-                  ...buildRoutePointIcon("destination", "small"),
-                  iconSize: [32, 40],
-                  iconAnchor: [16, 38],
-                })
-              }>
+                icon={buildRoutePointIcon("destination", "small")}
+              >
                 <Popup closeButton={false} minWidth={200}>
                   <div className="text-xs text-zinc-700 font-semibold">
                     🎯 Destination
@@ -234,7 +227,7 @@ export default function AgentMapMarkers({
             {/* Marker icône véhicule */}
             <Marker
               position={[mission.latitude, mission.longitude]}
-              icon={new (window as any).L.Icon(buildVehicleIcon(status, isSelected))}
+              icon={buildVehicleIcon(status, isSelected)}
               eventHandlers={{
                 click: () => onSelect(isSelected ? null : mission.missionId),
               }}
