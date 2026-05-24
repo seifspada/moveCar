@@ -11,6 +11,8 @@ export interface ActiveMission {
   accuracy: number | null;
   lastGpsAt: string;
   isDeviated: boolean;
+  latitudeArrivee?: number;
+  longitudeArrivee?: number;
 }
 
 export interface GPSTrack {

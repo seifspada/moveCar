@@ -1,20 +1,22 @@
 import { gql } from "@apollo/client";
 
 export const GET_ACTIVE_MISSIONS_MAP = gql`
-  query GetActiveMissionsMap {
-    getActiveMissionsMap {
-      missionId
-      sessionId
-      vehicleName
-      convoyeurName
-      status
-      latitude
-      longitude
-      accuracy
-      lastGpsAt
-      isDeviated
-    }
+ query GetActiveMissionsMap {
+  getActiveMissionsMap {
+    missionId
+    sessionId
+    vehicleName
+    convoyeurName
+    status
+    latitude
+    longitude
+    accuracy
+    lastGpsAt
+    isDeviated
+    latitudeArrivee   # ← à ajouter
+    longitudeArrivee  # ← à ajouter
   }
+}
 `;
 
 export const GET_MISSION_TRACKING_HISTORY = gql`
