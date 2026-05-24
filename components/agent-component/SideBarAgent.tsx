@@ -30,6 +30,8 @@ export default function SideBarAgent({
          { key: 'Acceuil', icon: Home, label: 'Acceuil', href: '/agent/acceuil' },
     { key: 'Demande de mission', icon: Briefcase, label: 'Demande de mission', href: '/agent/demande-mission' },
      { key: 'Liste des missions ', icon: Briefcase, label: 'Liste des missions ', href: '/agent/missions-list' },
+          { key: 'suivie des missions ', icon: Briefcase, label: 'Suivie des missions ', href: '/agent/map' },
+
    
   ];
 
