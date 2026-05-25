@@ -21,11 +21,12 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
 
   // ✅ Mutation toggle favori
 const [toggleFavori] = useMutation<{ toggleFavori: boolean }>(TOGGLE_FAVORI, {
-  update(cache, { data }) {
-    cache.modify({
-      id: cache.identify({ __typename: 'MissionCardType', id: mission.id }),
-      fields: { isFavori: () => data?.toggleFavori },
-    });
+  // ✅ Recharge la liste complète après chaque toggle
+  refetchQueries: ['MissionsForCards'],
+  onError: (error) => {
+    console.error('❌ Erreur toggle favori:', error);
+    // ✅ Annuler l'optimistic update si erreur backend
+    setIsFavorite((current) => !current);
   },
 });
 

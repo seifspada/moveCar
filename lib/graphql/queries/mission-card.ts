@@ -14,7 +14,14 @@ export const GET_MISSIONS_FOR_CARDS = gql`
       montantTotal
       dateDebut
       dateDepartMax
+      isFavori
     }
+  }
+`;
+
+export const TOGGLE_FAVORI = gql`
+  mutation ToggleFavori($missionId: String!) {
+    toggleFavori(missionId: $missionId)
   }
 `;
 export const GET_MISSIONS_FOR_CARDS_BY_AGENCE = gql`
@@ -138,8 +145,4 @@ export const GET_MISSIONS_BY_AGENCE = gql`
 `;
 
 
-export const TOGGLE_FAVORI = gql`
-  mutation ToggleFavori($missionId: String!) {
-    toggleFavori(missionId: $missionId)
-  }
-`;
+
