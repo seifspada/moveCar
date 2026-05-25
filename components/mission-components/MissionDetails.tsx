@@ -32,7 +32,9 @@ const { data: tarificationData, loading, error } = useQuery<{
     restitutionAutreEndroit: number | null;
   }
 }>(GET_CONTRACT_TARIFICATION, {
-  variables: { demandeId: Number(mission.id) },
+    variables: { demandeId: mission.demandeId },
+        skip: !mission.demandeId, // ← skip si pas de demandeId
+ // ← plus de Number()
 });
 
 // ← ajouter ici

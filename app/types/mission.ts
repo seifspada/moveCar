@@ -152,6 +152,8 @@ export type MissionDetails = {
 
 export interface MissionDetail {
   id: string;
+  demandeId: number; // ← ajouter
+
   statut: string;
   commentaire?: string;
   dateCreation: string;
