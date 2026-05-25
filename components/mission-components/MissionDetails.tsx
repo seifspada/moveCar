@@ -24,17 +24,23 @@ export default function MissionDetails({
   const carburantInfo = getCarburantConfig(mission.vehicule?.typeCarburant);
 
   // ── Query tarification ──────────────────────────────
-  const { data: tarificationData } = useQuery<{
-    contratTarification: {
-      prixParKm:               number | null;
-      depassementKilometrage:  number | null;
-      retardSansAvertissement: number | null;
-      restitutionAutreEndroit: number | null;
-    }
-  }>(GET_CONTRACT_TARIFICATION, {
-    variables: { demandeId: Number(mission.id) },
-  });
+const { data: tarificationData, loading, error } = useQuery<{
+  contratTarification: {
+    prixParKm:               number | null;
+    depassementKilometrage:  number | null;
+    retardSansAvertissement: number | null;
+    restitutionAutreEndroit: number | null;
+  }
+}>(GET_CONTRACT_TARIFICATION, {
+  variables: { demandeId: Number(mission.id) },
+});
 
+// ← ajouter ici
+console.log('🔍 mission.id:', mission.id);
+console.log('🔍 demandeId envoyé:', Number(mission.id));
+console.log('🔍 tarificationData:', tarificationData);
+console.log('🔍 error:', error);
+console.log('🔍 loading:', loading);
   const tarif = tarificationData?.contratTarification;
 
   // ── Conditions contractuelles ───────────────────────
