@@ -16,19 +16,27 @@ interface MissionCardProps {
 
 export default function MissionCard({ mission, missionId }: MissionCardProps) {
   const router = useRouter();
-  // ✅ Initialisé depuis isFavori backend
   const [isFavorite, setIsFavorite] = useState(mission.isFavori ?? false);
 
-  // ✅ Mutation toggle favori
-const [toggleFavori] = useMutation<{ toggleFavori: boolean }>(TOGGLE_FAVORI, {
-  // ✅ Recharge la liste complète après chaque toggle
-  refetchQueries: ['MissionsForCards'],
-  onError: (error) => {
-    console.error('❌ Erreur toggle favori:', error);
-    // ✅ Annuler l'optimistic update si erreur backend
-    setIsFavorite((current) => !current);
-  },
-});
+  // ✅ Pas de refetchQueries → pas de skeleton/loading sur la liste
+  const [toggleFavori] = useMutation<{ toggleFavori: boolean }>(TOGGLE_FAVORI, {
+    onError: (error) => {
+      console.error('❌ Erreur toggle favori:', error);
+      // Rollback optimistic update si erreur backend
+      setIsFavorite((current) => !current);
+    },
+    // ✅ Mise à jour du cache Apollo sans re-fetch
+    update(cache) {
+      cache.modify({
+        id: cache.identify({ __typename: 'Mission', id: mission.id }),
+        fields: {
+          isFavori(existing: boolean) {
+            return !existing;
+          },
+        },
+      });
+    },
+  });
 
   if (!mission) {
     return (
@@ -53,7 +61,7 @@ const [toggleFavori] = useMutation<{ toggleFavori: boolean }>(TOGGLE_FAVORI, {
     router.push(`/adherent/mission-reservation/${missionId || "default"}`);
   };
 
-  // ✅ Optimistic update + appel backend
+  // ✅ Optimistic update immédiat + appel backend silencieux
   const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsFavorite((current) => !current);
