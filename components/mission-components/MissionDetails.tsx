@@ -23,30 +23,27 @@ export default function MissionDetails({
   const vehicleConfig = getVehicleConfig(mission.vehicule?.typeVehicule);
   const carburantInfo = getCarburantConfig(mission.vehicule?.typeCarburant);
 
-  // ── Query tarification ──────────────────────────────
-const { data: tarificationData, loading, error } = useQuery<{
-  contratTarification: {
-    prixParKm:               number | null;
-    depassementKilometrage:  number | null;
-    retardSansAvertissement: number | null;
-    restitutionAutreEndroit: number | null;
-  }
-}>(GET_CONTRACT_TARIFICATION,
-  {
-    variables: { demandeId: mission.partenaire?.demandeInitiale?.id },
-    skip: !mission.partenaire?.demandeInitiale?.id,
-  }
-);
+  // ── Conversion en Int pour correspondre au type GraphQL ──────────────────
+  const demandeId = mission.partenaire?.demandeInitiale?.id
+    ? Number(mission.partenaire.demandeInitiale.id)
+    : undefined;
 
-// ← ajouter ici
-console.log('🔍 mission.id:', mission.id);
-console.log('🔍 demandeId envoyé:', Number(mission.id));
-console.log('🔍 tarificationData:', tarificationData);
-console.log('🔍 error:', error);
-console.log('🔍 loading:', loading);
+  // ── Query tarification ──────────────────────────────────────────────────
+  const { data: tarificationData } = useQuery<{
+    contratTarification: {
+      prixParKm:               number | null;
+      depassementKilometrage:  number | null;
+      retardSansAvertissement: number | null;
+      restitutionAutreEndroit: number | null;
+    };
+  }>(GET_CONTRACT_TARIFICATION, {
+    variables: { demandeId },           // ✅ Int, pas String
+    skip: demandeId == null || isNaN(demandeId),
+  });
+
   const tarif = tarificationData?.contratTarification;
 
-  // ── Conditions contractuelles ───────────────────────
+  // ── Conditions contractuelles ───────────────────────────────────────────
   const conditions = [
     {
       label: "Dépassement de km",
@@ -245,7 +242,7 @@ console.log('🔍 loading:', loading);
                   <p className="font-semibold text-gray-900">
                     {new Date(mission.disponibilite.dateDebut).toLocaleDateString('fr-FR', {
                       day: '2-digit', month: 'long', year: 'numeric',
-                      hour: '2-digit', minute: '2-digit'
+                      hour: '2-digit', minute: '2-digit',
                     })}
                   </p>
                 </div>
@@ -254,7 +251,7 @@ console.log('🔍 loading:', loading);
                   <p className="font-semibold text-gray-900">
                     {new Date(mission.disponibilite.dateFin).toLocaleDateString('fr-FR', {
                       day: '2-digit', month: 'long', year: 'numeric',
-                      hour: '2-digit', minute: '2-digit'
+                      hour: '2-digit', minute: '2-digit',
                     })}
                   </p>
                 </div>
