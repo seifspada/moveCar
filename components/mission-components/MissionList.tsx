@@ -1,7 +1,7 @@
 // components/mission-components/MissionList.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { MissionDetails } from "@/app/types/mission";
 import MissionCard from "./MissionCard";
 import { useRouter } from 'next/navigation';
@@ -14,7 +14,6 @@ type Props = {
   onMissionClick?: (missionId: string) => void;
 };
 
-// ✅ Skeleton qui reproduit exactement la structure visuelle de MissionCard
 function MissionCardSkeleton() {
   return (
     <div className="relative min-h-[282px] w-full overflow-hidden rounded-[22px] border border-orange-500/15
@@ -22,34 +21,20 @@ function MissionCardSkeleton() {
                     p-2.5 pb-2 pt-3
                     shadow-[0_18px_45px_rgba(0,0,0,0.32),0_0_0_1px_rgba(255,255,255,0.04)]
                     sm:min-h-[340px] sm:rounded-[28px] sm:p-5 sm:pb-4 xl:min-h-[370px] xl:p-6 xl:pb-5">
-
-      {/* Shimmer overlay */}
       <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-white/[0.04] to-transparent" />
-
-      {/* Coin coloré (même clipPath que la vraie card) */}
       <div
         className="absolute left-0 top-0 h-20 w-24 bg-zinc-700/60 sm:h-32 sm:w-36 xl:h-40 xl:w-44"
         style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }}
       />
-
-      {/* Icône véhicule — cercle */}
       <div className="absolute left-2.5 top-3 z-10 h-10 w-10 rounded-full bg-zinc-700/70 sm:left-5 sm:top-6 sm:h-16 sm:w-16 xl:left-6 xl:top-7 xl:h-20 xl:w-20" />
-
-      {/* Bouton favori — cercle haut droite */}
       <div className="absolute right-2.5 top-3 z-20 h-7 w-7 rounded-full bg-zinc-800/70 sm:right-5 sm:top-6 sm:h-10 sm:w-10 xl:right-6 xl:top-7 xl:h-11 xl:w-11" />
-
-      {/* Contenu */}
       <div className="relative z-10 flex h-full flex-col">
-
-        {/* Zone villes */}
         <div className="min-h-[84px] pl-12 pr-8 sm:min-h-[116px] sm:pl-20 sm:pr-12 xl:min-h-[132px] xl:pl-24">
           <div className="flex flex-col items-center gap-1.5 pt-5 sm:pt-9 xl:pt-10">
             <div className="h-3 w-24 rounded-full bg-zinc-700/70 sm:h-4 sm:w-32" />
             <div className="h-3 w-20 rounded-full bg-zinc-800/70 sm:h-4 sm:w-28" />
           </div>
         </div>
-
-        {/* Montant + Distance */}
         <div className="mt-2.5 grid grid-cols-2 gap-1.5 sm:mt-4 sm:gap-3">
           <div className="rounded-xl border border-orange-400/15 bg-orange-500/5 px-1.5 py-1.5 sm:rounded-2xl sm:px-3 sm:py-3 xl:px-4">
             <div className="mx-auto mb-1 h-2 w-8 rounded-full bg-zinc-700/50 sm:h-2.5 sm:w-10" />
@@ -60,8 +45,6 @@ function MissionCardSkeleton() {
             <div className="mx-auto h-4 w-10 rounded-full bg-zinc-700/60 sm:h-5 sm:w-14" />
           </div>
         </div>
-
-        {/* Véhicule + Carburant */}
         <div className="mt-3 grid gap-2.5 sm:mt-5 sm:gap-4 xl:mt-6">
           <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
             <div className="flex items-center gap-1 sm:gap-3">
@@ -73,8 +56,6 @@ function MissionCardSkeleton() {
               <div className="h-3 w-10 rounded-full bg-zinc-700/50 sm:h-4 sm:w-16" />
             </div>
           </div>
-
-          {/* Date + Péage */}
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2 sm:gap-4">
             <div className="flex items-start gap-1 sm:gap-3">
               <div className="mt-0.5 h-4 w-4 flex-none rounded bg-zinc-700/50 sm:h-5 sm:w-5" />
@@ -98,6 +79,25 @@ export default function MissionList({ missions, loading = false, mode = 'agent',
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'all' | 'favorites'>('all');
 
+  // ✅ Source de vérité unique pour les favoris — initialisé depuis les props
+  // Set<string> des IDs favoris, géré ici et passé aux cards via callback
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(
+    () => new Set(missions.filter((m) => m.isFavori).map((m) => m.id))
+  );
+
+  // ✅ Callback que MissionCard appelle après chaque toggle réussi
+  const handleFavoriteToggle = useCallback((missionId: string, newValue: boolean) => {
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+      if (newValue) {
+        next.add(missionId);
+      } else {
+        next.delete(missionId);
+      }
+      return next;
+    });
+  }, []);
+
   const handleMissionClick = (missionId: string) => {
     if (onMissionClick) {
       onMissionClick(missionId);
@@ -110,10 +110,11 @@ export default function MissionList({ missions, loading = false, mode = 'agent',
     }
   };
 
-  const favoritesCount = missions.filter((m) => m.isFavori).length;
+  // ✅ Ces valeurs viennent maintenant du Set local — toujours à jour
+  const favoritesCount = favoriteIds.size;
 
   const displayedMissions = activeTab === 'favorites'
-    ? missions.filter((m) => m.isFavori)
+    ? missions.filter((m) => favoriteIds.has(m.id))
     : missions;
 
   if (loading) {
@@ -129,7 +130,6 @@ export default function MissionList({ missions, loading = false, mode = 'agent',
   return (
     <div className="space-y-4">
 
-      {/* Onglets Toutes / Favoris — mode adhérent uniquement */}
       {mode === 'adherent' && (
         <div className="flex items-center gap-2">
           <button
@@ -173,7 +173,6 @@ export default function MissionList({ missions, loading = false, mode = 'agent',
         </div>
       )}
 
-      {/* Vide */}
       {displayedMissions.length === 0 ? (
         <div className="py-16 text-center">
           {activeTab === 'favorites' ? (
@@ -196,7 +195,13 @@ export default function MissionList({ missions, loading = false, mode = 'agent',
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-4">
           {displayedMissions.map((mission) => (
             <div key={mission.id} onClick={() => handleMissionClick(mission.id)} className="cursor-pointer">
-              <MissionCard mission={mission} missionId={mission.id} />
+              <MissionCard
+                mission={mission}
+                missionId={mission.id}
+                // ✅ Passe l'état favori du Set parent (pas de mission.isFavori)
+                isFavoriOverride={favoriteIds.has(mission.id)}
+                onFavoriteToggle={handleFavoriteToggle}
+              />
             </div>
           ))}
         </div>

@@ -12,29 +12,30 @@ import { TOGGLE_FAVORI } from '@/lib/graphql/queries/mission-card';
 interface MissionCardProps {
   mission: MissionDetails;
   missionId?: string;
+  // ✅ Nouveaux props pour synchronisation avec MissionList
+  isFavoriOverride?: boolean;
+  onFavoriteToggle?: (missionId: string, newValue: boolean) => void;
 }
 
-export default function MissionCard({ mission, missionId }: MissionCardProps) {
+export default function MissionCard({ mission, missionId, isFavoriOverride, onFavoriteToggle }: MissionCardProps) {
   const router = useRouter();
-  const [isFavorite, setIsFavorite] = useState(mission.isFavori ?? false);
 
-  // ✅ Pas de refetchQueries → pas de skeleton/loading sur la liste
+  // ✅ Si le parent contrôle l'état (mode liste), on utilise isFavoriOverride
+  // Sinon fallback sur le state local (usage standalone)
+  const isControlled = isFavoriOverride !== undefined;
+  const [localFavorite, setLocalFavorite] = useState(mission.isFavori ?? false);
+  const isFavorite = isControlled ? isFavoriOverride : localFavorite;
+
   const [toggleFavori] = useMutation<{ toggleFavori: boolean }>(TOGGLE_FAVORI, {
     onError: (error) => {
       console.error('❌ Erreur toggle favori:', error);
-      // Rollback optimistic update si erreur backend
-      setIsFavorite((current) => !current);
-    },
-    // ✅ Mise à jour du cache Apollo sans re-fetch
-    update(cache) {
-      cache.modify({
-        id: cache.identify({ __typename: 'Mission', id: mission.id }),
-        fields: {
-          isFavori(existing: boolean) {
-            return !existing;
-          },
-        },
-      });
+      // Rollback
+      const rolledBack = !isFavorite;
+      if (isControlled) {
+        onFavoriteToggle?.(mission.id, rolledBack);
+      } else {
+        setLocalFavorite(rolledBack);
+      }
     },
   });
 
@@ -61,10 +62,18 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
     router.push(`/adherent/mission-reservation/${missionId || "default"}`);
   };
 
-  // ✅ Optimistic update immédiat + appel backend silencieux
+  // ✅ Toggle : met à jour le parent en premier (optimistic), puis appel backend
   const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsFavorite((current) => !current);
+    const newValue = !isFavorite;
+
+    if (isControlled) {
+      // Notifie le parent immédiatement → le Set se met à jour → filtre Favoris réactif
+      onFavoriteToggle?.(mission.id, newValue);
+    } else {
+      setLocalFavorite(newValue);
+    }
+
     await toggleFavori({ variables: { missionId: mission.id } });
   };
 
@@ -78,17 +87,14 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
                  hover:shadow-[0_22px_60px_rgba(0,0,0,0.36),0_0_28px_rgba(249,115,22,0.26)]
                  sm:min-h-[340px] sm:rounded-[28px] sm:p-5 sm:pb-4 xl:min-h-[370px] xl:p-6 xl:pb-5"
     >
-      {/* Décorations */}
       <div className="pointer-events-none absolute inset-0 rounded-[22px] ring-1 ring-inset ring-white/5 sm:rounded-[28px]" />
       <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-orange-200/70 to-transparent" />
 
-      {/* Coin coloré */}
       <div
         className="absolute left-0 top-0 h-20 w-24 bg-gradient-to-br from-orange-400 via-orange-600 to-red-600 shadow-[10px_10px_24px_rgba(0,0,0,0.34)] sm:h-32 sm:w-36 xl:h-40 xl:w-44"
         style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }}
       />
 
-      {/* Icône véhicule */}
       <div className="absolute left-2.5 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-zinc-50 shadow-[0_10px_22px_rgba(0,0,0,0.38)] ring-1 ring-black/10 sm:left-5 sm:top-6 sm:h-16 sm:w-16 xl:left-6 xl:top-7 xl:h-20 xl:w-20">
         <Image
           src={vehicleConf.icon}
@@ -100,7 +106,6 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
         />
       </div>
 
-      {/* Bouton favori */}
       <button
         onClick={handleFavoriteClick}
         className="absolute right-2.5 top-3 z-20 grid h-7 w-7 place-items-center rounded-full border border-white/10 bg-zinc-950/40 text-zinc-400 backdrop-blur
@@ -115,10 +120,7 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
         />
       </button>
 
-      {/* Contenu principal */}
       <div className="relative z-10 flex h-full flex-col">
-
-        {/* Villes départ / arrivée */}
         <div className="min-h-[84px] pl-12 pr-8 sm:min-h-[116px] sm:pl-20 sm:pr-12 xl:min-h-[132px] xl:pl-24">
           <div className="flex flex-col items-center gap-0.5 pt-5 text-center sm:gap-1 sm:pt-9 xl:pt-10">
             <h3 className="max-w-full text-balance font-extrabold leading-tight tracking-normal text-zinc-100 drop-shadow
@@ -132,7 +134,6 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
           </div>
         </div>
 
-        {/* Montant + Distance */}
         <div className="mt-2.5 grid grid-cols-2 gap-1.5 sm:mt-4 sm:gap-3">
           <div className="rounded-xl border border-orange-400/45 bg-orange-500/10 px-1.5 py-1.5 text-center shadow-inner shadow-orange-950/30 transition-colors group-hover:border-orange-300/80 sm:rounded-2xl sm:px-3 sm:py-3 xl:px-4">
             <p className="text-[9px] font-medium text-zinc-400 sm:text-sm">Total</p>
@@ -151,7 +152,6 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
           </div>
         </div>
 
-        {/* Véhicule + Carburant + Date + Péage */}
         <div className="mt-3 grid gap-2.5 sm:mt-5 sm:gap-4 xl:mt-6">
           <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
             <div className="flex min-w-0 items-center gap-1 sm:gap-3">
