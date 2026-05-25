@@ -11,9 +11,10 @@ export const GET_MISSION_BY_ID = gql`
       partenaire {
         id
         entiteGroupe
-        demandeInitiale {        
-          id                     
+        demandeInitiale {
+          id
         }
+      }                        # ← ferme partenaire
       agent {
         id
         nom
@@ -68,7 +69,7 @@ export const GET_MISSION_BY_ID = gql`
         nomContact
         telephoneContact
       }
-    }
+    }                          # ← ferme getMissionById
   }
 `;
 
