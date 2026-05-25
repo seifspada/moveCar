@@ -136,3 +136,10 @@ export const GET_MISSIONS_BY_AGENCE = gql`
     }
   }
 `;
+
+
+export const TOGGLE_FAVORI = gql`
+  mutation ToggleFavori($missionId: String!) {
+    toggleFavori(missionId: $missionId)
+  }
+`;

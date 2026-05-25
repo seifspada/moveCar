@@ -6,6 +6,8 @@ import { ArrowRight, CalendarDays, Route, Star, Ticket, Truck } from "lucide-rea
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useMutation } from '@apollo/client/react';
+import { TOGGLE_FAVORI } from '@/lib/graphql/queries/mission-card';
 
 interface MissionCardProps {
   mission: MissionDetails;
@@ -14,7 +16,18 @@ interface MissionCardProps {
 
 export default function MissionCard({ mission, missionId }: MissionCardProps) {
   const router = useRouter();
-  const [isFavorite, setIsFavorite] = useState(false);
+  // ✅ Initialisé depuis isFavori backend
+  const [isFavorite, setIsFavorite] = useState(mission.isFavori ?? false);
+
+  // ✅ Mutation toggle favori
+const [toggleFavori] = useMutation<{ toggleFavori: boolean }>(TOGGLE_FAVORI, {
+  update(cache, { data }) {
+    cache.modify({
+      id: cache.identify({ __typename: 'MissionCardType', id: mission.id }),
+      fields: { isFavori: () => data?.toggleFavori },
+    });
+  },
+});
 
   if (!mission) {
     return (
@@ -39,9 +52,11 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
     router.push(`/adherent/mission-reservation/${missionId || "default"}`);
   };
 
-  const handleFavoriteClick = (e: React.MouseEvent) => {
+  // ✅ Optimistic update + appel backend
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsFavorite((current) => !current);
+    await toggleFavori({ variables: { missionId: mission.id } });
   };
 
   return (
@@ -94,7 +109,7 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
       {/* Contenu principal */}
       <div className="relative z-10 flex h-full flex-col">
 
-        {/* Villes départ / arrivée — police réduite pour les noms longs */}
+        {/* Villes départ / arrivée */}
         <div className="min-h-[84px] pl-12 pr-8 sm:min-h-[116px] sm:pl-20 sm:pr-12 xl:min-h-[132px] xl:pl-24">
           <div className="flex flex-col items-center gap-0.5 pt-5 text-center sm:gap-1 sm:pt-9 xl:pt-10">
             <h3 className="max-w-full text-balance font-extrabold leading-tight tracking-normal text-zinc-100 drop-shadow
@@ -171,8 +186,6 @@ export default function MissionCard({ mission, missionId }: MissionCardProps) {
           </div>
         </div>
       </div>
-
-      {/* Icône Fuel supprimée */}
     </div>
   );
 }

@@ -146,6 +146,8 @@ export type MissionDetails = {
   montantTotal: number;
   dateDebut: string;
   dateDepartMax: string | null;
+  isFavori: boolean; // ✅ AJOUTER cette ligne
+
 };
 
 
@@ -178,6 +180,7 @@ export interface MissionDetail {
   disponibilite?: Disponibilite;
   calculs?: Calcul;
   notifications: Notification[];
+
 }
 
 
