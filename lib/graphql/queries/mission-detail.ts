@@ -65,3 +65,14 @@ export const GET_MISSION_BY_ID = gql`
     }
   }
 `;
+
+export const GET_CONTRACT_TARIFICATION = gql`
+ query GetContratTarification($demandeId: Int!) {
+  contratTarification(demandeId: $demandeId) {
+    prixParKm
+    depassementKilometrage
+    retardSansAvertissement
+    restitutionAutreEndroit
+  }
+}
+`;

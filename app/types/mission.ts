@@ -150,6 +150,21 @@ export type MissionDetails = {
 
 };
 
+export interface MissionDetail {
+  id: string;
+  statut: string;
+  commentaire?: string;
+  dateCreation: string;
+  partenaire: Partenaire;
+  vehicule: Vehicule;
+  adresseDepart: Adresse;
+  adresseArrivee: Adresse;
+  disponibilite?: Disponibilite;
+  calculs?: Calcul;
+  notifications: Notification[];
+
+}
+
 
 // ==========================================
 // ✅ INTERFACES AJOUTÉES POUR LE HOOK
@@ -168,20 +183,7 @@ export interface Partenaire {
 
 
 // Interface complète pour la page de détails (utilise vos interfaces existantes)
-export interface MissionDetail {
-  id: string;
-  statut: string;
-  commentaire?: string;
-  dateCreation: string;
-  partenaire: Partenaire;
-  vehicule: Vehicule;
-  adresseDepart: Adresse;
-  adresseArrivee: Adresse;
-  disponibilite?: Disponibilite;
-  calculs?: Calcul;
-  notifications: Notification[];
 
-}
 
 
 // ✅ Import MissionListItem type
