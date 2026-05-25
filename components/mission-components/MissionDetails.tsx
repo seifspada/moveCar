@@ -31,11 +31,12 @@ const { data: tarificationData, loading, error } = useQuery<{
     retardSansAvertissement: number | null;
     restitutionAutreEndroit: number | null;
   }
-}>(GET_CONTRACT_TARIFICATION, {
-    variables: { demandeId: mission.demandeId },
-        skip: !mission.demandeId, // ← skip si pas de demandeId
- // ← plus de Number()
-});
+}>(GET_CONTRACT_TARIFICATION,
+  {
+    variables: { demandeId: mission.partenaire?.demandeInitiale?.id },
+    skip: !mission.partenaire?.demandeInitiale?.id,
+  }
+);
 
 // ← ajouter ici
 console.log('🔍 mission.id:', mission.id);

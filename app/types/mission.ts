@@ -152,12 +152,17 @@ export type MissionDetails = {
 
 export interface MissionDetail {
   id: string;
-  demandeId: number; // ← ajouter
 
   statut: string;
+   partenaire: {
+    id: number;
+    entiteGroupe: string;
+    demandeInitiale?: {
+      id: number;
+    };
+  };
   commentaire?: string;
   dateCreation: string;
-  partenaire: Partenaire;
   vehicule: Vehicule;
   adresseDepart: Adresse;
   adresseArrivee: Adresse;
