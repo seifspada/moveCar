@@ -2,6 +2,8 @@
 import type { VehicleType, VehiculeCarburant } from '@/app/config/mission-icons.config';
 
 export interface Adresse {
+    id: string;
+
   villeNom: string;
   adresseComplete: string;
   typeLieu: string;
@@ -23,16 +25,18 @@ export interface Calcul {
 
 
 export interface Vehicule {
+  id: string;
+  typeVehicule: string;
+  typeCarburant: string;
   marqueModele: string;
   immatriculation: string;
-  typeVehicule: VehicleType;
-  typeCarburant: VehiculeCarburant;
   nombrePlaces: number;
-  boiteVitesse?: string;      // ✅ Ajouté
+  boiteVitesse?: string;
 }
 
 
 export interface Disponibilite {
+    id: string;
   dateDebut: string;
   dateFin: string;
   dateDepartMax?: string;     // ✅ Ajouté
@@ -40,6 +44,7 @@ export interface Disponibilite {
 
 
 export interface Notification {
+    id: string;
   typeNotification: 'DEPART' | 'ARRIVEE';
   actif: boolean;
   nomContact?: string;        // ✅ Optionnel
@@ -155,12 +160,14 @@ export interface MissionDetail {
 
   statut: string;
    partenaire: {
-    id: number;
+    id: string;
     entiteGroupe: string;
     demandeInitiale?: {
       id: number;
     };
   };
+    agent?: Agent;       // ⚠ manquait complètement
+
   commentaire?: string;
   dateCreation: string;
   vehicule: Vehicule;
@@ -169,9 +176,26 @@ export interface MissionDetail {
   disponibilite?: Disponibilite;
   calculs?: Calcul;
   notifications: Notification[];
+    contrat?: Contrat;   // ⚠ manquait complètement
+
 
 }
 
+export interface Contrat {
+  prixParKm: number;
+  depassementKilometrage: number;
+  retardSansAvertissement: number;
+  restitutionAutreEndroit: number;
+}
+
+export interface Agent {
+  id: string;
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone?: string;
+  photo?: string;
+}
 
 // ==========================================
 // ✅ INTERFACES AJOUTÉES POUR LE HOOK

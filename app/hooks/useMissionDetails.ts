@@ -1,8 +1,8 @@
 // hooks/useMissionDetails.ts
-import { GET_MISSION_BY_ID } from '@/lib/graphql/queries/mission-detail';
 import { useParams } from 'next/navigation';
 import { MissionDetail } from '@/app/types/mission';
 import { useQuery } from '@apollo/client/react';
+import { GET_MISSION_BY_ID } from '@/lib/graphql/queries/mission-detail';
 
 // ✅ Définir le type de la réponse GraphQL
 interface GetMissionByIdResponse {

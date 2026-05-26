@@ -1,5 +1,4 @@
-// lib/graphql/queries/mission-detail.ts
-import { gql } from '@apollo/client';
+import { gql } from "@apollo/client";
 
 export const GET_MISSION_BY_ID = gql`
   query GetMissionById($id: String!) {
@@ -8,13 +7,12 @@ export const GET_MISSION_BY_ID = gql`
       statut
       commentaire
       dateCreation
+
       partenaire {
         id
         entiteGroupe
-        demandeInitiale {
-          id
-        }
-      }                        # ← ferme partenaire
+      }
+
       agent {
         id
         nom
@@ -23,6 +21,7 @@ export const GET_MISSION_BY_ID = gql`
         telephone
         photo
       }
+
       vehicule {
         id
         typeVehicule
@@ -32,6 +31,7 @@ export const GET_MISSION_BY_ID = gql`
         nombrePlaces
         boiteVitesse
       }
+
       adresseDepart {
         id
         villeNom
@@ -41,6 +41,7 @@ export const GET_MISSION_BY_ID = gql`
         latitude
         longitude
       }
+
       adresseArrivee {
         id
         villeNom
@@ -50,18 +51,21 @@ export const GET_MISSION_BY_ID = gql`
         latitude
         longitude
       }
+
       disponibilite {
         id
         dateDebut
         dateFin
         dateDepartMax
       }
+
       calculs {
         id
         distanceKm
         fraisPeage
         montantTotal
       }
+
       notifications {
         id
         typeNotification
@@ -69,17 +73,13 @@ export const GET_MISSION_BY_ID = gql`
         nomContact
         telephoneContact
       }
-    }                          # ← ferme getMissionById
-  }
-`;
 
-export const GET_CONTRACT_TARIFICATION = gql`
- query GetContratTarification($demandeId: Int!) {
-  contratTarification(demandeId: $demandeId) {
-    prixParKm
-    depassementKilometrage
-    retardSansAvertissement
-    restitutionAutreEndroit
+      contrat {
+        prixParKm
+        depassementKilometrage
+        retardSansAvertissement
+        restitutionAutreEndroit
+      }
+    }
   }
-}
 `;
