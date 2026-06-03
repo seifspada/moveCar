@@ -69,17 +69,12 @@ export default function ProfileHeader({
   const [data, setData] = useState<AdherentNavbarData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
-const showNavbar = pathname.startsWith('/adherent'); // ✅
-
-
-
-
+  const showNavbar = pathname.startsWith('/adherent');
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // ✅ Fetcher les données avec apolloClient.query()
   useEffect(() => {
     if (!isClient) return;
 
@@ -88,10 +83,8 @@ const showNavbar = pathname.startsWith('/adherent'); // ✅
         setLoading(true);
         const result = await apolloClient.query<AdherentNavbarData>({
           query: GET_ADHERENT_NAVBAR,
-          fetchPolicy: 'network-only', // ✅ Corrigé
+          fetchPolicy: 'network-only',
         });
-        
-        // ✅ Vérifier que data existe avant de set
         if (result.data) {
           setData(result.data);
         }
@@ -109,10 +102,8 @@ const showNavbar = pathname.startsWith('/adherent'); // ✅
     fetchData();
   }, [isClient]);
 
-  // ✅ Construire l'URL complète pour la photo
   const photoUrl = data?.adherentMe?.photo ? buildDocumentUrl(data.adherentMe.photo) : null;
 
-  // ✅ Données de l'adhérent
   const adherent = {
     nom: data?.adherentMe?.nom || '',
     prenom: data?.adherentMe?.prenom || '',
@@ -122,24 +113,35 @@ const showNavbar = pathname.startsWith('/adherent'); // ✅
   };
 
   const nomComplet = `${adherent.prenom} ${adherent.nom}`.trim();
-  
-if (!showNavbar) return null; // ✅ avant le return JSX
+
+  if (!showNavbar) return null;
 
   // ✅ Skeleton pendant le chargement
   if (loading || !data) {
     return (
-      <header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-[2000]">
+      <header
+        className="w-full sticky top-0 z-[2000]"
+        style={{
+          background: 'rgba(0, 0, 0, 0.55)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
+        }}
+      >
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-5 md:py-6 lg:py-7">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 bg-slate-700 rounded-full animate-pulse"></div>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-full animate-pulse"
+                style={{ background: 'rgba(255,255,255,0.07)' }}></div>
             </div>
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <div className="h-5 w-32 bg-slate-700 rounded animate-pulse mb-1"></div>
-                <div className="h-4 w-48 bg-slate-700 rounded animate-pulse"></div>
+                <div className="h-5 w-32 rounded animate-pulse mb-1" style={{ background: 'rgba(255,255,255,0.07)' }}></div>
+                <div className="h-4 w-48 rounded animate-pulse" style={{ background: 'rgba(255,255,255,0.07)' }}></div>
               </div>
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 bg-slate-700 rounded-full animate-pulse"></div>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-full animate-pulse"
+                style={{ background: 'rgba(255,255,255,0.07)' }}></div>
             </div>
           </div>
         </div>
@@ -150,12 +152,21 @@ if (!showNavbar) return null; // ✅ avant le return JSX
   // ✅ Erreur GraphQL
   if (error || !data?.adherentMe) {
     return (
-      <header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-[2000]">
+      <header
+        className="w-full sticky top-0 z-[2000]"
+        style={{
+          background: 'rgba(0, 0, 0, 0.55)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)',
+        }}
+      >
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-5 md:py-6 lg:py-7">
           <div className="flex items-center justify-center">
             <div className="text-center">
-              <p className="text-red-500 text-lg font-semibold mb-2">❌ Erreur de chargement</p>
-              <p className="text-gray-400 text-sm">Impossible de récupérer vos informations</p>
+              <p className="text-red-400 text-lg font-semibold mb-2">❌ Erreur de chargement</p>
+              <p className="text-gray-500 text-sm">Impossible de récupérer vos informations</p>
             </div>
           </div>
         </div>
@@ -165,24 +176,52 @@ if (!showNavbar) return null; // ✅ avant le return JSX
 
   return (
     <>
+      {/* Backdrop overlay */}
       <div
-        className={`fixed inset-0 bg-black z-30 transition-opacity duration-700 ease-out pointer-events-none print:hidden ${
-          isMobileMenuOpen || isDesktopMenuOpen ? 'opacity-70 pointer-events-auto' : 'opacity-0'
+        className={`fixed inset-0 z-30 transition-opacity duration-700 ease-out pointer-events-none print:hidden ${
+          isMobileMenuOpen || isDesktopMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0'
         }`}
+        style={{ background: 'rgba(0,0,0,0.75)' }}
         onClick={() => {
           if (isMobileMenuOpen) toggleMobileMenu();
           if (isDesktopMenuOpen) toggleDesktopMenu();
         }}
       />
 
-      <header className="w-full bg-slate-800 border-b border-orange-500/30 shadow-2xl sticky top-0 z-[2000] print:hidden">
+      {/* ── HEADER ── */}
+      <header
+        className="w-full sticky top-0 z-[2000] print:hidden"
+        style={{
+          background: 'rgba(5, 5, 8, 0.60)',
+          backdropFilter: 'blur(24px) saturate(200%) brightness(0.85)',
+          WebkitBackdropFilter: 'blur(24px) saturate(200%) brightness(0.85)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.07)',
+          boxShadow:
+            '0 4px 6px -1px rgba(0,0,0,0.5), 0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
+        }}
+      >
+        {/* Subtle top-edge reflection line */}
+        <div
+          className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent, rgba(255,255,255,0.12) 30%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.12) 70%, transparent)',
+          }}
+        />
+
         <div className="max-w-7xl mx-auto px-2 sm:px-3 md:px-6 lg:px-8 py-4 sm:py-5 md:py-6 lg:py-7 xl:py-3">
           <div className="flex items-center justify-between gap-1 sm:gap-2 md:gap-4">
 
+            {/* ── LEFT: menu toggle + logo ── */}
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-4">
+              {/* Mobile toggle */}
               <button
                 onClick={toggleMobileMenu}
-                className="md:hidden text-white p-2 sm:p-2.5 hover:bg-orange-500/20 rounded-xl transition-all duration-300 transform hover:scale-110 active:scale-95"
+                className="md:hidden text-white p-2 sm:p-2.5 rounded-xl transition-all duration-300 transform hover:scale-110 active:scale-95"
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}
                 aria-label="Menu Mobile"
               >
                 <div className="relative w-6 h-6">
@@ -195,9 +234,14 @@ if (!showNavbar) return null; // ✅ avant le return JSX
                 </div>
               </button>
 
+              {/* Desktop toggle */}
               <button
                 onClick={toggleDesktopMenu}
-                className="hidden md:block text-white p-3 md:p-3.5 lg:p-4 hover:bg-orange-500/20 rounded-xl transition-all duration-300 transform hover:scale-110 active:scale-95"
+                className="hidden md:block text-white p-3 md:p-3.5 lg:p-4 rounded-xl transition-all duration-300 transform hover:scale-110 active:scale-95"
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}
                 aria-label="Menu Desktop"
               >
                 <div className="relative w-7 h-7">
@@ -210,9 +254,16 @@ if (!showNavbar) return null; // ✅ avant le return JSX
                 </div>
               </button>
 
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-full border-2 sm:border-3 md:border-4 border-orange-500 overflow-hidden shadow-lg flex-shrink-0">
+              {/* Logo */}
+              <div
+                className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-full overflow-hidden flex-shrink-0"
+                style={{
+                  border: '2px solid rgba(255,255,255,0.15)',
+                  boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 4px 20px rgba(0,0,0,0.5)',
+                }}
+              >
                 <Image
-                  src="/images/logo.jpg"
+                  src="/images/logo.png"
                   alt="Logo"
                   width={150}
                   height={150}
@@ -222,30 +273,46 @@ if (!showNavbar) return null; // ✅ avant le return JSX
               </div>
             </div>
 
+            {/* ── CENTER: page title ── */}
             {pageTitle && (
-              <div className="hidden lg:block border-l-4 border-orange-500 pl-4 xl:pl-8 mb-1">
-                <h1 className="text-2xl xl:text-4xl font-bold text-white truncate max-w-xs xl:max-w-none">
+              <div
+                className="hidden lg:block pl-4 xl:pl-8 mb-1"
+                style={{ borderLeft: '3px solid rgba(255,255,255,0.25)' }}
+              >
+                <h1 className="text-2xl xl:text-4xl font-bold text-white truncate max-w-xs xl:max-w-none"
+                  style={{ textShadow: '0 1px 8px rgba(0,0,0,0.8)' }}>
                   {pageTitle.title}
                 </h1>
-                <p className="text-sm xl:text-base text-white mt-1 truncate max-w-xs xl:max-w-none">
+                <p className="text-sm xl:text-base mt-1 truncate max-w-xs xl:max-w-none"
+                  style={{ color: 'rgba(255,255,255,0.5)' }}>
                   {pageTitle.subtitle}
                 </p>
               </div>
             )}
 
+            {/* ── RIGHT: user info + avatar + pack ── */}
             <div className="flex items-center gap-1 sm:gap-2 md:gap-3 lg:gap-4">
               <div className="text-right max-w-[100px] sm:max-w-[140px] md:max-w-[180px] lg:max-w-none">
-                <h2 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-white leading-tight truncate">
+                <h2 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-white leading-tight truncate"
+                  style={{ textShadow: '0 1px 6px rgba(0,0,0,0.8)' }}>
                   {truncateText(nomComplet, 20)}
                 </h2>
-                <p className="text-xs sm:text-xs md:text-sm lg:text-base text-orange-400 font-medium leading-tight truncate">
+                <p className="text-xs sm:text-xs md:text-sm lg:text-base font-medium leading-tight truncate"
+                  style={{ color: 'rgba(255,255,255,0.45)' }}>
                   {truncateText(adherent.email, 25)}
                 </p>
               </div>
 
+              {/* Avatar */}
               <div className="relative flex-shrink-0">
                 {adherent.photo ? (
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-full border-2 sm:border-3 md:border-4 border-orange-500 overflow-hidden shadow-lg">
+                  <div
+                    className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-full overflow-hidden"
+                    style={{
+                      border: '2px solid rgba(255,255,255,0.18)',
+                      boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.6)',
+                    }}
+                  >
                     <Image
                       src={adherent.photo}
                       alt={nomComplet}
@@ -261,35 +328,75 @@ if (!showNavbar) return null; // ✅ avant le return JSX
                     />
                   </div>
                 ) : (
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full border-2 sm:border-3 md:border-4 border-orange-500 flex items-center justify-center shadow-lg">
+                  <div
+                    className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-full flex items-center justify-center"
+                    style={{
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '2px solid rgba(255,255,255,0.15)',
+                      boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.6)',
+                    }}
+                  >
                     <span className="text-white font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">
                       {obtenirInitiales(adherent.prenom, adherent.nom)}
                     </span>
                   </div>
                 )}
-                <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 border-2 border-slate-800 rounded-full"></div>
+                {/* Online dot */}
+                <div
+                  className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full"
+                  style={{
+                    background: '#22c55e',
+                    border: '2px solid rgba(0,0,0,0.7)',
+                    boxShadow: '0 0 6px rgba(34,197,94,0.6)',
+                  }}
+                />
               </div>
 
+              {/* Pack badge */}
               <div className="flex flex-col gap-1">
                 {adherent.pack === 'basique' && (
-                  <button className="flex items-center gap-1 sm:gap-1.5 bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-600 text-white px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3.5 rounded-full font-bold hover:from-yellow-600 hover:to-yellow-700 transition-all duration-300 shadow-lg text-xs sm:text-sm md:text-base whitespace-nowrap hover:scale-105 active:scale-95">
+                  <button
+                    className="flex items-center gap-1 sm:gap-1.5 text-white px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3.5 rounded-full font-bold text-xs sm:text-sm md:text-base whitespace-nowrap transition-all duration-300 hover:scale-105 active:scale-95"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(234,179,8,0.9), rgba(202,138,4,0.9))',
+                      border: '1px solid rgba(253,224,71,0.4)',
+                      boxShadow: '0 4px 20px rgba(234,179,8,0.3), inset 0 1px 0 rgba(255,255,255,0.15)',
+                      backdropFilter: 'blur(8px)',
+                    }}
+                  >
                     <Crown className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>Devenir Premium</span>
                   </button>
                 )}
 
                 {adherent.pack === 'premium' && (
-                  <div className="flex items-center gap-1 sm:gap-1.5 bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-600 text-white px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3.5 rounded-full font-bold shadow-lg text-xs sm:text-sm md:text-base whitespace-nowrap border-2 border-yellow-300">
+                  <div
+                    className="flex items-center gap-1 sm:gap-1.5 text-white px-3 sm:px-4 md:px-5 lg:px-6 py-2 sm:py-2.5 md:py-3 lg:py-3.5 rounded-full font-bold text-xs sm:text-sm md:text-base whitespace-nowrap"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(234,179,8,0.85), rgba(202,138,4,0.85))',
+                      border: '1px solid rgba(253,224,71,0.5)',
+                      boxShadow: '0 4px 20px rgba(234,179,8,0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
+                      backdropFilter: 'blur(8px)',
+                    }}
+                  >
                     <span className="text-base sm:text-lg md:text-xl">⭐</span>
                     <span>Premium</span>
                   </div>
                 )}
               </div>
-
             </div>
 
           </div>
         </div>
+
+        {/* Bottom-edge inner shadow for depth */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent, rgba(255,255,255,0.05) 30%, rgba(255,255,255,0.05) 70%, transparent)',
+          }}
+        />
       </header>
     </>
   );

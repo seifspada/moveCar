@@ -41,10 +41,7 @@ const conditions = [
       ? `${mission.contrat.retardSansAvertissement} €/h`
       : "Selon convention signée",
   },
-  {
-    label: "Carburant",
-    valeur: "Prix selon convention signée",
-  },
+
   {
     label: "Restitution autre endroit",
     valeur: mission.contrat

@@ -216,7 +216,7 @@ console.log("🖼️ URL finale agent.photo:", photoUrl);
               </button>
               <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-full border-2 sm:border-3 md:border-4 border-orange-500 overflow-hidden shadow-lg flex-shrink-0">
                 <Image
-                  src="/images/logo.jpg"
+                  src="/images/logo.png"
                   alt="Logo"
                   width={150}
                   height={150}

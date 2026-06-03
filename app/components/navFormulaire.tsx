@@ -27,7 +27,7 @@ export default function NavFormulaire() {
 >
   <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full border-3 sm:border-4 border-orange-500 overflow-hidden shadow-lg">
     <Image
-      src="/images/logo.jpg"
+      src="/images/logo.png"
       alt="Logo"
       width={150}
       height={150}

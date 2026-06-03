@@ -140,7 +140,7 @@ export default function ProfileHeader({
               {/* Logo */}
               <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-full border-3 sm:border-4 border-orange-500 overflow-hidden shadow-lg">
                 <Image
-                  src={logoUrl || "/images/logo.jpg"}
+                  src={logoUrl || "/images/logo.png"}
                   alt="Logo"
                   width={150}
                   height={150}

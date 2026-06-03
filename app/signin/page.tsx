@@ -206,7 +206,7 @@ export default function LoginPage() {
           <div className="flex justify-center mb-8 -mt-10">
             <div className="relative inline-block">
               <Image
-                src="/images/logo.jpg"
+                src="/images/logo.png"
                 alt="Logo TransConvoy"
                 width={240}
                 height={240}
