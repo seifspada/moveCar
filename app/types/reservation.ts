@@ -60,6 +60,8 @@ export interface MissionSimple {
   adresseArrivee?: {
     villeNom: string;
     adresseComplete?: string | null;
+    latitude?: number | string | null;
+    longitude?: number | string | null;
   } | null;
   calculs?: {
     distanceKm: number;

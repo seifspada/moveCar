@@ -23,7 +23,7 @@ export const RESERVATION_FIELDS = gql`
     motifRefus
     motifAnnulation
     annulePar
-    dateValidation
+    dateCreation
     dateAcceptationAgent
     dateConfirmationAdherent
     dateAnnulation
@@ -33,6 +33,7 @@ export const RESERVATION_FIELDS = gql`
       nom
       prenom
       telephone
+      statut
       user {
         name
         email
@@ -48,6 +49,8 @@ export const RESERVATION_FIELDS = gql`
       }
       adresseArrivee {
         villeNom
+        latitude
+        longitude
       }
     }
   }
@@ -185,7 +188,6 @@ export const REFUSE_RESERVATION = gql`
       numeroReservation
       statut
       motifRefus
-      dateRefus
     }
   }
 `;

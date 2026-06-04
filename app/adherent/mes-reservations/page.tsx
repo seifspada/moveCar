@@ -123,7 +123,10 @@ export default function MesReservationsPage() {
   const [requestCancellation]          = useRequestCancellation();
   const [cancelPendingReservation]     = useCancelPendingReservation(); // ✅
 
-  const reservations: Reservation[] = data?.myReservations ?? [];
+  const reservations: Reservation[] = useMemo(
+    () => data?.myReservations ?? [],
+    [data?.myReservations],
+  );
 
   const filteredReservations = useMemo(() => {
     if (filter === 'ALL') return reservations;
@@ -142,8 +145,8 @@ export default function MesReservationsPage() {
       await fn();
       await refetch();
       toast.success(successMsg);
-    } catch (e: any) {
-      toast.error(e?.message ?? errorFallback);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : errorFallback);
     } finally {
       setActionLoadingId(null);
     }
@@ -216,7 +219,7 @@ export default function MesReservationsPage() {
                 Réservation{nbAConfirmer > 1 ? 's' : ''} en attente de votre confirmation
               </p>
               <p className="text-blue-400/60 text-xs mt-0.5">
-                L'agent a accepté — confirmez pour finaliser
+                L&apos;agent a accepté — confirmez pour finaliser
               </p>
             </div>
           </div>
