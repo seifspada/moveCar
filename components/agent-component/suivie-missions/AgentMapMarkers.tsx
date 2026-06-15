@@ -1,11 +1,15 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Marker, Popup, Polyline } from "react-leaflet";
 import { divIcon } from "leaflet";
 import Link from "next/link";
 import { ActiveMission, getMarkerStatus, formatLastSeen } from "@/app/types/map-agent";
 import { GPSTrack } from "@/app/types/map-agent";
 import { buildRoutePointIcon, RouteLineStyles } from "@/app/utils/route-point-icons";
+import { NOTER_MISSION_CONVOYEUR } from "@/lib/graphql/mutations/mission.mutations";
+import { useMutation } from "@apollo/client/react";
+
+// ── Icône véhicule ───────────────────────────────────────────
 
 function buildVehicleIcon(
   status: "normal" | "gps_old" | "deviated",
@@ -57,6 +61,8 @@ function getVehicleIconSVG(
 </svg>`.trim();
 }
 
+// ── Fetch route OSRM ─────────────────────────────────────────
+
 async function fetchRoadRoute(start: [number, number], end: [number, number]): Promise<[number, number][]> {
   try {
     const url = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`;
@@ -76,17 +82,338 @@ async function fetchRoadRoute(start: [number, number], end: [number, number]): P
   }
 }
 
+// ── Composant étoiles ────────────────────────────────────────
+
+interface StarRatingProps {
+  value: number;
+  onChange: (note: number) => void;
+  disabled?: boolean;
+}
+
+function StarRating({ value, onChange, disabled }: StarRatingProps) {
+  const [hovered, setHovered] = useState(0);
+
+  return (
+    <div style={{ display: "flex", gap: "4px", justifyContent: "center" }}>
+      {[1, 2, 3, 4, 5].map((star) => {
+        const active = star <= (hovered || value);
+        return (
+          <button
+            key={star}
+            disabled={disabled}
+            onMouseEnter={() => !disabled && setHovered(star)}
+            onMouseLeave={() => !disabled && setHovered(0)}
+            onClick={() => !disabled && onChange(star)}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: disabled ? "default" : "pointer",
+              padding: "2px",
+              fontSize: "22px",
+              lineHeight: 1,
+              color: active ? "#f59e0b" : "#3f3f46",
+              transform: active ? "scale(1.15)" : "scale(1)",
+              transition: "transform 0.15s, color 0.15s",
+              filter: active ? "drop-shadow(0 0 4px rgba(245,158,11,0.5))" : "none",
+            }}
+            title={`${star} étoile${star > 1 ? "s" : ""}`}
+          >
+            ★
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Carte résultat IA ────────────────────────────────────────
+
+interface AIScoreCardProps {
+  noteAgent: number;
+  scoreLogistique: number;
+  scorePredictedLabel: string;
+}
+
+function AIScoreCard({ noteAgent, scoreLogistique, scorePredictedLabel }: AIScoreCardProps) {
+  const percent = Math.round(scoreLogistique * 100);
+
+  const scoreColor =
+    percent >= 80 ? "#22c55e"
+    : percent >= 50 ? "#f97316"
+    : "#ef4444";
+
+  const scoreBg =
+    percent >= 80 ? "rgba(34,197,94,0.1)"
+    : percent >= 50 ? "rgba(249,115,22,0.1)"
+    : "rgba(239,68,68,0.1)";
+
+  const scoreBorder =
+    percent >= 80 ? "rgba(34,197,94,0.3)"
+    : percent >= 50 ? "rgba(249,115,22,0.3)"
+    : "rgba(239,68,68,0.3)";
+
+  return (
+    <div style={{
+      background: "rgba(24,24,27,0.98)",
+      borderRadius: "12px",
+      overflow: "hidden",
+      border: "1px solid #27272a",
+      marginTop: "4px",
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: "8px 12px",
+        background: "linear-gradient(135deg, rgba(234,88,12,0.15), rgba(234,88,12,0.05))",
+        borderBottom: "1px solid #27272a",
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+      }}>
+        <span style={{ fontSize: "14px" }}>✅</span>
+        <span style={{ fontSize: "11px", fontWeight: 700, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          Mission évaluée
+        </span>
+      </div>
+
+      <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+        {/* Note agent */}
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: "11px", color: "#71717a", marginBottom: "4px" }}>
+            Note de l&apos;agent
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "6px" }}>
+            <span style={{ fontSize: "18px", color: "#f59e0b", letterSpacing: "1px" }}>
+              {"★".repeat(noteAgent)}{"☆".repeat(5 - noteAgent)}
+            </span>
+            <span style={{ fontSize: "13px", fontWeight: 700, color: "#e4e4e7" }}>
+              {noteAgent}/5
+            </span>
+          </div>
+        </div>
+
+        {/* Score IA */}
+        <div style={{
+          background: scoreBg,
+          border: `1px solid ${scoreBorder}`,
+          borderRadius: "8px",
+          padding: "8px 10px",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "5px" }}>
+            <span style={{ fontSize: "10px", color: "#71717a", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
+              Score IA
+            </span>
+            <span style={{
+              fontSize: "11px",
+              fontWeight: 700,
+              color: scoreColor,
+              background: `rgba(${scoreColor === "#22c55e" ? "34,197,94" : scoreColor === "#f97316" ? "249,115,22" : "239,68,68"},0.15)`,
+              padding: "1px 7px",
+              borderRadius: "20px",
+            }}>
+              {scorePredictedLabel}
+            </span>
+          </div>
+
+          {/* Barre de progression */}
+          <div style={{
+            height: "5px",
+            background: "#27272a",
+            borderRadius: "99px",
+            overflow: "hidden",
+          }}>
+            <div style={{
+              height: "100%",
+              width: `${percent}%`,
+              background: `linear-gradient(90deg, ${scoreColor}, ${scoreColor}cc)`,
+              borderRadius: "99px",
+              transition: "width 0.6s ease",
+              boxShadow: `0 0 6px ${scoreColor}66`,
+            }} />
+          </div>
+
+          <div style={{
+            textAlign: "right",
+            fontSize: "11px",
+            fontWeight: 700,
+            color: scoreColor,
+            marginTop: "3px",
+          }}>
+            {percent}%
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Bloc évaluation dans la popup ───────────────────────────
+
+interface MissionRatingBlockProps {
+  mission: ActiveMission & {
+    statut?: string;
+    noteAgent?: number | null;
+    scoreLogistique?: number | null;
+    scorePredictedLabel?: string | null;
+  };
+}
+
+function MissionRatingBlock({ mission }: MissionRatingBlockProps) {
+  const [note, setNote] = useState(0);
+  const [submitted, setSubmitted] = useState(false);
+  const [localNote, setLocalNote] = useState<number | null>(null);
+
+  const [noterMission, { loading, error }] = useMutation<
+    { noterMissionConvoyeur: boolean },
+    { missionId: string; note: Float }
+  >(NOTER_MISSION_CONVOYEUR);
+
+  // Déjà noté côté backend
+  const alreadyRated =
+    submitted ||
+    (mission.noteAgent != null && mission.scoreLogistique != null);
+
+  const displayNote = localNote ?? mission.noteAgent ?? 0;
+  const displayScore = mission.scoreLogistique ?? 0;
+  const displayLabel = mission.scorePredictedLabel ?? "N/A";
+
+  const handleSubmit = useCallback(async () => {
+    if (!note || note < 1 || note > 5) return;
+    try {
+      await noterMission({
+        variables: { missionId: mission.missionId, note: note as Float },
+      });
+      setLocalNote(note);
+      setSubmitted(true);
+    } catch (e) {
+      console.error("Erreur notation:", e);
+    }
+  }, [note, mission.missionId, noterMission]);
+
+  if (mission.statut !== "TERMINEE") return null;
+
+  if (alreadyRated) {
+    return (
+      <AIScoreCard
+        noteAgent={displayNote}
+        scoreLogistique={displayScore}
+        scorePredictedLabel={displayLabel}
+      />
+    );
+  }
+
+  return (
+    <div style={{
+      background: "rgba(24,24,27,0.98)",
+      borderRadius: "12px",
+      overflow: "hidden",
+      border: "1px solid #27272a",
+      marginTop: "4px",
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: "8px 12px",
+        background: "linear-gradient(135deg, rgba(234,88,12,0.15), rgba(234,88,12,0.05))",
+        borderBottom: "1px solid #27272a",
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+      }}>
+        <span style={{ fontSize: "14px" }}>⭐</span>
+        <span style={{ fontSize: "11px", fontWeight: 700, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          Évaluer le convoyeur
+        </span>
+      </div>
+
+      <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+        <p style={{ fontSize: "11px", color: "#71717a", textAlign: "center", margin: 0 }}>
+          Mission terminée · Donnez votre avis
+        </p>
+
+        <StarRating value={note} onChange={setNote} disabled={loading} />
+
+        {note > 0 && (
+          <p style={{
+            textAlign: "center",
+            fontSize: "11px",
+            color: "#f59e0b",
+            margin: 0,
+            fontWeight: 600,
+          }}>
+            {["", "Insuffisant", "Passable", "Bien", "Très bien", "Excellent"][note]}
+          </p>
+        )}
+
+        {error && (
+          <p style={{ fontSize: "10px", color: "#ef4444", textAlign: "center", margin: 0 }}>
+            Erreur : {error.message}
+          </p>
+        )}
+
+        <button
+          disabled={!note || loading}
+          onClick={handleSubmit}
+          style={{
+            background: !note || loading
+              ? "#27272a"
+              : "linear-gradient(135deg, #ea580c, #dc4a00)",
+            color: !note || loading ? "#52525b" : "#fff",
+            border: "none",
+            borderRadius: "8px",
+            padding: "8px 12px",
+            fontSize: "12px",
+            fontWeight: 700,
+            cursor: !note || loading ? "not-allowed" : "pointer",
+            width: "100%",
+            transition: "all 0.2s",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+            boxShadow: note && !loading ? "0 2px 12px rgba(234,88,12,0.35)" : "none",
+          }}
+        >
+          {loading ? (
+            <>
+              <span style={{
+                width: "10px", height: "10px", border: "2px solid #71717a",
+                borderTopColor: "transparent", borderRadius: "50%",
+                display: "inline-block", animation: "spin 0.7s linear infinite",
+              }} />
+              Envoi…
+            </>
+          ) : (
+            "Valider l'évaluation"
+          )}
+        </button>
+      </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
 // ── Types ────────────────────────────────────────────────────
+
+// Extend Float type alias for the mutation variable
+type Float = number;
+
 interface AgentMapMarkersProps {
-  missions: ActiveMission[];
+  missions: (ActiveMission & {
+    statut?: string;
+    noteAgent?: number | null;
+    scoreLogistique?: number | null;
+    scorePredictedLabel?: string | null;
+  })[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   trackHistory?: Record<string, GPSTrack[]>;
-  routePoints?: Record<string, { 
+  routePoints?: Record<string, {
     departure?: [number, number];
-    destination?: [number, number] 
+    destination?: [number, number];
   }>;
 }
+
+// ── Composant principal ──────────────────────────────────────
 
 export default function AgentMapMarkers({
   missions,
@@ -134,10 +461,7 @@ export default function AgentMapMarkers({
     }
 
     loadRoadRoutes();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [missions, routePoints, trackHistory]);
 
   return (
@@ -150,10 +474,7 @@ export default function AgentMapMarkers({
         const departure = route.departure ?? (history[0] ? ([history[0].latitude, history[0].longitude] as [number, number]) : undefined);
         const destination = route.destination;
 
-        // ── Tracé passé (bleu) ──────────────────────────────
         const pastPath: [number, number][] = history.map((t) => [t.latitude, t.longitude]);
-
-        // ── Tracé restant (orange) : position actuelle → destination ──
         const remainingPath: [number, number][] = destination
           ? [[mission.latitude, mission.longitude], destination]
           : [];
@@ -166,7 +487,7 @@ export default function AgentMapMarkers({
 
         return (
           <span key={mission.missionId}>
-            {/* ✅ Trajet complet (départ → destination) en route réelle */}
+            {/* Trajet complet (départ → destination) */}
             {fullRoadPath.length > 1 && (
               <Polyline
                 positions={fullRoadPath}
@@ -180,7 +501,7 @@ export default function AgentMapMarkers({
               />
             )}
 
-            {/* Trajectoire passée — bleu ciel avec fond léger */}
+            {/* Trajectoire passée — bleu ciel */}
             {pastPath.length > 1 && (
               <Polyline
                 positions={pastPath}
@@ -196,35 +517,31 @@ export default function AgentMapMarkers({
               />
             )}
 
-            {/* ✅ Marqueur icône départ (ville de départ) — icône unifiée */}
+            {/* Marqueur départ */}
             {departure && (
-              <Marker 
-                position={departure} 
+              <Marker
+                position={departure}
                 icon={buildRoutePointIcon("departure", "small")}
               >
                 <Popup closeButton={false} minWidth={200}>
-                  <div className="text-xs text-zinc-700 font-semibold">
-                    🚀 Ville de départ
-                  </div>
+                  <div className="text-xs text-zinc-700 font-semibold">🚀 Ville de départ</div>
                 </Popup>
               </Marker>
             )}
 
-            {/* ✅ Marqueur icône destination (arrivée) — icône unifiée */}
+            {/* Marqueur destination */}
             {destination && (
-              <Marker 
-                position={destination} 
+              <Marker
+                position={destination}
                 icon={buildRoutePointIcon("destination", "small")}
               >
                 <Popup closeButton={false} minWidth={200}>
-                  <div className="text-xs text-zinc-700 font-semibold">
-                    🎯 Destination
-                  </div>
+                  <div className="text-xs text-zinc-700 font-semibold">🎯 Destination</div>
                 </Popup>
               </Marker>
             )}
 
-            {/* Marker icône véhicule */}
+            {/* Marker véhicule — popup avec évaluation */}
             <Marker
               position={[mission.latitude, mission.longitude]}
               icon={buildVehicleIcon(status, isSelected)}
@@ -232,74 +549,138 @@ export default function AgentMapMarkers({
                 click: () => onSelect(isSelected ? null : mission.missionId),
               }}
             >
-              <Popup closeButton={false} className="agent-map-popup" minWidth={270}>
-                <div className="bg-zinc-900 rounded-xl overflow-hidden text-white shadow-2xl -m-3">
+              <Popup
+                closeButton={false}
+                className="agent-map-popup"
+                minWidth={285}
+                maxWidth={310}
+              >
+                <div style={{
+                  background: "#18181b",
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  color: "white",
+                  boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
+                  margin: "-12px",
+                  fontFamily: "system-ui, -apple-system, sans-serif",
+                }}>
                   {/* Status bar */}
-                  <div className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${
-                    status === "normal"   ? "bg-green-950/80 text-green-400"
-                    : status === "gps_old" ? "bg-orange-950/80 text-orange-400"
-                    : "bg-red-950/80 text-red-400"
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${
-                      status === "normal" ? "bg-green-400"
-                      : status === "gps_old" ? "bg-orange-400 animate-pulse"
-                      : "bg-red-400 animate-pulse"
-                    }`}/>
+                  <div style={{
+                    padding: "6px 12px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    background: status === "normal"
+                      ? "rgba(20,83,45,0.7)"
+                      : status === "gps_old"
+                      ? "rgba(124,45,18,0.7)"
+                      : "rgba(127,29,29,0.7)",
+                    color: status === "normal" ? "#4ade80"
+                      : status === "gps_old" ? "#fb923c"
+                      : "#f87171",
+                  }}>
+                    <span style={{
+                      width: "6px", height: "6px", borderRadius: "50%", flexShrink: 0,
+                      background: status === "normal" ? "#4ade80"
+                        : status === "gps_old" ? "#fb923c"
+                        : "#f87171",
+                    }} />
                     {status === "normal" ? "GPS normal"
                       : status === "gps_old" ? "GPS ancien"
                       : "Déviation détectée"}
                   </div>
 
-                  <div className="px-3 py-3 space-y-2.5">
+                  <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: "8px" }}>
                     {/* Véhicule + convoyeur */}
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center flex-shrink-0 text-lg">
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{
+                        width: "38px", height: "38px", borderRadius: "8px",
+                        background: "#27272a", border: "1px solid #3f3f46",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: "18px", flexShrink: 0,
+                      }}>
                         🚗
                       </div>
                       <div>
-                        <p className="font-bold text-sm text-white">{mission.vehicleName}</p>
-                        <p className="text-xs text-zinc-400">{mission.convoyeurName}</p>
+                        <p style={{ fontWeight: 700, fontSize: "13px", color: "#f4f4f5", margin: 0 }}>
+                          {mission.vehicleName}
+                        </p>
+                        <p style={{ fontSize: "11px", color: "#71717a", margin: "2px 0 0" }}>
+                          {mission.convoyeurName}
+                        </p>
                       </div>
                     </div>
 
                     {/* Position + MAJ */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-zinc-800/60 rounded-lg px-2 py-1.5">
-                        <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-0.5">Position</p>
-                        <p className="font-mono text-[11px] text-zinc-300 leading-tight">
-                          {mission.latitude.toFixed(4)}<br/>{mission.longitude.toFixed(4)}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                      <div style={{
+                        background: "rgba(39,39,42,0.6)", borderRadius: "8px",
+                        padding: "6px 8px",
+                      }}>
+                        <p style={{ fontSize: "9px", color: "#52525b", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 2px" }}>
+                          Position
+                        </p>
+                        <p style={{ fontFamily: "monospace", fontSize: "10px", color: "#a1a1aa", margin: 0, lineHeight: 1.5 }}>
+                          {mission.latitude.toFixed(4)}<br />{mission.longitude.toFixed(4)}
                         </p>
                       </div>
-                      <div className="bg-zinc-800/60 rounded-lg px-2 py-1.5">
-                        <p className="text-[10px] text-zinc-500 uppercase tracking-wide mb-0.5">Dernière MAJ</p>
-                        <p className="text-[11px] text-zinc-300">{formatLastSeen(mission.lastGpsAt)}</p>
+                      <div style={{
+                        background: "rgba(39,39,42,0.6)", borderRadius: "8px",
+                        padding: "6px 8px",
+                      }}>
+                        <p style={{ fontSize: "9px", color: "#52525b", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 2px" }}>
+                          Dernière MAJ
+                        </p>
+                        <p style={{ fontSize: "10px", color: "#a1a1aa", margin: 0 }}>
+                          {formatLastSeen(mission.lastGpsAt)}
+                        </p>
                         {mission.accuracy && (
-                          <p className="text-[10px] text-zinc-500">±{mission.accuracy}m</p>
+                          <p style={{ fontSize: "9px", color: "#52525b", margin: "2px 0 0" }}>
+                            ±{mission.accuracy}m
+                          </p>
                         )}
                       </div>
                     </div>
 
-                    {/* Stats trajet si historique disponible */}
+                    {/* Stats trajet */}
                     {history.length > 0 && (
-                      <div className="flex items-center gap-3 text-[11px]">
-                        <span className="flex items-center gap-1">
-                          <span className="w-2 h-0.5 bg-blue-400 inline-block rounded"/>
-                          <span className="text-blue-400">{history.length} points</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "11px" }}>
+                        <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          <span style={{ width: "8px", height: "2px", background: "#60a5fa", display: "inline-block", borderRadius: "1px" }} />
+                          <span style={{ color: "#60a5fa" }}>{history.length} points</span>
                         </span>
                         {destination && (
-                          <span className="flex items-center gap-1">
-                            <span className="w-2 h-0.5 bg-orange-400 inline-block rounded" style={{borderTop: "2px dashed #ea580c", background:"none"}}/>
-                            <span className="text-orange-400">Trajet restant</span>
+                          <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <span style={{ width: "8px", height: 0, borderTop: "2px dashed #ea580c", display: "inline-block" }} />
+                            <span style={{ color: "#fb923c" }}>Trajet restant</span>
                           </span>
                         )}
                       </div>
                     )}
-                  </div>
 
-                  <div className="px-3 pb-3">
+                    {/* ── Bloc évaluation (Phase 3) ── */}
+                    <MissionRatingBlock mission={mission} />
+
+                    {/* Lien détails */}
                     <Link
                       href={`/agent/missions/${mission.missionId}`}
-                      className="block w-full text-center py-2 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold rounded-lg transition-colors"
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        textAlign: "center",
+                        padding: "7px 12px",
+                        background: "#ea580c",
+                        color: "#fff",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        borderRadius: "8px",
+                        textDecoration: "none",
+                        boxSizing: "border-box",
+                      }}
                     >
                       Voir détails mission →
                     </Link>

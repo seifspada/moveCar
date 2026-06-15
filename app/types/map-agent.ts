@@ -6,6 +6,7 @@ export interface ActiveMission {
   vehicleName: string;
   convoyeurName: string;
   status: string;
+  statut?: string;                        // Statut métier (ex: "TERMINEE", "EN_COURS")
   latitude: number;
   longitude: number;
   accuracy: number | null;
@@ -15,6 +16,10 @@ export interface ActiveMission {
   longitudeDepart?: number;
   latitudeArrivee?: number;
   longitudeArrivee?: number;
+  // ── Phase 3 : Évaluation ────────────────────────────────
+  noteAgent?: number | null;             // Note 1–5 donnée par l'agent
+  scoreLogistique?: number | null;       // Float 0–1 calculé par l'IA
+  scorePredictedLabel?: string | null;   // Ex: "Excellent", "Moyen", "Risqué"
 }
 
 export interface GPSTrack {
