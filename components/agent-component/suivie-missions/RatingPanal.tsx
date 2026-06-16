@@ -1,5 +1,6 @@
 "use client";
 import { useState, useCallback } from "react";
+import Link from "next/link";
 import { NOTER_MISSION_CONVOYEUR } from "@/lib/graphql/mutations/mission.mutations";
 import { ActiveMission } from "@/app/types/map-agent";
 import { useMutation } from "@apollo/client/react";
@@ -234,6 +235,14 @@ export default function RatingPanel({ mission, onClose }: RatingPanelProps) {
                   "Valider l'évaluation"
                 )}
               </button>
+
+              {/* Lien discret vers la page détail */}
+              <Link
+                href={`/agent/missions/${mission.missionId}`}
+                className="block text-center text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors underline underline-offset-2"
+              >
+                Voir la page détail de la mission
+              </Link>
             </>
           )}
         </div>

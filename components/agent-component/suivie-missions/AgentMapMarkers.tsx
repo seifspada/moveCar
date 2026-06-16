@@ -274,19 +274,19 @@ export default function AgentMapMarkers({
                       </div>
                     </div>
 
-                    {/* Bouton évaluation */}
-                    {isTerminee && (
+                    {/* Bouton unique : ouvre le panneau si TERMINEE, navigue sinon */}
+                    {isTerminee ? (
                       <button
                         onClick={() => onOpenRating(mission)}
                         style={{
                           width: "100%",
                           padding: "9px 12px",
                           background: alreadyRated
-                            ? "rgba(88,28,135,0.25)"
-                            : "linear-gradient(135deg, #7c3aed, #6d28d9)",
-                          border: alreadyRated ? "1px solid rgba(124,58,237,0.5)" : "none",
+                            ? "linear-gradient(135deg, #92400e, #78350f)"
+                            : "linear-gradient(135deg, #ea580c, #dc4a00)",
+                          border: "none",
                           borderRadius: "9px",
-                          color: alreadyRated ? "#c084fc" : "#fff",
+                          color: "#fff",
                           fontSize: "12px",
                           fontWeight: 700,
                           cursor: "pointer",
@@ -294,41 +294,43 @@ export default function AgentMapMarkers({
                           alignItems: "center",
                           justifyContent: "center",
                           gap: "6px",
-                          boxShadow: alreadyRated ? "none" : "0 4px 14px rgba(124,58,237,0.35)",
+                          boxShadow: "0 4px 14px rgba(234,88,12,0.35)",
+                          boxSizing: "border-box",
                         }}
                       >
                         {alreadyRated ? (
                           <>
-                            <span style={{ color: "#f59e0b" }}>{"★".repeat(mission.noteAgent ?? 0)}</span>
-                            <span>Noté {mission.noteAgent}/5</span>
+                            <span style={{ color: "#fbbf24" }}>{"★".repeat(mission.noteAgent ?? 0)}</span>
+                            <span>Voir évaluation ({mission.noteAgent}/5)</span>
                           </>
                         ) : (
                           <>
                             <span>⭐</span>
-                            <span>Évaluer le convoyeur</span>
+                            <span>Voir détails mission →</span>
                           </>
                         )}
                       </button>
+                    ) : (
+                      <Link
+                        href={`/agent/missions/${mission.missionId}`}
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          textAlign: "center",
+                          padding: "9px 12px",
+                          background: "linear-gradient(135deg, #ea580c, #dc4a00)",
+                          color: "#fff",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          borderRadius: "9px",
+                          textDecoration: "none",
+                          boxSizing: "border-box",
+                          boxShadow: "0 4px 14px rgba(234,88,12,0.35)",
+                        }}
+                      >
+                        Voir détails mission →
+                      </Link>
                     )}
-
-                    <Link
-                      href={`/agent/missions/${mission.missionId}`}
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        textAlign: "center",
-                        padding: "7px 12px",
-                        background: "#ea580c",
-                        color: "#fff",
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        borderRadius: "8px",
-                        textDecoration: "none",
-                        boxSizing: "border-box",
-                      }}
-                    >
-                      Voir détails mission →
-                    </Link>
                   </div>
                 </div>
               </Popup>
