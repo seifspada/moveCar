@@ -1,11 +1,10 @@
+// components/agent-component/suivie-missions/RatingPanel.tsx
 "use client";
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { NOTER_MISSION_CONVOYEUR } from "@/lib/graphql/mutations/mission.mutations";
 import { ActiveMission } from "@/app/types/map-agent";
 import { useMutation } from "@apollo/client/react";
-
-// ── Types ────────────────────────────────────────────────────
 
 export interface MissionWithEval extends ActiveMission {
   statut?: string;
@@ -47,8 +46,10 @@ function StarRating({
               onClick={() => !disabled && onChange(star)}
               className={`text-3xl leading-none transition-all duration-150 px-0.5 select-none
                 ${disabled ? "cursor-default" : "cursor-pointer hover:scale-110"}
-                ${active ? "text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]" : "text-zinc-700"}
-              `}
+                ${active
+                  ? "text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]"
+                  : "text-zinc-700"
+                }`}
             >
               ★
             </button>
@@ -69,9 +70,11 @@ function StarRating({
 function ScoreBar({ score, label }: { score: number; label: string }) {
   const percent = Math.round(score * 100);
   const color =
-    percent >= 80 ? { bar: "bg-emerald-500", text: "text-emerald-400", badge: "bg-emerald-950 text-emerald-400 border-emerald-800" }
-    : percent >= 50 ? { bar: "bg-orange-500", text: "text-orange-400", badge: "bg-orange-950 text-orange-400 border-orange-800" }
-    : { bar: "bg-red-500", text: "text-red-400", badge: "bg-red-950 text-red-400 border-red-800" };
+    percent >= 80
+      ? { bar: "bg-emerald-500", text: "text-emerald-400", badge: "bg-emerald-950 text-emerald-400 border-emerald-800" }
+      : percent >= 50
+      ? { bar: "bg-orange-500", text: "text-orange-400", badge: "bg-orange-950 text-orange-400 border-orange-800" }
+      : { bar: "bg-red-500", text: "text-red-400", badge: "bg-red-950 text-red-400 border-red-800" };
 
   return (
     <div className="space-y-2">
@@ -86,7 +89,7 @@ function ScoreBar({ score, label }: { score: number; label: string }) {
       <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-700 ${color.bar}`}
-          style={{ width: `${percent}%`, boxShadow: `0 0 8px currentColor` }}
+          style={{ width: `${percent}%` }}
         />
       </div>
       <div className={`text-right text-xs font-bold ${color.text}`}>{percent}%</div>
@@ -106,8 +109,7 @@ export default function RatingPanel({ mission, onClose }: RatingPanelProps) {
   >(NOTER_MISSION_CONVOYEUR);
 
   const alreadyRated =
-    submitted ||
-    (mission.noteAgent != null && mission.scoreLogistique != null);
+    submitted || (mission.noteAgent != null && mission.noteAgent > 0);
 
   const displayNote = submitted ? note : (mission.noteAgent ?? 0);
 
@@ -122,29 +124,22 @@ export default function RatingPanel({ mission, onClose }: RatingPanelProps) {
   }, [note, loading, mission.missionId, noterMission]);
 
   return (
-    /* Overlay transparent pour fermer en cliquant dehors */
-    <div
-      className="absolute inset-0 z-[1100]"
-      onClick={onClose}
-    >
-      {/* Panneau flottant — stoppe la propagation du clic */}
+    // Overlay — clic extérieur ferme le panneau
+    <div className="absolute inset-0 z-[1100]" onClick={onClose}>
       <div
-        className="absolute bottom-8 right-4 w-72 bg-zinc-900 border border-zinc-700/80 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-200"
+        className="absolute bottom-8 right-4 w-72 bg-zinc-900 border border-zinc-700/80 rounded-2xl shadow-2xl overflow-hidden"
+        style={{ animation: "slideUp 0.2s ease" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-gradient-to-r from-orange-950/40 to-transparent">
           <div className="flex items-center gap-2">
-            <span className="text-base">
-              {alreadyRated ? "✅" : "⭐"}
-            </span>
+            <span className="text-base">{alreadyRated ? "✅" : "⭐"}</span>
             <div>
               <p className="text-xs font-bold text-white leading-tight">
                 {alreadyRated ? "Mission évaluée" : "Évaluer le convoyeur"}
               </p>
-              <p className="text-[10px] text-zinc-500 leading-tight">
-                Mission terminée
-              </p>
+              <p className="text-[10px] text-zinc-500 leading-tight">Mission terminée</p>
             </div>
           </div>
           <button
@@ -168,14 +163,15 @@ export default function RatingPanel({ mission, onClose }: RatingPanelProps) {
 
         <div className="px-4 py-4 space-y-4">
           {alreadyRated ? (
-            /* ── Vue résultat ── */
             <>
               {/* Note affichée */}
               <div className="text-center space-y-1">
-                <p className="text-[10px] text-zinc-500 uppercase tracking-widest">Note de l&apos;agent</p>
+                <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
+                  Note de l&apos;agent
+                </p>
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-xl text-amber-400 tracking-wider">
-                    {"★".repeat(displayNote)}
+                  <span className="text-xl tracking-wider">
+                    <span className="text-amber-400">{"★".repeat(displayNote)}</span>
                     <span className="text-zinc-700">{"★".repeat(5 - displayNote)}</span>
                   </span>
                   <span className="text-sm font-bold text-white">{displayNote}/5</span>
@@ -190,8 +186,8 @@ export default function RatingPanel({ mission, onClose }: RatingPanelProps) {
                 />
               )}
 
-              {/* Message de confirmation si vient d'être soumis */}
-              {submitted && !mission.scoreLogistique && (
+              {/* Confirmation si vient d'être soumis et pas encore de score IA */}
+              {submitted && mission.scoreLogistique == null && (
                 <div className="bg-emerald-950/50 border border-emerald-800/50 rounded-xl px-3 py-2.5 text-center">
                   <p className="text-xs text-emerald-400 font-semibold">
                     Évaluation envoyée avec succès
@@ -203,7 +199,6 @@ export default function RatingPanel({ mission, onClose }: RatingPanelProps) {
               )}
             </>
           ) : (
-            /* ── Vue notation ── */
             <>
               <p className="text-[11px] text-zinc-500 text-center">
                 Comment s&apos;est passée la mission ?
@@ -235,18 +230,25 @@ export default function RatingPanel({ mission, onClose }: RatingPanelProps) {
                   "Valider l'évaluation"
                 )}
               </button>
-
-              {/* Lien discret vers la page détail */}
-              <Link
-                href={`/agent/missions/${mission.missionId}`}
-                className="block text-center text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors underline underline-offset-2"
-              >
-                Voir la page détail de la mission
-              </Link>
             </>
           )}
+
+          {/* Lien page détail */}
+          <Link
+            href={`/agent/missions/${mission.missionId}`}
+            className="block text-center text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors underline underline-offset-2"
+          >
+            Voir la page détail de la mission
+          </Link>
         </div>
       </div>
+
+      <style>{`
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

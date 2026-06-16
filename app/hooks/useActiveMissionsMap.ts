@@ -1,3 +1,4 @@
+// app/hooks/useActiveMissionsMap.ts
 "use client";
 import { GET_ACTIVE_MISSIONS_MAP } from "@/lib/graphql/queries/map-agent";
 import { ActiveMission } from "../types/map-agent";

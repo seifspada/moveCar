@@ -1,3 +1,4 @@
+// components/agent-component/suivie-missions/AgentMapView.tsx
 "use client";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
@@ -11,9 +12,9 @@ import RatingPanel, { MissionWithEval } from "./RatingPanal";
 
 export default function AgentMapView() {
   const { missions, loading, error, refetch } = useActiveMissionsMap(15000);
-  const [selectedId, setSelectedId]     = useState<string | null>(null);
+  const [selectedId, setSelectedId]       = useState<string | null>(null);
   const [ratingMission, setRatingMission] = useState<MissionWithEval | null>(null);
-  const [trackHistory, setTrackHistory] = useState<Record<string, GPSTrack[]>>({});
+  const [trackHistory, setTrackHistory]   = useState<Record<string, GPSTrack[]>>({});
   const client = useApolloClient();
 
   // Fix icônes Leaflet Next.js
@@ -29,7 +30,6 @@ export default function AgentMapView() {
     });
   }, []);
 
-  // Charge l'historique GPS quand on sélectionne une mission
   const loadHistory = useCallback(async (missionId: string) => {
     if (trackHistory[missionId]) return;
     try {
@@ -41,8 +41,8 @@ export default function AgentMapView() {
       if (data?.getMissionTrackingHistory) {
         setTrackHistory((prev) => ({ ...prev, [missionId]: data.getMissionTrackingHistory }));
       }
-    } catch (error) {
-      console.error("Erreur chargement historique:", error);
+    } catch (err) {
+      console.error("Erreur chargement historique:", err);
     }
   }, [client, trackHistory]);
 
@@ -51,21 +51,11 @@ export default function AgentMapView() {
     if (id) loadHistory(id);
   }, [loadHistory]);
 
-  // Ouvre le panneau de notation pour une mission TERMINEE
-  const handleOpenRating = useCallback((mission: MissionWithEval) => {
-    setRatingMission(mission);
-  }, []);
+  const handleOpenRating  = useCallback((mission: MissionWithEval) => setRatingMission(mission), []);
+  const handleCloseRating = useCallback(() => setRatingMission(null), []);
 
-  const handleCloseRating = useCallback(() => {
-    setRatingMission(null);
-  }, []);
-
-  // Points de route extraits depuis les missions
   const routePoints = useMemo(() => {
-    const map: Record<string, {
-      departure?: [number, number];
-      destination?: [number, number]
-    }> = {};
+    const map: Record<string, { departure?: [number, number]; destination?: [number, number] }> = {};
     missions.forEach((m) => {
       const destination =
         typeof m.latitudeArrivee === "number" && typeof m.longitudeArrivee === "number"
@@ -81,6 +71,7 @@ export default function AgentMapView() {
   }, [missions]);
 
   const counts = useMemo(() => ({
+    total:    missions.length,
     deviated: missions.filter((m) => getMarkerStatus(m) === "deviated").length,
     gpsOld:   missions.filter((m) => getMarkerStatus(m) === "gps_old").length,
     terminee: missions.filter((m) => (m as MissionWithEval).statut === "TERMINEE").length,
@@ -100,7 +91,7 @@ export default function AgentMapView() {
 
       {/* Stats flottantes */}
       <div className="absolute top-4 left-4 z-[1000] flex gap-2 flex-wrap">
-        <Chip color="orange" label={`${missions.length} missions`} />
+        <Chip color="orange" label={`${counts.total} mission${counts.total > 1 ? "s" : ""}`} />
         {counts.deviated > 0 && (
           <Chip color="red" label={`${counts.deviated} déviation${counts.deviated > 1 ? "s" : ""}`} pulse />
         )}
@@ -108,7 +99,7 @@ export default function AgentMapView() {
           <Chip color="orange" label={`${counts.gpsOld} GPS ancien${counts.gpsOld > 1 ? "s" : ""}`} />
         )}
         {counts.terminee > 0 && (
-          <Chip color="green" label={`${counts.terminee} à évaluer`} />
+          <Chip color="purple" label={`${counts.terminee} à évaluer`} />
         )}
       </div>
 
@@ -165,10 +156,7 @@ export default function AgentMapView() {
 
       {/* Panneau flottant d'évaluation */}
       {ratingMission && (
-        <RatingPanel
-          mission={ratingMission}
-          onClose={handleCloseRating}
-        />
+        <RatingPanel mission={ratingMission} onClose={handleCloseRating} />
       )}
 
       {!loading && missions.length === 0 && !error && (
@@ -186,20 +174,22 @@ export default function AgentMapView() {
 
 // ── Petits composants UI ─────────────────────────────────────
 
-function Chip({ color, label, pulse }: { color: "orange" | "red" | "green"; label: string; pulse?: boolean }) {
-  const styles = {
+type ChipColor = "orange" | "red" | "purple";
+
+function Chip({ color, label, pulse }: { color: ChipColor; label: string; pulse?: boolean }) {
+  const styles: Record<ChipColor, string> = {
     red:    "bg-red-950/95 border-red-800 text-red-300",
     orange: "bg-zinc-900/95 border-zinc-700 text-white",
-    green:  "bg-purple-950/95 border-purple-800 text-purple-300",
+    purple: "bg-purple-950/95 border-purple-800 text-purple-300",
   };
-  const dotStyles = {
+  const dots: Record<ChipColor, string> = {
     red:    "bg-red-400",
     orange: "bg-orange-500",
-    green:  "bg-purple-400",
+    purple: "bg-purple-400",
   };
   return (
     <div className={`backdrop-blur border rounded-xl px-3 py-2 flex items-center gap-2 shadow-xl text-xs font-bold ${styles[color]} ${pulse ? "animate-pulse" : ""}`}>
-      <span className={`w-2 h-2 rounded-full ${dotStyles[color]}`} />
+      <span className={`w-2 h-2 rounded-full ${dots[color]}`} />
       {label}
     </div>
   );
@@ -218,8 +208,8 @@ function LegendLine({ color, label, dashed, opacity }: { color: string; label: s
   return (
     <div className="flex items-center gap-2">
       <span
-        className={`w-5 h-0.5 flex-shrink-0 rounded ${color} ${opacity || ""}`}
-        style={dashed ? { backgroundImage: "none", borderTop: "2px dashed #ea580c", height: 0 } : {}}
+        className={`w-5 flex-shrink-0 rounded ${!dashed ? `h-0.5 ${color} ${opacity ?? ""}` : ""}`}
+        style={dashed ? { height: 0, borderTop: "2px dashed #ea580c" } : {}}
       />
       <span className="text-[11px] text-zinc-300">{label}</span>
     </div>
