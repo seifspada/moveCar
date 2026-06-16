@@ -7,10 +7,12 @@ import { GET_MISSION_TRACKING_HISTORY } from "@/lib/graphql/queries/map-agent";
 import { getMarkerStatus, GPSTrack } from "@/app/types/map-agent";
 import { useApolloClient } from "@apollo/client/react";
 import AgentMapMarkers from "./AgentMapMarkers";
+import RatingPanel, { MissionWithEval } from "./RatingPanal";
 
 export default function AgentMapView() {
   const { missions, loading, error, refetch } = useActiveMissionsMap(15000);
-  const [selectedId, setSelectedId]   = useState<string | null>(null);
+  const [selectedId, setSelectedId]     = useState<string | null>(null);
+  const [ratingMission, setRatingMission] = useState<MissionWithEval | null>(null);
   const [trackHistory, setTrackHistory] = useState<Record<string, GPSTrack[]>>({});
   const client = useApolloClient();
 
@@ -29,7 +31,7 @@ export default function AgentMapView() {
 
   // Charge l'historique GPS quand on sélectionne une mission
   const loadHistory = useCallback(async (missionId: string) => {
-    if (trackHistory[missionId]) return; // déjà chargé
+    if (trackHistory[missionId]) return;
     try {
       const { data } = await client.query<{ getMissionTrackingHistory: GPSTrack[] }>({
         query: GET_MISSION_TRACKING_HISTORY,
@@ -37,10 +39,7 @@ export default function AgentMapView() {
         fetchPolicy: "network-only",
       });
       if (data?.getMissionTrackingHistory) {
-        setTrackHistory((prev) => ({
-          ...prev,
-          [missionId]: data.getMissionTrackingHistory,
-        }));
+        setTrackHistory((prev) => ({ ...prev, [missionId]: data.getMissionTrackingHistory }));
       }
     } catch (error) {
       console.error("Erreur chargement historique:", error);
@@ -52,28 +51,31 @@ export default function AgentMapView() {
     if (id) loadHistory(id);
   }, [loadHistory]);
 
-  // ✅ Points de route extraits depuis les missions + historique
+  // Ouvre le panneau de notation pour une mission TERMINEE
+  const handleOpenRating = useCallback((mission: MissionWithEval) => {
+    setRatingMission(mission);
+  }, []);
+
+  const handleCloseRating = useCallback(() => {
+    setRatingMission(null);
+  }, []);
+
+  // Points de route extraits depuis les missions
   const routePoints = useMemo(() => {
-    const map: Record<string, { 
+    const map: Record<string, {
       departure?: [number, number];
-      destination?: [number, number] 
+      destination?: [number, number]
     }> = {};
-    
     missions.forEach((m) => {
       const destination =
         typeof m.latitudeArrivee === "number" && typeof m.longitudeArrivee === "number"
           ? ([m.latitudeArrivee, m.longitudeArrivee] as [number, number])
           : undefined;
-
-      // ✅ Utiliser le point de départ de la mission si disponible
       const departure =
         typeof m.latitudeDepart === "number" && typeof m.longitudeDepart === "number"
           ? ([m.latitudeDepart, m.longitudeDepart] as [number, number])
           : undefined;
-
-      if (destination || departure) {
-        map[m.missionId] = { destination, departure };
-      }
+      if (destination || departure) map[m.missionId] = { destination, departure };
     });
     return map;
   }, [missions]);
@@ -81,6 +83,7 @@ export default function AgentMapView() {
   const counts = useMemo(() => ({
     deviated: missions.filter((m) => getMarkerStatus(m) === "deviated").length,
     gpsOld:   missions.filter((m) => getMarkerStatus(m) === "gps_old").length,
+    terminee: missions.filter((m) => (m as MissionWithEval).statut === "TERMINEE").length,
   }), [missions]);
 
   const center: [number, number] = [33.8869, 9.5375];
@@ -104,6 +107,9 @@ export default function AgentMapView() {
         {counts.gpsOld > 0 && (
           <Chip color="orange" label={`${counts.gpsOld} GPS ancien${counts.gpsOld > 1 ? "s" : ""}`} />
         )}
+        {counts.terminee > 0 && (
+          <Chip color="green" label={`${counts.terminee} à évaluer`} />
+        )}
       </div>
 
       {/* Légende */}
@@ -112,11 +118,11 @@ export default function AgentMapView() {
         <LegendItem dot="bg-green-400"  label="GPS normal" />
         <LegendItem dot="bg-orange-400" label="GPS ancien (> 10 min)" />
         <LegendItem dot="bg-red-400"    label="Déviation GPS" />
+        <LegendItem dot="bg-purple-400" label="Mission terminée" />
         <div className="border-t border-zinc-700 pt-1.5 space-y-1">
-          <LegendLine color="bg-orange-600" label="Trajet complet (route)" opacity="opacity-30" />
-          <LegendLine color="bg-orange-600" label="Route départ-arrivée" />
-          <LegendLine color="bg-blue-400" label="Trajet parcouru" />
-          <LegendLine color="bg-orange-400" label="Position-arrivée" dashed />
+          <LegendLine color="bg-orange-600" label="Trajet complet" opacity="opacity-30" />
+          <LegendLine color="bg-blue-400"   label="Trajet parcouru" />
+          <LegendLine color="bg-orange-400" label="Position → arrivée" dashed />
         </div>
       </div>
 
@@ -148,13 +154,22 @@ export default function AgentMapView() {
           maxZoom={19}
         />
         <AgentMapMarkers
-          missions={missions}
+          missions={missions as MissionWithEval[]}
           selectedId={selectedId}
           onSelect={handleSelect}
+          onOpenRating={handleOpenRating}
           trackHistory={trackHistory}
           routePoints={routePoints}
         />
       </MapContainer>
+
+      {/* Panneau flottant d'évaluation */}
+      {ratingMission && (
+        <RatingPanel
+          mission={ratingMission}
+          onClose={handleCloseRating}
+        />
+      )}
 
       {!loading && missions.length === 0 && !error && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[500]">
@@ -169,16 +184,22 @@ export default function AgentMapView() {
   );
 }
 
-// ── Petits composants UI internes ────────────────────────────
+// ── Petits composants UI ─────────────────────────────────────
 
-function Chip({ color, label, pulse }: { color: "orange" | "red"; label: string; pulse?: boolean }) {
+function Chip({ color, label, pulse }: { color: "orange" | "red" | "green"; label: string; pulse?: boolean }) {
+  const styles = {
+    red:    "bg-red-950/95 border-red-800 text-red-300",
+    orange: "bg-zinc-900/95 border-zinc-700 text-white",
+    green:  "bg-purple-950/95 border-purple-800 text-purple-300",
+  };
+  const dotStyles = {
+    red:    "bg-red-400",
+    orange: "bg-orange-500",
+    green:  "bg-purple-400",
+  };
   return (
-    <div className={`backdrop-blur border rounded-xl px-3 py-2 flex items-center gap-2 shadow-xl text-xs font-bold ${
-      color === "red"
-        ? "bg-red-950/95 border-red-800 text-red-300"
-        : "bg-zinc-900/95 border-zinc-700 text-white"
-    } ${pulse ? "animate-pulse" : ""}`}>
-      <span className={`w-2 h-2 rounded-full ${color === "red" ? "bg-red-400" : "bg-orange-500"}`} />
+    <div className={`backdrop-blur border rounded-xl px-3 py-2 flex items-center gap-2 shadow-xl text-xs font-bold ${styles[color]} ${pulse ? "animate-pulse" : ""}`}>
+      <span className={`w-2 h-2 rounded-full ${dotStyles[color]}`} />
       {label}
     </div>
   );
@@ -196,8 +217,10 @@ function LegendItem({ dot, label }: { dot: string; label: string }) {
 function LegendLine({ color, label, dashed, opacity }: { color: string; label: string; dashed?: boolean; opacity?: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className={`w-5 h-0.5 flex-shrink-0 rounded ${color} ${opacity || ""} ${dashed ? "opacity-70" : ""}`}
-        style={dashed ? { backgroundImage: "repeating-linear-gradient(90deg, #ea580c 0,#ea580c 4px,transparent 4px,transparent 8px)", background: "none", borderTop: "2px dashed #ea580c", height: 0 } : {}} />
+      <span
+        className={`w-5 h-0.5 flex-shrink-0 rounded ${color} ${opacity || ""}`}
+        style={dashed ? { backgroundImage: "none", borderTop: "2px dashed #ea580c", height: 0 } : {}}
+      />
       <span className="text-[11px] text-zinc-300">{label}</span>
     </div>
   );
