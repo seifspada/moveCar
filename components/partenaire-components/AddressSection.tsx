@@ -156,7 +156,7 @@ export default function AddressSection({
                   ? "Adresse de départ"
                   : "Adresse d'arrivée"
               }
-              className={`w-full px-4 py-3 border border-gray-300 bg-white text-white placeholder-gray-500 rounded-full ${focusRing} focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors`}
+              className={`w-full px-4 py-3 border border-gray-300 bg-white text-black placeholder-gray-500 rounded-full ${focusRing} focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors`}
             />
           </div>
 
@@ -198,16 +198,21 @@ export default function AddressSection({
             placeholder="Type de lieu *"
           />
 
-          <input
-            type="text"
-            name={nomLieuKey}
-            value={formData[nomLieuKey] || ""}
-            onChange={handleInputChange}
-            placeholder={`Nom du lieu (ex: ${
-              type === "depart" ? "Agence XYZ" : "Concession ACME"
-            })`}
-            className={`w-full px-4 py-3 border border-gray-300 bg-white text-white placeholder-gray-500 rounded-full ${focusRing} focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors`}
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nom du lieu
+            </label>
+            <input
+              type="text"
+              name={nomLieuKey}
+              value={formData[nomLieuKey] || ""}
+              onChange={handleInputChange}
+              placeholder={`Nom du lieu (ex: ${
+                type === "depart" ? "Agence XYZ" : "Concession ACME"
+              })`}
+              className={`w-full px-4 py-3 border border-gray-300 bg-white text-black placeholder-gray-500 rounded-full ${focusRing} focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors`}
+            />
+          </div>
         </div>
 
         <ToggleSwitch
