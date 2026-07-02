@@ -29,9 +29,11 @@ export const GET_MISSION_TRACKING_HISTORY = gql`
   query GetMissionTrackingHistory($missionId: ID!) {
     getMissionTrackingHistory(missionId: $missionId) {
       id
+      sessionId
       latitude
       longitude
       accuracy
+      speed
       timestamp
       isDeviated
       distanceFromRoute

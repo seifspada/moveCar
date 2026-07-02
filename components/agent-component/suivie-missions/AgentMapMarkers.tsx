@@ -240,6 +240,21 @@ export default function AgentMapMarkers({
                       </div>
                     </div>
 
+                    {/* Vitesse en temps réel + numéro de seconde */}
+                    {history.length > 0 && (() => {
+                      const firstTs = new Date(history[0].timestamp).getTime();
+                      const last = history[history.length - 1];
+                      const elapsedSec = Math.max(0, Math.floor((new Date(last.timestamp).getTime() - firstTs) / 1000));
+                      return (
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+                          <div style={{ fontSize: "13px", fontWeight: 700, color: "#f4f4f5" }}>
+                            Vitesse: {last.speed != null ? `${Number(last.speed).toFixed(1)} km/h` : "—"}
+                          </div>
+                          <div style={{ fontSize: "11px", color: "#a1a1aa" }}>T+{elapsedSec}s</div>
+                        </div>
+                      );
+                    })()}
+
                     {/* Bouton unique : évaluation si TERMINEE, détail sinon */}
                     {isTerminee ? (
                       <button

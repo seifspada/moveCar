@@ -29,6 +29,8 @@ export interface GPSTrack {
   latitude: number;
   longitude: number;
   accuracy: number | null;
+  sessionId?: string | null;
+  speed?: number | null;
   timestamp: string;
   isDeviated: boolean;
   distanceFromRoute: number | null;

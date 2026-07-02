@@ -51,6 +51,29 @@ export default function AgentMapView() {
     if (id) loadHistory(id);
   }, [loadHistory]);
 
+  // Poll mission tracking history every 1s for the selected mission (real-time follow)
+  useEffect(() => {
+    if (!selectedId) return;
+    let cancelled = false;
+    const fetchOnce = async () => {
+      try {
+        const { data } = await client.query<{ getMissionTrackingHistory: GPSTrack[] }>({
+          query: GET_MISSION_TRACKING_HISTORY,
+          variables: { missionId: selectedId },
+          fetchPolicy: "network-only",
+        });
+        if (!cancelled && data?.getMissionTrackingHistory) {
+          setTrackHistory((prev) => ({ ...prev, [selectedId]: data.getMissionTrackingHistory }));
+        }
+      } catch (err) {
+        console.error("Erreur polling historique:", err);
+      }
+    };
+    fetchOnce();
+    const t = setInterval(fetchOnce, 1000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [selectedId, client]);
+
   const handleOpenRating  = useCallback((mission: MissionWithEval) => setRatingMission(mission), []);
   const handleCloseRating = useCallback(() => setRatingMission(null), []);
 
