@@ -178,25 +178,31 @@ export default function AddressSection({
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <CustomSelect
-            options={[
-              { label: "Agence", value: "AGENCE" },
-              { label: "Concession", value: "CONCESSION" },
-              { label: "Particulier", value: "PARTICULIER" },
-              { label: "Parc auto", value: "PARC_AUTO" },
-              { label: "Entreprise", value: "ENTREPRISE" },
-              { label: "Hôtel", value: "HOTEL" },
-              { label: "Domicile", value: "DOMICILE" },
-              { label: "Gare", value: "GARE" },
-              { label: "Aéroport", value: "AEROPORT" },
-              { label: "Autre", value: "AUTRE" },
-            ]}
-            value={formData[typeLieuKey] || ""}
-            onChange={(value) =>
-              handleSelectChange(typeLieuKey, String(value))
-            }
-            placeholder="Type de lieu *"
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Type de lieu
+            </label>
+            <CustomSelect
+              options={[
+                { label: "Agence", value: "AGENCE" },
+                { label: "Concession", value: "CONCESSION" },
+                { label: "Particulier", value: "PARTICULIER" },
+                { label: "Parc auto", value: "PARC_AUTO" },
+                { label: "Entreprise", value: "ENTREPRISE" },
+                { label: "Hôtel", value: "HOTEL" },
+                { label: "Domicile", value: "DOMICILE" },
+                { label: "Gare", value: "GARE" },
+                { label: "Aéroport", value: "AEROPORT" },
+                { label: "Autre", value: "AUTRE" },
+              ]}
+              value={formData[typeLieuKey] || ""}
+              onChange={(value) =>
+                handleSelectChange(typeLieuKey, String(value))
+              }
+              placeholder="Type de lieu *"
+              className="w-full"
+            />
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
