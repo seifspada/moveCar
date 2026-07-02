@@ -271,10 +271,8 @@ export const MissionRequestForm: React.FC<MissionRequestFormProps> = ({
 
 
   return (
-    <div className="min-h-screen bg-black">
-         
-
-<div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8 pt-2 md:pt-4 my-0">
+    <div className="min-h-screen bg-black mission-request-form">
+      <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-8 pt-2 md:pt-4 my-0">
             <FormHeader />
 
 

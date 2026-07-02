@@ -27,3 +27,14 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #52525b;
 }
+
+.mission-request-form input,
+.mission-request-form textarea,
+.mission-request-form select {
+  color: #000 !important;
+}
+
+.mission-request-form input::placeholder,
+.mission-request-form textarea::placeholder {
+  color: #6b7280 !important;
+}
