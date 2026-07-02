@@ -13,13 +13,15 @@ type CustomSelectProps = {
   value: string | number | null;
   onChange: (value: string | number) => void;
   placeholder?: string;
+  className?: string;
 };
 
 export default function CustomSelect({ 
   options, 
   value, 
   onChange,
-  placeholder = "Sélectionner"
+  placeholder = "Sélectionner",
+  className = ""
 }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
 
@@ -28,12 +30,12 @@ export default function CustomSelect({
   const displayText = selectedOption ? selectedOption.label : placeholder;
 
   return (
-    <div className="relative w-full placeholder-gray-700">
+    <div className={`relative w-full placeholder-gray-700 ${className}`}>
       {/* Bouton principal */}
       <button
         type="button"
         onClick={() => setOpen(!open)}
-className="w-full flex items-center justify-between pl-4 pr-4 py-3 rounded-full border border-gray-300 bg-white text-black focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition placeholder-gray-700"
+        className="w-full flex items-center justify-between pl-4 pr-4 py-3 rounded-full border border-gray-300 bg-white text-black focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition placeholder-gray-700"
       >
         <span className={!selectedOption ? "text-gray-700" : ""}>
           {displayText}
