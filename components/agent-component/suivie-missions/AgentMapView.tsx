@@ -4,18 +4,47 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useActiveMissionsMap } from "@/app/hooks/useActiveMissionsMap";
-import { GET_MISSION_TRACKING_HISTORY } from "@/lib/graphql/queries/map-agent";
-import { getMarkerStatus, GPSTrack } from "@/app/types/map-agent";
-import { useApolloClient } from "@apollo/client/react";
+import { GET_MISSION_TRACKING_HISTORY, UPDATE_MISSION_LOCATION } from "@/lib/graphql/queries/map-agent";
+import { getMarkerStatus, formatLastSeen, GPSTrack } from "@/app/types/map-agent";
+import { useApolloClient, useMutation } from "@apollo/client/react";
+import { Gauge } from "lucide-react";
 import AgentMapMarkers from "./AgentMapMarkers";
 import RatingPanel, { MissionWithEval } from "./RatingPanal";
+
+type UpdateMissionLocationPayload = {
+  updateMissionLocation: {
+    id: string;
+    latitude: number;
+    longitude: number;
+    speed: number | null;
+    timestamp: string;
+    isDeviated: boolean;
+  };
+};
+
+type UpdateMissionLocationVariables = {
+  input: {
+    missionId: string;
+    latitude: number;
+    longitude: number;
+    accuracy: number | null;
+    speed: number | null;
+    timestamp: string;
+  };
+};
 
 export default function AgentMapView() {
   const { missions, loading, error, refetch } = useActiveMissionsMap(15000);
   const [selectedId, setSelectedId]       = useState<string | null>(null);
   const [ratingMission, setRatingMission] = useState<MissionWithEval | null>(null);
   const [trackHistory, setTrackHistory]   = useState<Record<string, GPSTrack[]>>({});
+  const [currentSpeed, setCurrentSpeed]   = useState<number | null>(null);
+  const [gpsLastUpdate, setGpsLastUpdate] = useState<string | null>(null);
+  const [gpsStatus, setGpsStatus]         = useState<"idle" | "active" | "unavailable" | "error">("idle");
   const client = useApolloClient();
+  const [updateMissionLocation] = useMutation<UpdateMissionLocationPayload, UpdateMissionLocationVariables>(
+    UPDATE_MISSION_LOCATION
+  );
 
   // Fix icônes Leaflet Next.js
   useEffect(() => {
@@ -77,6 +106,104 @@ export default function AgentMapView() {
   const handleOpenRating  = useCallback((mission: MissionWithEval) => setRatingMission(mission), []);
   const handleCloseRating = useCallback(() => setRatingMission(null), []);
 
+  const gpsMission = useMemo(() => {
+    if (selectedId) return missions.find((m) => m.missionId === selectedId) ?? null;
+    return missions.length === 1 ? missions[0] : null;
+  }, [missions, selectedId]);
+
+  const gpsMissionId = gpsMission?.missionId ?? null;
+
+  useEffect(() => {
+    if (!gpsMissionId) {
+      setCurrentSpeed(null);
+      setGpsLastUpdate(null);
+      setGpsStatus("idle");
+      return;
+    }
+
+    const history = trackHistory[gpsMissionId];
+    const last = history?.[history.length - 1];
+    setCurrentSpeed(last?.speed ?? null);
+    setGpsLastUpdate(last?.timestamp ?? null);
+  }, [gpsMissionId, trackHistory]);
+
+  useEffect(() => {
+    if (!gpsMissionId) return;
+
+    if (typeof window === "undefined" || !navigator.geolocation) {
+      setGpsStatus("unavailable");
+      return;
+    }
+
+    let cancelled = false;
+    setGpsStatus("active");
+
+    const watchId = navigator.geolocation.watchPosition(
+      async (position) => {
+        const nativeSpeed = position.coords.speed;
+        const speedKmh =
+          typeof nativeSpeed === "number" && Number.isFinite(nativeSpeed)
+            ? nativeSpeed * 3.6
+            : null;
+        const timestamp = new Date(position.timestamp || Date.now()).toISOString();
+
+        try {
+          const { data } = await updateMissionLocation({
+            variables: {
+              input: {
+                missionId: gpsMissionId,
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy ?? null,
+                speed: speedKmh,
+                timestamp,
+              },
+            },
+          });
+
+          const updatedPoint = data?.updateMissionLocation;
+          if (!cancelled && updatedPoint) {
+            setCurrentSpeed(updatedPoint.speed ?? null);
+            setGpsLastUpdate(updatedPoint.timestamp);
+            setGpsStatus("active");
+            setTrackHistory((prev) => {
+              const existing = prev[gpsMissionId] ?? [];
+              const nextPoint: GPSTrack = {
+                ...updatedPoint,
+                accuracy: position.coords.accuracy ?? null,
+                sessionId: null,
+                distanceFromRoute: null,
+              };
+              return {
+                ...prev,
+                [gpsMissionId]: [
+                  ...existing.filter((point) => point.id !== updatedPoint.id),
+                  nextPoint,
+                ],
+              };
+            });
+          }
+        } catch (err) {
+          console.error("Erreur updateMissionLocation:", err);
+        }
+      },
+      (err) => {
+        console.error("Erreur geolocalisation:", err);
+        if (!cancelled) setGpsStatus("error");
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 5000,
+        timeout: 15000,
+      }
+    );
+
+    return () => {
+      cancelled = true;
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [gpsMissionId, updateMissionLocation]);
+
   const routePoints = useMemo(() => {
     const map: Record<string, { departure?: [number, number]; destination?: [number, number] }> = {};
     missions.forEach((m) => {
@@ -101,6 +228,18 @@ export default function AgentMapView() {
   }), [missions]);
 
   const center: [number, number] = [33.8869, 9.5375];
+  const speedLabel = currentSpeed != null && Number.isFinite(currentSpeed)
+    ? `${Math.round(currentSpeed)} km/h`
+    : "-- km/h";
+  const speedHint = !gpsMissionId
+    ? "Selectionnez une mission"
+    : gpsStatus === "unavailable"
+      ? "GPS indisponible"
+      : gpsStatus === "error"
+        ? "GPS en attente"
+        : gpsLastUpdate
+          ? formatLastSeen(gpsLastUpdate)
+          : "GPS actif";
 
   return (
     <div className="relative w-full h-full">
@@ -153,6 +292,23 @@ export default function AgentMapView() {
         </svg>
         Actualiser
       </button>
+
+      {/* Vitesse mission en temps reel */}
+      <div className="absolute top-16 right-4 z-[1000] bg-zinc-900/95 backdrop-blur border border-zinc-700 rounded-xl px-4 py-3 shadow-xl min-w-[180px]">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-orange-600/15 border border-orange-600/40 flex items-center justify-center text-orange-400">
+            <Gauge className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Vitesse mission</p>
+            <p className="text-2xl font-black text-white leading-tight tabular-nums">{speedLabel}</p>
+          </div>
+        </div>
+        <div className="mt-2 flex items-center gap-2 text-[11px] text-zinc-400">
+          <span className={`w-1.5 h-1.5 rounded-full ${gpsStatus === "active" ? "bg-green-400 animate-pulse" : "bg-orange-400"}`} />
+          <span className="truncate">{speedHint}</span>
+        </div>
+      </div>
 
       <MapContainer
         center={center}

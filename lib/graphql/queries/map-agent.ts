@@ -40,3 +40,16 @@ export const GET_MISSION_TRACKING_HISTORY = gql`
     }
   }
 `;
+
+export const UPDATE_MISSION_LOCATION = gql`
+  mutation UpdateMissionLocation($input: UpdateLocationInput!) {
+    updateMissionLocation(input: $input) {
+      id
+      latitude
+      longitude
+      speed
+      timestamp
+      isDeviated
+    }
+  }
+`;
