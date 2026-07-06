@@ -9,7 +9,7 @@ const testimonials = [
     avatar: 'MD',
     accent: 'text-orange-600',
     avatarBg: 'bg-orange-600/10 border-orange-600/30',
-    text: "ConvoyPro a transformé notre gestion des transferts. On économise 6h de coordination par semaine. Le suivi en temps réel est un game changer.",
+    text: "MoveCar a transformé notre gestion des transferts. On économise 6h de coordination par semaine. Le suivi en temps réel est un game changer.",
   },
   {
     name: 'Thomas Renard',
@@ -17,7 +17,7 @@ const testimonials = [
     avatar: 'TR',
     accent: 'text-teal-400',
     avatarBg: 'bg-teal-400/10 border-teal-400/30',
-    text: "En 3 mois, j'ai réalisé 47 missions via ConvoyPro. L'app est fluide, les paiements sont rapides. C'est devenu ma principale source de revenus.",
+    text: "En 3 mois, j'ai réalisé 47 missions via MoveCar. L'app est fluide, les paiements sont rapides. C'est devenu ma principale source de revenus.",
   },
   {
     name: 'Pierre Laurent',
@@ -68,7 +68,7 @@ export default function SocialProof() {
           Témoignages
         </div>
         <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white">
-          Ils font confiance à ConvoyPro
+          Ils font confiance à MoveCar
         </h2>
       </div>
 

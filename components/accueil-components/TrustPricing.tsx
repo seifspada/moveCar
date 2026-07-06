@@ -38,7 +38,7 @@ export function TrustSection() {
           notre <span className="text-orange-600">priorité absolue</span>
         </h2>
         <p className="text-zinc-400 text-base font-light max-w-md mx-auto leading-relaxed">
-          Nous avons construit ConvoyPro sur des fondations de confiance. Chaque détail est pensé pour protéger agences et convoyeurs.
+          Nous avons construit MoveCar sur des fondations de confiance. Chaque détail est pensé pour protéger agences et convoyeurs.
         </p>
       </div>
 

@@ -137,7 +137,7 @@ export function Footer() {
               <Icon className="w-4 h-4" />
             </a>
           ))}
-          <span className="text-zinc-700 text-xs ml-2">© {new Date().getFullYear()} ConvoyPro</span>
+          <span className="text-zinc-700 text-xs ml-2">© {new Date().getFullYear()} MoveCar</span>
         </div>
       </div>
     </footer>

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import {
   AuthLayout,
   AuthFormCard,
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,32 +57,37 @@ export default function LoginPage() {
 
       // ✅ Décoder le JWT pour extraire agentId / agenceId / adherentId / partenaireId
       try {
-        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-        console.log('🔑 JWT Payload:', tokenPayload);
+        const tokenPayload = JSON.parse(atob(token.split(".")[1]));
+        console.log("🔑 JWT Payload:", tokenPayload);
 
-        if (userRole === 'agent') {
+        if (userRole === "agent") {
           if (tokenPayload.agentId) {
             localStorage.setItem("agentId", String(tokenPayload.agentId));
-            console.log('✅ agentId sauvegardé:', tokenPayload.agentId);
+            console.log("✅ agentId sauvegardé:", tokenPayload.agentId);
           }
           if (tokenPayload.agenceId) {
             localStorage.setItem("agenceId", String(tokenPayload.agenceId));
-            console.log('✅ agenceId sauvegardé:', tokenPayload.agenceId);
+            console.log("✅ agenceId sauvegardé:", tokenPayload.agenceId);
           }
         }
 
-        if (userRole === 'adherent' && tokenPayload.adherentId) {
+        if (userRole === "adherent" && tokenPayload.adherentId) {
           localStorage.setItem("adherentId", String(tokenPayload.adherentId));
-          console.log('✅ adherentId sauvegardé:', tokenPayload.adherentId);
+          console.log("✅ adherentId sauvegardé:", tokenPayload.adherentId);
         }
 
-        if (userRole === 'partenaire' && tokenPayload.partenaireId) {
-          localStorage.setItem("partenaireId", String(tokenPayload.partenaireId));
-          console.log('✅ partenaireId sauvegardé:', tokenPayload.partenaireId);
+        if (userRole === "partenaire" && tokenPayload.partenaireId) {
+          localStorage.setItem(
+            "partenaireId",
+            String(tokenPayload.partenaireId)
+          );
+          console.log(
+            "✅ partenaireId sauvegardé:",
+            tokenPayload.partenaireId
+          );
         }
-
       } catch (jwtErr) {
-        console.warn('⚠️ Impossible de décoder le JWT:', jwtErr);
+        console.warn("⚠️ Impossible de décoder le JWT:", jwtErr);
       }
 
       // ✅ Nettoyer ancien currentUser corrompu
@@ -98,9 +105,9 @@ export default function LoginPage() {
       if (!redirectPath) throw new Error(`Rôle non autorisé: ${userRole}`);
 
       window.location.href = redirectPath;
-
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Une erreur est survenue";
+      const errorMessage =
+        err instanceof Error ? err.message : "Une erreur est survenue";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -147,17 +154,39 @@ export default function LoginPage() {
               disabled={loading}
               autoComplete="new-email"
             />
-            <AuthInput
-              id="password"
-              name="password"
-              type="password"
-              label="Mot de passe"
-              placeholder="Entrer votre mot de passe"
-              value={formData.password}
-              onChange={handleChange}
-              disabled={loading}
-              autoComplete="new-password"
-            />
+
+            {/* Champ mot de passe avec icône œil */}
+            <div className="relative">
+              <AuthInput
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                label="Mot de passe"
+                placeholder="Entrer votre mot de passe"
+                value={formData.password}
+                onChange={handleChange}
+                disabled={loading}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                disabled={loading}
+                tabIndex={-1}
+                aria-label={
+                  showPassword
+                    ? "Masquer le mot de passe"
+                    : "Afficher le mot de passe"
+                }
+                className="absolute right-3 top-[38px] text-gray-500 hover:text-gray-700 transition disabled:opacity-50"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
           </div>
 
           <AuthButton loading={loading} loadingText="Connexion en cours...">
