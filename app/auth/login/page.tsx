@@ -38,42 +38,39 @@ export default function LoginPage() {
         throw new Error(data.message || "Erreur de connexion");
       }
 
-      // ✅ Token
+      // Token
       const token = data.access_token || data.accessToken;
       if (!token) throw new Error("Token manquant dans la réponse");
       localStorage.setItem("token", token);
 
-      // ✅ User
+      // User
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
-      // ✅ Role
+      // Role
       const userRole = data.role?.toLowerCase();
       if (!userRole || typeof userRole !== "string") {
         throw new Error("Rôle utilisateur invalide ou manquant");
       }
       localStorage.setItem("role", userRole);
 
-      // ✅ Décoder le JWT pour extraire agentId / agenceId / adherentId / partenaireId
+      // Décoder le JWT pour extraire agentId / agenceId / adherentId / partenaireId
       try {
         const tokenPayload = JSON.parse(atob(token.split(".")[1]));
-        console.log("🔑 JWT Payload:", tokenPayload);
+        console.log("JWT Payload:", tokenPayload);
 
         if (userRole === "agent") {
           if (tokenPayload.agentId) {
             localStorage.setItem("agentId", String(tokenPayload.agentId));
-            console.log("✅ agentId sauvegardé:", tokenPayload.agentId);
           }
           if (tokenPayload.agenceId) {
             localStorage.setItem("agenceId", String(tokenPayload.agenceId));
-            console.log("✅ agenceId sauvegardé:", tokenPayload.agenceId);
           }
         }
 
         if (userRole === "adherent" && tokenPayload.adherentId) {
           localStorage.setItem("adherentId", String(tokenPayload.adherentId));
-          console.log("✅ adherentId sauvegardé:", tokenPayload.adherentId);
         }
 
         if (userRole === "partenaire" && tokenPayload.partenaireId) {
@@ -81,19 +78,15 @@ export default function LoginPage() {
             "partenaireId",
             String(tokenPayload.partenaireId)
           );
-          console.log(
-            "✅ partenaireId sauvegardé:",
-            tokenPayload.partenaireId
-          );
         }
       } catch (jwtErr) {
-        console.warn("⚠️ Impossible de décoder le JWT:", jwtErr);
+        console.warn("Impossible de décoder le JWT:", jwtErr);
       }
 
-      // ✅ Nettoyer ancien currentUser corrompu
+      // Nettoyer ancien currentUser corrompu
       localStorage.removeItem("currentUser");
 
-      // ✅ Redirection
+      // Redirection
       const roleRoutes: Record<string, string> = {
         adherent: "/adherent/mission-page",
         partenaire: "/partenaire/acceuil",
