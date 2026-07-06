@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useActiveMissionsMap } from "@/app/hooks/useActiveMissionsMap";
+import { useMissionCurrentLocation } from "@/app/hooks/useMissionCurrentLocation";
 import { GET_MISSION_TRACKING_HISTORY, UPDATE_MISSION_LOCATION } from "@/lib/graphql/queries/map-agent";
 import { getMarkerStatus, formatLastSeen, GPSTrack } from "@/app/types/map-agent";
 import { useApolloClient, useMutation } from "@apollo/client/react";
@@ -59,6 +60,7 @@ export default function AgentMapView() {
     });
   }, []);
 
+  // Chargement initial du tracé complet — une seule fois par mission sélectionnée
   const loadHistory = useCallback(async (missionId: string) => {
     if (trackHistory[missionId]) return;
     try {
@@ -80,29 +82,6 @@ export default function AgentMapView() {
     if (id) loadHistory(id);
   }, [loadHistory]);
 
-  // Poll mission tracking history every 1s for the selected mission (real-time follow)
-  useEffect(() => {
-    if (!selectedId) return;
-    let cancelled = false;
-    const fetchOnce = async () => {
-      try {
-        const { data } = await client.query<{ getMissionTrackingHistory: GPSTrack[] }>({
-          query: GET_MISSION_TRACKING_HISTORY,
-          variables: { missionId: selectedId },
-          fetchPolicy: "network-only",
-        });
-        if (!cancelled && data?.getMissionTrackingHistory) {
-          setTrackHistory((prev) => ({ ...prev, [selectedId]: data.getMissionTrackingHistory }));
-        }
-      } catch (err) {
-        console.error("Erreur polling historique:", err);
-      }
-    };
-    fetchOnce();
-    const t = setInterval(fetchOnce, 1000);
-    return () => { cancelled = true; clearInterval(t); };
-  }, [selectedId, client]);
-
   const handleOpenRating  = useCallback((mission: MissionWithEval) => setRatingMission(mission), []);
   const handleCloseRating = useCallback(() => setRatingMission(null), []);
 
@@ -113,6 +92,45 @@ export default function AgentMapView() {
 
   const gpsMissionId = gpsMission?.missionId ?? null;
 
+  // Charge le tracé complet dès qu'une mission unique est auto-sélectionnée
+  // (le cas "sélection manuelle" est déjà couvert par handleSelect)
+  useEffect(() => {
+    if (gpsMissionId) loadHistory(gpsMissionId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gpsMissionId]);
+
+  // Position actuelle temps réel — remplace l'ancien polling complet de l'historique (1s)
+  // par une requête légère qui ne renvoie que le dernier point GPS
+  const { location: currentLocation } = useMissionCurrentLocation(gpsMissionId ?? "", {
+    pollInterval: 3000,
+    skip: !gpsMissionId,
+  });
+
+  // Injecte le nouveau point dans trackHistory pour prolonger le tracé sur la carte
+  useEffect(() => {
+    if (!gpsMissionId || !currentLocation) return;
+
+    setTrackHistory((prev) => {
+      const existing = prev[gpsMissionId] ?? [];
+      if (existing.some((point) => point.id === currentLocation.id)) return prev;
+
+      const nextPoint: GPSTrack = {
+        id: currentLocation.id,
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+        timestamp: currentLocation.timestamp,
+        speed: currentLocation.speed,
+        accuracy: currentLocation.accuracy,
+        isDeviated: currentLocation.isDeviated,
+        sessionId: null,
+        distanceFromRoute: null,
+      };
+
+      return { ...prev, [gpsMissionId]: [...existing, nextPoint] };
+    });
+  }, [gpsMissionId, currentLocation]);
+
+  // Dérive vitesse / dernière position affichées dans le panneau flottant
   useEffect(() => {
     if (!gpsMissionId) {
       setCurrentSpeed(null);
@@ -127,6 +145,7 @@ export default function AgentMapView() {
     setGpsLastUpdate(last?.timestamp ?? null);
   }, [gpsMissionId, trackHistory]);
 
+  // Envoi de la position du convoyeur/agent en conduite (mutation, flux distinct de la lecture)
   useEffect(() => {
     if (!gpsMissionId) return;
 
